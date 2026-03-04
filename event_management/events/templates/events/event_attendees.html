@@ -1,0 +1,24 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+
+<h2>Attendees - {{ event.title }}</h2>
+
+<div class="event-card">
+    <p><strong>Total Bookings:</strong> {{ bookings|length }}</p>
+    <p><strong>Total Revenue:</strong> ₹{{ total_revenue }}</p>
+</div>
+
+{% for booking in bookings %}
+    <div class="event-card">
+        <p><strong>User:</strong> {{ booking.user.username }}</p>
+        <p><strong>Ticket Type:</strong> {{ booking.ticket_type }}</p>
+        <p><strong>Booked At:</strong> {{ booking.booked_at }}</p>
+    </div>
+{% empty %}
+    <p>No attendees yet.</p>
+{% endfor %}
+
+<a href="{% url 'event_detail' event.id %}">← Back</a>
+
+{% endblock %}

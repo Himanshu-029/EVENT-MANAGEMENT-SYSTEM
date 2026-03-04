@@ -1,0 +1,19 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+
+<h2>Cancel Booking</h2>
+
+<div class="event-card">
+    <p>Are you sure you want to cancel your booking for:</p>
+    <p><strong>{{ booking.event.title }}</strong></p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Yes, Cancel Booking</button>
+</form>
+
+<a href="{% url 'event_detail' booking.event.id %}">Back</a>
+
+{% endblock %}

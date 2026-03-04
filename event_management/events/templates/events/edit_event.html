@@ -1,0 +1,32 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+
+<h2>Edit Event</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <p>Title:</p>
+    <input type="text" name="title" value="{{ event.title }}">
+
+    <p>Description:</p>
+    <textarea name="description">{{ event.description }}</textarea>
+
+    <p>Location:</p>
+    <input type="text" name="location" value="{{ event.location }}">
+
+    <p>Date:</p>
+    <input type="datetime-local" name="date" value="{{ event.date|date:'Y-m-d\\TH:i' }}">
+
+    <p>Update Image:</p>
+    <input type="file" name="image">
+
+    <p>Capacity:</p>
+    <input type="number" name="capacity" value="{{ event.capacity }}">
+
+    <br><br>
+    <button type="submit">Update</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+
+<h2>Create Event</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <p>Title:</p>
+    <input type="text" name="title">
+
+    <p>Description:</p>
+    <textarea name="description"></textarea>
+
+    <p>Location:</p>
+    <input type="text" name="location">
+
+    <p>Date:</p>
+    <input type="datetime-local" name="date">
+
+    <p>Category:</p>
+    <select name="category">
+    <option value="Tech">Tech</option>
+    <option value="Music">Music</option>
+    <option value="Sports">Sports</option>
+    <option value="Business">Business</option>
+    </select>
+
+    <p>Capacity:</p>
+    <input type="number" name="capacity">
+    
+    <p>Event Image:</p>
+    <input type="file" name="image">
+
+    <br><br>
+    <button type="submit">Create</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+
+<div class="event-card">
+    {% if event.image %}
+        <img src="{{ event.image.url }}" width="400">
+    {% endif %}
+    <h2>{{ event.title }}</h2>
+    <p>{{ event.description }}</p>
+    <p><strong>Location:</strong> {{ event.location }}</p>
+    <p><strong>Date:</strong> {{ event.date }}</p>
+    <p><strong>Capacity:</strong> {{ event.capacity }}</p>
+    <p><strong>Seats Left:</strong> {{ seats_left }}</p>
+    <p><strong>Created by:</strong> {{ event.created_by.username }}</p>
+    <p><strong>Category:</strong> {{ event.category }}</p>
+</div>
+
+{% if user == event.created_by or user.is_superuser %}
+    <hr>
+    <a href="{% url 'edit_event' event.id %}">Edit</a> |
+    <a href="{% url 'delete_event' event.id %}">Delete</a> |
+    <a href="{% url 'event_attendees' event.id %}">View Attendees</a>
+{% endif %}
+
+
+{% if user.is_authenticated %}
+
+    {% if user_booked %}
+        <p style="color: green;"><strong>You have already booked this event.</strong></p>
+
+        {% for booking in event.booking_set.all %}
+            {% if booking.user == user %}
+                <div class="event-card">
+                    <h4>Your Ticket QR Code</h4>
+                    <p><strong>Booking ID:</strong> {{ booking.id }}</p>
+                    <img src="{{ booking.qr_code.url }}" width="200">
+                    <a href="{% url 'cancel_booking' booking.id %}">Cancel Booking</a>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+    {% elif seats_left > 0 %}
+
+        <form method="post" action="{% url 'book_event' event.id %}">
+            {% csrf_token %}
+            <select name="ticket_type">
+                <option value="Regular">Regular - ₹500</option>
+                <option value="VIP">VIP - ₹1000</option>
+            </select>
+            <br><br>
+            <button type="submit">Book Now</button>
+        </form>
+
+    {% else %}
+        <p style="color: red;"><strong>Event Full.</strong></p>
+    {% endif %}
+
+{% else %}
+    <p><a href="/accounts/login/">Login to book this event</a></p>
+{% endif %}
+
+<a href="/">← Back to Events</a>
+
+{% endblock %}
+
+

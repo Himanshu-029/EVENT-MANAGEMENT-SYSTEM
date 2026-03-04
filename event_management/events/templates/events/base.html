@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Management System</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f6f9;
+        }
+
+        .navbar {
+            margin-bottom: 30px;
+        }
+
+        .event-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Message Styles */
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .message.warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="navbar">
+    <h1>Event Management System</h1>
+
+    {% if user.is_authenticated %}
+        <p>
+            Welcome, {{ user.username }} |
+
+            <a href="{% url 'create_event' %}">Create Event</a> |
+            <a href="{% url 'my_bookings' %}">My Bookings</a>
+
+            {% if user.is_superuser %}
+                | <a href="{% url 'dashboard' %}">Dashboard</a>
+                | <a href="{% url 'verify_ticket' %}">Verify Ticket</a>
+            {% endif %}
+
+            | <a href="/accounts/logout/">Logout</a>
+        </p>
+    {% else %}
+        <p>
+            <a href="/accounts/login/">Login</a>
+        </p>
+    {% endif %}
+
+    <hr>
+</div>
+
+<!-- Messages -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="message {{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% block content %}
+{% endblock %}
+
+</body>
+</html>

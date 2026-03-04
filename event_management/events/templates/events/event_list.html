@@ -1,0 +1,64 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+
+<h2>All Events</h2>
+
+<form method="get">
+    <input type="text" name="q" placeholder="Search by title">
+
+    <select name="category">
+        <option value="">All Categories</option>
+        <option value="Tech">Tech</option>
+        <option value="Music">Music</option>
+        <option value="Sports">Sports</option>
+        <option value="Business">Business</option>
+    </select>
+
+    <button type="submit">Filter</button>
+</form>
+
+<hr>
+
+{% for event in page_obj %}
+    <div class="event-card">
+        {% if event.image %}
+            <img src="{{ event.image.url }}" width="300">
+        {% endif %}
+
+        <h3>
+            <a href="{% url 'event_detail' event.id %}">
+                {{ event.title }}
+            </a>
+        </h3>
+
+        <p>{{ event.description }}</p>
+        <p><strong>Location:</strong> {{ event.location }}</p>
+        <p><strong>Date:</strong> {{ event.date }}</p>
+        <p><strong>Capacity:</strong> {{ event.capacity }}</p>
+    </div>
+{% empty %}
+    <p>No events available.</p>
+{% endfor %}
+
+<!-- Debug Info -->
+<p>Total Pages: {{ page_obj.paginator.num_pages }}</p>
+<p>Current Page: {{ page_obj.number }}</p>
+<p>Has Next: {{ page_obj.has_next }}</p>
+
+<!-- Pagination Controls -->
+<div style="margin-top: 20px;">
+    {% if page_obj.has_previous %}
+        <a href="?page=1">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+    {% endif %}
+</div>
+
+{% endblock %}
