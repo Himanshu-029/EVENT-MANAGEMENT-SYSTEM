@@ -2,18 +2,43 @@
 
 {% block content %}
 
-<h2>Cancel Booking</h2>
+<div class="row justify-content-center">
 
-<div class="event-card">
-    <p>Are you sure you want to cancel your booking for:</p>
-    <p><strong>{{ booking.event.title }}</strong></p>
+<div class="col-md-6">
+
+<div class="card shadow-sm">
+
+<div class="card-body text-center">
+
+<h3 class="mb-3 text-danger">Cancel Booking</h3>
+
+<div class="alert alert-warning">
+
+<p class="mb-1">Are you sure you want to cancel your booking for:</p>
+
+<h5 class="mt-2"><strong>{{ booking.event.title }}</strong></h5>
+
 </div>
 
 <form method="post">
-    {% csrf_token %}
-    <button type="submit">Yes, Cancel Booking</button>
+{% csrf_token %}
+
+<button type="submit" class="btn btn-danger">
+Yes, Cancel Booking
+</button>
+
+<a href="{% url 'event_detail' booking.event.id %}" class="btn btn-secondary ms-2">
+Go Back
+</a>
+
 </form>
 
-<a href="{% url 'event_detail' booking.event.id %}">Back</a>
+</div>
+
+</div>
+
+</div>
+
+</div>
 
 {% endblock %}

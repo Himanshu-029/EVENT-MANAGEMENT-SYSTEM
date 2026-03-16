@@ -2,31 +2,70 @@
 
 {% block content %}
 
-<h2>Edit Event</h2>
+<div class="row justify-content-center">
+
+<div class="col-md-8">
+
+<div class="card shadow-sm">
+
+<div class="card-body">
+
+<h3 class="mb-4">Edit Event</h3>
 
 <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+{% csrf_token %}
 
-    <p>Title:</p>
-    <input type="text" name="title" value="{{ event.title }}">
+<div class="mb-3">
+<label class="form-label">Title</label>
+<input type="text" name="title" class="form-control" value="{{ event.title }}" required>
+</div>
 
-    <p>Description:</p>
-    <textarea name="description">{{ event.description }}</textarea>
+<div class="mb-3">
+<label class="form-label">Description</label>
+<textarea name="description" class="form-control" rows="4">{{ event.description }}</textarea>
+</div>
 
-    <p>Location:</p>
-    <input type="text" name="location" value="{{ event.location }}">
+<div class="mb-3">
+<label class="form-label">Location</label>
+<input type="text" name="location" class="form-control" value="{{ event.location }}">
+</div>
 
-    <p>Date:</p>
-    <input type="datetime-local" name="date" value="{{ event.date|date:'Y-m-d\\TH:i' }}">
+<div class="mb-3">
+<label class="form-label">Date & Time</label>
+<input type="datetime-local" name="date" class="form-control"
+value="{{ event.date|date:'Y-m-d\\TH:i' }}">
+</div>
 
-    <p>Update Image:</p>
-    <input type="file" name="image">
+<div class="mb-3">
+<label class="form-label">Capacity</label>
+<input type="number" name="capacity" class="form-control" value="{{ event.capacity }}">
+</div>
 
-    <p>Capacity:</p>
-    <input type="number" name="capacity" value="{{ event.capacity }}">
+<div class="mb-3">
+<label class="form-label">Update Image</label>
 
-    <br><br>
-    <button type="submit">Update</button>
+{% if event.image %}
+<p class="mb-2">Current Image:</p>
+<img src="{{ event.image.url }}" width="200" class="mb-3 rounded">
+{% endif %}
+
+<input type="file" name="image" class="form-control">
+</div>
+
+<button type="submit" class="btn btn-primary">
+Update Event
+</button>
+
+<a href="{% url 'event_detail' event.id %}" class="btn btn-secondary ms-2">
+Cancel
+</a>
+
 </form>
+
+</div>
+</div>
+
+</div>
+</div>
 
 {% endblock %}

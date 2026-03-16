@@ -1,104 +1,217 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Event Management System</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f4f6f9;
-        }
+<title>EventHub</title>
 
-        .navbar {
-            margin-bottom: 30px;
-        }
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        .event-card {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-        }
+<!-- Font Awesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-        a {
-            text-decoration: none;
-            color: #007bff;
-        }
+<style>
 
-        a:hover {
-            text-decoration: underline;
-        }
+/* ================= PAGE BACKGROUND ================= */
 
-        /* Message Styles */
-        .message {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-        }
+body{
+    background-image:url("/static/images/hero-bg.png");
+    background-size:cover;
+    background-position:center;
+    background-attachment:fixed;
+}
 
-        .message.success {
-            background-color: #d4edda;
-            color: #155724;
-        }
 
-        .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
+/* ================= DARK OVERLAY ================= */
 
-        .message.warning {
-            background-color: #fff3cd;
-            color: #856404;
-        }
+body::before{
+    content:"";
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.25);
+    z-index:-1;
+}
 
-        .message.info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-    </style>
+
+/* ================= HERO SECTION ================= */
+
+.hero-box{
+
+    position:relative;
+
+    padding:60px;
+
+    border: radius 50px;
+
+    text-align:center;
+
+    overflow:hidden;
+
+}
+
+
+/* HERO BACKGROUND LAYER */
+
+.hero-box::after{
+
+    content:"";
+
+    position:absolute;
+
+    top:0;
+    left:10;
+
+    width:100%;
+    height:100%;
+
+    background:rgba(255, 255, 255, 0.75);
+
+    z-index:0;
+
+}
+
+
+/* WORLD MAP LAYER */
+
+.hero-box::before{
+
+    content:"";
+
+    position:absolute;
+
+    top:0;
+    left:0;
+
+    width: 100%;
+    height:100%;
+
+    background:url("/static/images/world-map.png");
+
+    background-size:contain;
+    background-repeat:no-repeat;
+    background-position:center;
+
+    opacity:0.9;
+
+    z-index:1;
+
+}
+
+
+/* HERO TEXT LAYER */
+
+.hero-box h1,
+.hero-box p{
+
+    position:relative;
+
+    z-index:2;
+
+}
+
+.hero-box h1{
+
+    font-size:48px;
+
+    font-weight:700;
+
+}
+
+.hero-box p{
+
+    font-size:18px;
+
+}
+
+
+/* ================= EVENT CARDS ================= */
+
+.event-card{
+
+    border-radius:12px;
+
+    padding:20px;
+
+    background:white;
+
+    box-shadow:0 6px 18px rgba(0,0,0,0.2);
+
+    transition:0.3s;
+
+}
+
+.event-card:hover{
+
+    transform:translateY(-6px);
+
+}
+
+
+/* ================= NAVBAR ================= */
+
+.navbar a{
+    text-decoration:none;
+}
+
+.navbar a:hover{
+    text-decoration:underline;
+}
+
+</style>
+
 </head>
+
 
 <body>
 
-<div class="navbar">
-    <h1>Event Management System</h1>
 
-    {% if user.is_authenticated %}
-        <p>
-            Welcome, {{ user.username }} |
+<!-- ================= NAVBAR ================= -->
 
-            <a href="{% url 'create_event' %}">Create Event</a> |
-            <a href="{% url 'my_bookings' %}">My Bookings</a>
+<nav class="navbar navbar-dark bg-dark px-4">
 
-            {% if user.is_superuser %}
-                | <a href="{% url 'dashboard' %}">Dashboard</a>
-                | <a href="{% url 'verify_ticket' %}">Verify Ticket</a>
-            {% endif %}
+<a class="navbar-brand" href="/">EventHub</a>
 
-            | <a href="/accounts/logout/">Logout</a>
-        </p>
-    {% else %}
-        <p>
-            <a href="/accounts/login/">Login</a>
-        </p>
-    {% endif %}
+<div>
 
-    <hr>
+<a class="text-light me-3" href="/create">
+<i class="fa-solid fa-circle-plus"></i> Create Event
+</a>
+
+<a class="text-light me-3" href="/my-bookings">
+<i class="fa-solid fa-ticket"></i> My Bookings
+</a>
+
+<a class="text-light me-3" href="/dashboard">
+<i class="fa-solid fa-chart-line"></i> Dashboard
+</a>
+
+<a class="text-light me-3" href="/verify-ticket">
+<i class="fa-solid fa-check-circle"></i> Verify Ticket
+</a>
+
+<span class="text-warning me-3">
+<i class="fa-solid fa-user"></i> Himanshu
+</span>
+
+<a class="text-danger" href="/logout">
+<i class="fa-solid fa-right-from-bracket"></i> Logout
+</a>
+
 </div>
 
-<!-- Messages -->
-{% if messages %}
-    {% for message in messages %}
-        <div class="message {{ message.tags }}">
-            {{ message }}
-        </div>
-    {% endfor %}
-{% endif %}
+</nav>
+
+
+<div class="container mt-5">
 
 {% block content %}
+
 {% endblock %}
+
+</div>
+
 
 </body>
 </html>

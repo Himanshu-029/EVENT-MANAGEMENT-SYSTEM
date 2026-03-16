@@ -2,18 +2,44 @@
 
 {% block content %}
 
-<h2>Verify Ticket</h2>
+<div class="row justify-content-center">
+
+<div class="col-md-6">
+
+<div class="card shadow-sm">
+
+<div class="card-body">
+
+<h3 class="mb-4 text-center">Verify Ticket</h3>
 
 <form method="post">
-    {% csrf_token %}
-    <input type="number" name="booking_id" placeholder="Enter Booking ID">
-    <button type="submit">Verify</button>
+{% csrf_token %}
+
+<div class="mb-3">
+<label class="form-label">Booking ID</label>
+<input type="number" name="booking_id" class="form-control" placeholder="Enter Booking ID" required>
+</div>
+
+<button type="submit" class="btn btn-primary w-100">
+Verify Ticket
+</button>
+
 </form>
 
 {% if result %}
-    <div class="event-card">
-        <h3>{{ result }}</h3>
-    </div>
+
+<div class="alert alert-info mt-4 text-center">
+<h5 class="mb-0">{{ result }}</h5>
+</div>
+
 {% endif %}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
 
 {% endblock %}

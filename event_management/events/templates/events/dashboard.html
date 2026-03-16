@@ -2,21 +2,67 @@
 
 {% block content %}
 
-<h2>Admin Dashboard</h2>
+<h2 class="mb-4">Admin Dashboard</h2>
 
-<div class="event-card">
-    <p><strong>Total Events:</strong> {{ total_events }}</p>
-    <p><strong>Total Bookings:</strong> {{ total_bookings }}</p>
-    <p><strong>Total Users:</strong> {{ total_users }}</p>
-    <p><strong>Total Revenue:</strong> ₹{{ total_revenue }}</p>
+<!-- Stats Cards -->
+<div class="row">
+
+<div class="col-md-3 mb-4">
+<div class="card text-center shadow-sm">
+<div class="card-body">
+<h5 class="card-title">Total Events</h5>
+<h3>{{ total_events }}</h3>
+</div>
+</div>
 </div>
 
+<div class="col-md-3 mb-4">
+<div class="card text-center shadow-sm">
+<div class="card-body">
+<h5 class="card-title">Total Bookings</h5>
+<h3>{{ total_bookings }}</h3>
+</div>
+</div>
+</div>
+
+<div class="col-md-3 mb-4">
+<div class="card text-center shadow-sm">
+<div class="card-body">
+<h5 class="card-title">Total Users</h5>
+<h3>{{ total_users }}</h3>
+</div>
+</div>
+</div>
+
+<div class="col-md-3 mb-4">
+<div class="card text-center shadow-sm">
+<div class="card-body">
+<h5 class="card-title">Total Revenue</h5>
+<h3>₹{{ total_revenue }}</h3>
+</div>
+</div>
+</div>
+
+</div>
+
+
+<!-- Most Popular Event -->
 {% if top_event %}
-<div class="event-card">
-    <h3>Most Popular Event</h3>
-    <p>{{ top_event.title }}</p>
-    <p>Total Bookings: {{ top_event.booking_count }}</p>
+
+<div class="card shadow-sm">
+
+<div class="card-body">
+
+<h4 class="mb-3">Most Popular Event</h4>
+
+<h5>{{ top_event.title }}</h5>
+
+<p>Total Bookings: <strong>{{ top_event.booking_count }}</strong></p>
+
 </div>
+
+</div>
+
 {% endif %}
 
 {% endblock %}

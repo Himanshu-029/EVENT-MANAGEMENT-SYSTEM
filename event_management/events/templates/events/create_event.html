@@ -2,39 +2,73 @@
 
 {% block content %}
 
-<h2>Create Event</h2>
+<div class="row justify-content-center">
+
+<div class="col-md-8">
+
+<div class="card shadow-sm">
+
+<div class="card-body">
+
+<h3 class="mb-4">Create New Event</h3>
 
 <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+{% csrf_token %}
 
-    <p>Title:</p>
-    <input type="text" name="title">
+<div class="mb-3">
+<label class="form-label">Title</label>
+<input type="text" name="title" class="form-control" required>
+</div>
 
-    <p>Description:</p>
-    <textarea name="description"></textarea>
+<div class="mb-3">
+<label class="form-label">Description</label>
+<textarea name="description" class="form-control" rows="4" required></textarea>
+</div>
 
-    <p>Location:</p>
-    <input type="text" name="location">
+<div class="mb-3">
+<label class="form-label">Location</label>
+<input type="text" name="location" class="form-control" required>
+</div>
 
-    <p>Date:</p>
-    <input type="datetime-local" name="date">
+<div class="mb-3">
+<label class="form-label">Date & Time</label>
+<input type="datetime-local" name="date" class="form-control" required>
+</div>
 
-    <p>Category:</p>
-    <select name="category">
-    <option value="Tech">Tech</option>
-    <option value="Music">Music</option>
-    <option value="Sports">Sports</option>
-    <option value="Business">Business</option>
-    </select>
+<div class="mb-3">
+<label class="form-label">Category</label>
+<select name="category" class="form-select">
+<option value="Tech">Tech</option>
+<option value="Music">Music</option>
+<option value="Sports">Sports</option>
+<option value="Business">Business</option>
+</select>
+</div>
 
-    <p>Capacity:</p>
-    <input type="number" name="capacity">
-    
-    <p>Event Image:</p>
-    <input type="file" name="image">
+<div class="mb-3">
+<label class="form-label">Capacity</label>
+<input type="number" name="capacity" class="form-control" required>
+</div>
 
-    <br><br>
-    <button type="submit">Create</button>
+<div class="mb-3">
+<label class="form-label">Event Image</label>
+<input type="file" name="image" class="form-control">
+</div>
+
+<button type="submit" class="btn btn-success">
+Create Event
+</button>
+
+<a href="/" class="btn btn-secondary ms-2">
+Cancel
+</a>
+
 </form>
+
+</div>
+</div>
+
+</div>
+</div>
 
 {% endblock %}

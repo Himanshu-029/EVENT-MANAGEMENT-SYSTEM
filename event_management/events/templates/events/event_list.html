@@ -2,63 +2,148 @@
 
 {% block content %}
 
-<h2>All Events</h2>
+<!-- HERO SECTION -->
 
-<form method="get">
-    <input type="text" name="q" placeholder="Search by title">
+<div class="hero-box text-center mb-5">
 
-    <select name="category">
-        <option value="">All Categories</option>
-        <option value="Tech">Tech</option>
-        <option value="Music">Music</option>
-        <option value="Sports">Sports</option>
-        <option value="Business">Business</option>
-    </select>
+    <div class="hero-map"></div>
 
-    <button type="submit">Filter</button>
+    <h1 class="display-5">Discover Amazing Events</h1>
+
+    <p class="lead">
+        Book tickets, manage events, and explore experiences.
+    </p>
+
+</div>
+
+
+
+<!-- ALL EVENTS -->
+
+<h2 class="mb-4 text-dark">All Events</h2>
+
+
+
+<!-- SEARCH + FILTER -->
+
+<form method="get" class="row g-3 mb-4">
+
+<div class="col-md-5">
+<input type="text" name="q" class="form-control" placeholder="Search by title">
+</div>
+
+<div class="col-md-5">
+<select name="category" class="form-select">
+
+<option value="">Categories</option>
+<option value="Tech">Tech</option>
+<option value="Music">Music</option>
+<option value="Sports">Sports</option>
+<option value="Business">Business</option>
+
+</select>
+</div>
+
+<div class="col-md-2">
+<button type="submit" class="btn btn-primary w-100">
+Filter
+</button>
+</div>
+
 </form>
 
-<hr>
+
+
+<!-- EVENT CARDS -->
+
+<div class="row">
 
 {% for event in page_obj %}
-    <div class="event-card">
-        {% if event.image %}
-            <img src="{{ event.image.url }}" width="300">
-        {% endif %}
 
-        <h3>
-            <a href="{% url 'event_detail' event.id %}">
-                {{ event.title }}
-            </a>
-        </h3>
+<div class="col-md-4 mb-4">
 
-        <p>{{ event.description }}</p>
-        <p><strong>Location:</strong> {{ event.location }}</p>
-        <p><strong>Date:</strong> {{ event.date }}</p>
-        <p><strong>Capacity:</strong> {{ event.capacity }}</p>
-    </div>
+<div class="card shadow-sm h-100 event-card">
+
+{% if event.image %}
+<img src="{{ event.image.url }}" class="card-img-top">
+{% endif %}
+
+<div class="card-body">
+
+<h5 class="card-title">
+
+<a href="{% url 'event_detail' event.id %}">
+{{ event.title }}
+</a>
+
+</h5>
+
+<span class="badge bg-primary mb-2">
+{{ event.category }}
+</span>
+
+<p class="card-text">
+{{ event.description|truncatewords:20 }}
+</p>
+
+<p class="mb-1"><strong>Location:</strong> {{ event.location }}</p>
+
+<p class="mb-1"><strong>Date:</strong> {{ event.date }}</p>
+
+<p class="mb-1"><strong>Capacity:</strong> {{ event.capacity }}</p>
+
+<a href="{% url 'event_detail' event.id %}" class="btn btn-primary mt-2">
+View Event
+</a>
+
+</div>
+
+</div>
+
+</div>
+
 {% empty %}
-    <p>No events available.</p>
+
+<div class="alert alert-info">
+No events available.
+</div>
+
 {% endfor %}
 
-<!-- Debug Info -->
-<p>Total Pages: {{ page_obj.paginator.num_pages }}</p>
-<p>Current Page: {{ page_obj.number }}</p>
-<p>Has Next: {{ page_obj.has_next }}</p>
-
-<!-- Pagination Controls -->
-<div style="margin-top: 20px;">
-    {% if page_obj.has_previous %}
-        <a href="?page=1">First</a>
-        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
-    {% endif %}
-
-    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-
-    {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}">Next</a>
-        <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-    {% endif %}
 </div>
+
+
+
+<!-- PAGINATION -->
+
+<nav class="mt-4">
+
+<ul class="pagination justify-content-center">
+
+{% if page_obj.has_previous %}
+<li class="page-item">
+<a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+Previous
+</a>
+</li>
+{% endif %}
+
+<li class="page-item active">
+<a class="page-link">
+Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+</a>
+</li>
+
+{% if page_obj.has_next %}
+<li class="page-item">
+<a class="page-link" href="?page={{ page_obj.next_page_number }}">
+Next
+</a>
+</li>
+{% endif %}
+
+</ul>
+
+</nav>
 
 {% endblock %}

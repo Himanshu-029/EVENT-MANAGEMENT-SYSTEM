@@ -267,3 +267,8 @@ def cancel_booking(request, id):
         return redirect('event_detail', id=booking.event.id)
 
     return render(request, 'events/cancel_booking.html', {'booking': booking})
+
+
+def home(request):
+    events = Event.objects.all()
+    return render(request,'events/home.html',{'events':events})

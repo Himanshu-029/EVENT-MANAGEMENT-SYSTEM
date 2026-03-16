@@ -15,10 +15,10 @@ class Event(models.Model):
     image = models.ImageField(upload_to='event_images/', blank=True, null=True)
 
     CATEGORY_CHOICES = [
-    ('Tech', 'Tech'),
-    ('Music', 'Music'),
-    ('Sports', 'Sports'),
-    ('Business', 'Business'),
+        ('Tech', 'Tech'),
+        ('Music', 'Music'),
+        ('Sports', 'Sports'),
+        ('Business', 'Business'),
     ]
 
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='Tech')
