@@ -128,16 +128,16 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_REDIRECT_URL = '/accounts/profile/'
 LOGOUT_REDIRECT_URL = '/'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 # ══ EMAIL SETTINGS ══
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-nv!gcgn7_fkbjag0w2v8t_%^)**u-by4_9t2r7r13z30taeo10')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'giri.himanshu2911@gmail.com'      # ← your Gmail
-EMAIL_HOST_PASSWORD = 'yfnn ihgc tprd ojja'      # ← Gmail App Password (NOT your Gmail password)
-DEFAULT_FROM_EMAIL = 'EventHub <giri.himanshu2911@gmail.com>'
-
-LOGIN_REDIRECT_URL = '/accounts/profile/'
-LOGOUT_REDIRECT_URL = '/'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = f'EventHub <{os.getenv("EMAIL_HOST_USER")}>'
