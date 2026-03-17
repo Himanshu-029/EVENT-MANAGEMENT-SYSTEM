@@ -2,70 +2,448 @@
 
 {% block content %}
 
-<div class="row justify-content-center">
+<style>
+  body {
+    background: #fff0fa !important;
+    background-image: none !important;
+  }
+  body::before { display: none !important; }
+  .container.mt-5 {
+    margin-top: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
 
-<div class="col-md-8">
+  :root {
+    --pink: #ff6eb4;
+    --sky: #74c7f5;
+    --mint: #5ee7bf;
+    --lemon: #ffe566;
+    --lavender: #c084fc;
+    --coral: #ff7f6e;
+    --bg: #fff0fa;
+    --dark: #1a1035;
+  }
 
-<div class="card shadow-sm">
+  /* ── PAGE WRAPPER ── */
+  .edit-page {
+    min-height: 90vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 1.5rem 5rem;
+    position: relative;
+    overflow: hidden;
+  }
 
-<div class="card-body">
+  /* Blobs */
+  .edit-page::before {
+    content: '';
+    position: fixed;
+    width: 350px; height: 350px;
+    background: var(--lemon);
+    border-radius: 50%;
+    opacity: 0.1;
+    top: -80px; left: -80px;
+    pointer-events: none;
+  }
+  .edit-page::after {
+    content: '';
+    position: fixed;
+    width: 250px; height: 250px;
+    background: var(--sky);
+    border-radius: 50%;
+    opacity: 0.1;
+    bottom: -60px; right: -60px;
+    pointer-events: none;
+  }
 
-<h3 class="mb-4">Edit Event</h3>
+  /* ── CARD ── */
+  .edit-card {
+    background: #fff;
+    border: 3px solid var(--dark);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 8px 8px 0 var(--dark);
+    width: 100%;
+    max-width: 680px;
+    position: relative;
+    z-index: 1;
+  }
 
-<form method="post" enctype="multipart/form-data">
-{% csrf_token %}
+  /* Banner */
+  .edit-banner {
+    background: var(--lemon);
+    border-bottom: 3px solid var(--dark);
+    padding: 1.8rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .edit-banner::before {
+    content: '✏️';
+    position: absolute;
+    font-size: 10rem;
+    opacity: 0.07;
+    top: -2rem; right: -1rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .edit-banner-icon { font-size: 2.5rem; }
+  .edit-banner h2 {
+    font-family: 'Boogaloo', cursive;
+    font-size: 2rem;
+    color: var(--dark);
+    margin: 0 0 0.2rem;
+  }
+  .edit-banner p {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: rgba(26,16,53,0.55);
+    margin: 0;
+  }
 
-<div class="mb-3">
-<label class="form-label">Title</label>
-<input type="text" name="title" class="form-control" value="{{ event.title }}" required>
-</div>
+  /* Body */
+  .edit-body { padding: 2rem; }
 
-<div class="mb-3">
-<label class="form-label">Description</label>
-<textarea name="description" class="form-control" rows="4">{{ event.description }}</textarea>
-</div>
+  /* Field groups */
+  .field-group { margin-bottom: 1.3rem; }
 
-<div class="mb-3">
-<label class="form-label">Location</label>
-<input type="text" name="location" class="form-control" value="{{ event.location }}">
-</div>
+  .field-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.92rem;
+    color: var(--dark);
+    display: block;
+    margin-bottom: 0.45rem;
+  }
 
-<div class="mb-3">
-<label class="form-label">Date & Time</label>
-<input type="datetime-local" name="date" class="form-control"
-value="{{ event.date|date:'Y-m-d\\TH:i' }}">
-</div>
+  /* Inputs */
+  .field-input {
+    width: 100%;
+    background: var(--bg) !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.75rem 1.3rem !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    outline: none !important;
+    box-shadow: 3px 3px 0 var(--dark) !important;
+    color: var(--dark) !important;
+    transition: all 0.2s !important;
+    box-sizing: border-box;
+  }
+  .field-input:focus {
+    border-color: var(--lemon) !important;
+    box-shadow: 4px 4px 0 #e6c800 !important;
+  }
 
-<div class="mb-3">
-<label class="form-label">Capacity</label>
-<input type="number" name="capacity" class="form-control" value="{{ event.capacity }}">
-</div>
+  /* Textarea */
+  .field-textarea {
+    width: 100%;
+    background: var(--bg) !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 20px !important;
+    padding: 0.75rem 1.3rem !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    outline: none !important;
+    box-shadow: 3px 3px 0 var(--dark) !important;
+    color: var(--dark) !important;
+    transition: all 0.2s !important;
+    box-sizing: border-box;
+    resize: vertical;
+    min-height: 120px;
+  }
+  .field-textarea:focus {
+    border-color: var(--lemon) !important;
+    box-shadow: 4px 4px 0 #e6c800 !important;
+  }
 
-<div class="mb-3">
-<label class="form-label">Update Image</label>
+  /* File input */
+  .field-file {
+    width: 100%;
+    background: var(--bg) !important;
+    border: 2.5px dashed var(--dark) !important;
+    border-radius: 16px !important;
+    padding: 0.75rem 1.3rem !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    outline: none !important;
+    color: var(--dark) !important;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
 
-{% if event.image %}
-<p class="mb-2">Current Image:</p>
-<img src="{{ event.image.url }}" width="200" class="mb-3 rounded">
-{% endif %}
+  /* Current image preview */
+  .img-preview-wrap {
+    background: var(--bg);
+    border: 2px solid var(--dark);
+    border-radius: 16px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    box-shadow: 2px 2px 0 var(--dark);
+    display: inline-block;
+  }
+  .img-preview-label {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: rgba(26,16,53,0.4);
+    margin-bottom: 0.5rem;
+  }
+  .img-preview-wrap img {
+    border: 2px solid var(--dark);
+    border-radius: 12px;
+    display: block;
+    max-width: 200px;
+    max-height: 140px;
+    object-fit: cover;
+  }
 
-<input type="file" name="image" class="form-control">
-</div>
+  /* 2-col grid */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
 
-<button type="submit" class="btn btn-primary">
-Update Event
-</button>
+  /* Select */
+  .field-select {
+    width: 100%;
+    background: var(--bg) !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.75rem 1.3rem !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    outline: none !important;
+    box-shadow: 3px 3px 0 var(--dark) !important;
+    color: var(--dark) !important;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
 
-<a href="{% url 'event_detail' event.id %}" class="btn btn-secondary ms-2">
-Cancel
-</a>
+  /* Divider */
+  .form-divider {
+    height: 2px;
+    background: rgba(26,16,53,0.07);
+    border-radius: 2px;
+    margin: 1.5rem 0;
+  }
 
-</form>
+  /* Buttons */
+  .form-btns {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+  .btn-submit {
+    flex: 1;
+    background: var(--lemon) !important;
+    color: var(--dark) !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.85rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-align: center;
+  }
+  .btn-submit:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 6px 6px 0 var(--dark) !important;
+  }
+  .btn-cancel-link {
+    flex: 1;
+    background: #fff !important;
+    color: var(--dark) !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.85rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+    text-align: center;
+    display: block;
+  }
+  .btn-cancel-link:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 6px 6px 0 var(--dark) !important;
+    text-decoration: none !important;
+    color: var(--dark) !important;
+  }
 
-</div>
-</div>
+  /* Messages */
+  .msg-box {
+    border: 2px solid var(--dark);
+    border-radius: 14px;
+    padding: 0.7rem 1rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    box-shadow: 2px 2px 0 var(--dark);
+    margin-bottom: 1.2rem;
+    text-align: center;
+  }
+  .msg-error   { background: #ffe4e0; color: var(--dark); }
+  .msg-success { background: #d4fce8; color: var(--dark); }
 
-</div>
+  @media (max-width: 600px) {
+    .field-row { grid-template-columns: 1fr; }
+    .edit-page { padding: 2rem 1rem 4rem; }
+    .form-btns { flex-direction: column; }
+  }
+</style>
+
+<div class="edit-page">
+  <div class="edit-card">
+
+    <!-- Banner -->
+    <div class="edit-banner">
+      <div class="edit-banner-icon">✏️</div>
+      <div>
+        <h2>Edit Event</h2>
+        <p>Update your event details below</p>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="edit-body">
+
+      <!-- Messages -->
+      {% if messages %}
+        {% for message in messages %}
+          <div class="msg-box {% if message.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Title -->
+        <div class="field-group">
+          <label class="field-label">📝 Event Title</label>
+          <input
+            type="text"
+            name="title"
+            class="field-input"
+            value="{{ event.title }}"
+            placeholder="Give your event a name!"
+            required
+          >
+        </div>
+
+        <!-- Description -->
+        <div class="field-group">
+          <label class="field-label">📄 Description</label>
+          <textarea
+            name="description"
+            class="field-textarea"
+            rows="4"
+            placeholder="Tell people what's happening..."
+          >{{ event.description }}</textarea>
+        </div>
+
+        <!-- Location + Date row -->
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">📍 Location</label>
+            <input
+              type="text"
+              name="location"
+              class="field-input"
+              value="{{ event.location }}"
+              placeholder="City or venue"
+            >
+          </div>
+          <div class="field-group">
+            <label class="field-label">📅 Date & Time</label>
+            <input
+              type="datetime-local"
+              name="date"
+              class="field-input"
+              value="{{ event.date|date:'Y-m-d\TH:i' }}"
+            >
+          </div>
+        </div>
+
+        <!-- Capacity + Category row -->
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">👥 Capacity</label>
+            <input
+              type="number"
+              name="capacity"
+              class="field-input"
+              value="{{ event.capacity }}"
+              placeholder="Max attendees"
+            >
+          </div>
+          <div class="field-group">
+            <label class="field-label">🏷️ Category</label>
+            <select name="category" class="field-select">
+              <option value="Tech"
+                {% if event.category == 'Tech' %}selected{% endif %}>
+                💻 Tech
+              </option>
+              <option value="Music"
+                {% if event.category == 'Music' %}selected{% endif %}>
+                🎵 Music
+              </option>
+              <option value="Sports"
+                {% if event.category == 'Sports' %}selected{% endif %}>
+                ⚽ Sports
+              </option>
+              <option value="Business"
+                {% if event.category == 'Business' %}selected{% endif %}>
+                💼 Business
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Image -->
+        <div class="field-group">
+          <label class="field-label">🖼️ Update Image</label>
+          {% if event.image %}
+            <div class="img-preview-wrap">
+              <div class="img-preview-label">Current Image</div>
+              <img src="{{ event.image.url }}" alt="Current image">
+            </div>
+          {% endif %}
+          <input type="file" name="image" class="field-file" accept="image/*">
+        </div>
+
+        <!-- Buttons -->
+        <div class="form-btns">
+          <button type="submit" class="btn-submit">
+            💾 Save Changes
+          </button>
+          <a href="{% url 'event_detail' event.id %}" class="btn-cancel-link">
+            ✕ Cancel
+          </a>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
 </div>
 
 {% endblock %}

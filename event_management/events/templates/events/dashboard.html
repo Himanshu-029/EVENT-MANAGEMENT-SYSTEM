@@ -2,67 +2,360 @@
 
 {% block content %}
 
-<h2 class="mb-4">Admin Dashboard</h2>
+<style>
+  body {
+    background: #fff0fa !important;
+    background-image: none !important;
+  }
+  body::before { display: none !important; }
+  .container.mt-5 {
+    margin-top: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
 
-<!-- Stats Cards -->
-<div class="row">
+  :root {
+    --pink: #ff6eb4;
+    --sky: #74c7f5;
+    --mint: #5ee7bf;
+    --lemon: #ffe566;
+    --lavender: #c084fc;
+    --coral: #ff7f6e;
+    --bg: #fff0fa;
+    --dark: #1a1035;
+  }
 
-<div class="col-md-3 mb-4">
-<div class="card text-center shadow-sm">
-<div class="card-body">
-<h5 class="card-title">Total Events</h5>
-<h3>{{ total_events }}</h3>
+  /* ── PAGE HEADER ── */
+  .dash-header {
+    background: linear-gradient(135deg, var(--dark), #2d1a5e);
+    padding: 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 3px solid var(--dark);
+  }
+  .dash-header::before {
+    content: '📊';
+    position: absolute;
+    font-size: 16rem;
+    opacity: 0.05;
+    top: -3rem; right: -2rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .dash-header h1 {
+    font-family: 'Boogaloo', cursive;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: #fff;
+    margin-bottom: 0.3rem;
+  }
+  .dash-header h1 em { color: var(--lemon); font-style: normal; }
+  .dash-header p {
+    color: rgba(255,255,255,0.5);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .admin-badge {
+    display: inline-block;
+    background: var(--lemon);
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.3rem 1rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.85rem;
+    color: var(--dark);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+    margin-top: 0.8rem;
+  }
+
+  /* ── MAIN WRAP ── */
+  .dash-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 3rem 5rem;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.6rem;
+    color: var(--dark);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* ── STATS GRID ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 3rem;
+  }
+
+  .stat-card {
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 5px 5px 0 var(--dark);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card:hover {
+    transform: translate(-3px,-3px);
+    box-shadow: 8px 8px 0 var(--dark);
+  }
+  .stat-card::before {
+    content: attr(data-emoji);
+    position: absolute;
+    font-size: 5rem;
+    opacity: 0.07;
+    bottom: -0.5rem;
+    right: 0.5rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .stat-card-label {
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: rgba(26,16,53,0.45);
+    margin-bottom: 0.5rem;
+  }
+  .stat-card-value {
+    font-family: 'Boogaloo', cursive;
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .stat-card-sub {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(26,16,53,0.4);
+  }
+
+  /* Color variants */
+  .stat-pink  { border-color: var(--pink) !important; box-shadow: 5px 5px 0 var(--pink) !important; }
+  .stat-pink:hover { box-shadow: 8px 8px 0 var(--pink) !important; }
+  .stat-pink .stat-card-value { color: var(--pink); }
+
+  .stat-sky   { border-color: #5bb8e8 !important; box-shadow: 5px 5px 0 #5bb8e8 !important; }
+  .stat-sky:hover { box-shadow: 8px 8px 0 #5bb8e8 !important; }
+  .stat-sky .stat-card-value { color: #3a9fd8; }
+
+  .stat-mint  { border-color: #3dd6a0 !important; box-shadow: 5px 5px 0 #3dd6a0 !important; }
+  .stat-mint:hover { box-shadow: 8px 8px 0 #3dd6a0 !important; }
+  .stat-mint .stat-card-value { color: #2bbf8a; }
+
+  .stat-lemon { border-color: #e6c800 !important; box-shadow: 5px 5px 0 #e6c800 !important; }
+  .stat-lemon:hover { box-shadow: 8px 8px 0 #e6c800 !important; }
+  .stat-lemon .stat-card-value { color: #b89e00; }
+
+  /* ── TOP EVENT CARD ── */
+  .top-event-card {
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 var(--dark);
+    margin-bottom: 3rem;
+  }
+  .top-event-header {
+    background: var(--pink);
+    border-bottom: 2.5px solid var(--dark);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .top-event-header h3 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: #fff;
+    margin: 0;
+  }
+  .top-event-body {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .top-event-info h2 {
+    font-family: 'Boogaloo', cursive;
+    font-size: 2rem;
+    color: var(--dark);
+    margin-bottom: 0.3rem;
+  }
+  .top-event-info p {
+    color: rgba(26,16,53,0.55);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .top-event-stat {
+    text-align: center;
+    background: var(--bg);
+    border: 2px solid var(--dark);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    box-shadow: 3px 3px 0 var(--dark);
+    min-width: 140px;
+  }
+  .top-event-stat-num {
+    font-family: 'Boogaloo', cursive;
+    font-size: 2.5rem;
+    color: var(--pink);
+    line-height: 1;
+  }
+  .top-event-stat-label {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: rgba(26,16,53,0.4);
+    margin-top: 0.3rem;
+  }
+
+  /* ── QUICK ACTIONS ── */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 3rem;
+  }
+  .action-card {
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 18px;
+    padding: 1.2rem;
+    text-align: center;
+    box-shadow: 4px 4px 0 var(--dark);
+    transition: all 0.2s;
+    text-decoration: none !important;
+    color: var(--dark) !important;
+    display: block;
+  }
+  .action-card:hover {
+    transform: translate(-3px,-3px);
+    box-shadow: 7px 7px 0 var(--dark);
+    text-decoration: none !important;
+  }
+  .action-icon { font-size: 2.2rem; margin-bottom: 0.5rem; }
+  .action-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: var(--dark);
+    margin-bottom: 0.2rem;
+  }
+  .action-sub {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(26,16,53,0.45);
+  }
+  .ac-pink   { background: linear-gradient(135deg, #fff0f7, #fff); }
+  .ac-sky    { background: linear-gradient(135deg, #f0f9ff, #fff); }
+  .ac-mint   { background: linear-gradient(135deg, #f0fff8, #fff); }
+  .ac-lemon  { background: linear-gradient(135deg, #fffef0, #fff); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .dash-wrap { padding: 2rem 1.5rem 4rem; }
+    .dash-header { padding: 2rem 1.5rem; }
+    .top-event-body { flex-direction: column; }
+  }
+</style>
+
+<!-- ══ HEADER ══ -->
+<div class="dash-header">
+  <h1>Admin <em>Dashboard</em> 📊</h1>
+  <p>Everything you need to manage EventHub</p>
+  <div class="admin-badge">⚡ Superuser Access</div>
 </div>
-</div>
-</div>
 
-<div class="col-md-3 mb-4">
-<div class="card text-center shadow-sm">
-<div class="card-body">
-<h5 class="card-title">Total Bookings</h5>
-<h3>{{ total_bookings }}</h3>
+<div class="dash-wrap">
+
+  <!-- ══ STATS ══ -->
+  <div class="section-title">📈 Overview</div>
+  <div class="stats-grid">
+
+    <div class="stat-card stat-pink" data-emoji="🎪">
+      <div class="stat-card-label">Total Events</div>
+      <div class="stat-card-value">{{ total_events }}</div>
+      <div class="stat-card-sub">Events on platform</div>
+    </div>
+
+    <div class="stat-card stat-sky" data-emoji="🎟️">
+      <div class="stat-card-label">Total Bookings</div>
+      <div class="stat-card-value">{{ total_bookings }}</div>
+      <div class="stat-card-sub">Tickets booked</div>
+    </div>
+
+    <div class="stat-card stat-mint" data-emoji="👥">
+      <div class="stat-card-label">Total Users</div>
+      <div class="stat-card-value">{{ total_users }}</div>
+      <div class="stat-card-sub">Registered users</div>
+    </div>
+
+    <div class="stat-card stat-lemon" data-emoji="💰">
+      <div class="stat-card-label">Total Revenue</div>
+      <div class="stat-card-value">₹{{ total_revenue }}</div>
+      <div class="stat-card-sub">Total earnings</div>
+    </div>
+
+  </div>
+
+  <!-- ══ TOP EVENT ══ -->
+  {% if top_event %}
+  <div class="section-title">🏆 Most Popular Event</div>
+  <div class="top-event-card">
+    <div class="top-event-header">
+      <h3>🔥 Top Performing Event</h3>
+    </div>
+    <div class="top-event-body">
+      <div class="top-event-info">
+        <h2>{{ top_event.title }}</h2>
+        <p>📍 {{ top_event.location }} · {{ top_event.date|date:"M d, Y" }}</p>
+        <p>👤 Organizer: <b>{{ top_event.created_by.username }}</b></p>
+      </div>
+      <div class="top-event-stat">
+        <div class="top-event-stat-num">{{ top_event.booking_count }}</div>
+        <div class="top-event-stat-label">Total Bookings</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ QUICK ACTIONS ══ -->
+  <div class="section-title">⚡ Quick Actions</div>
+  <div class="actions-grid">
+    <a href="{% url 'event_list' %}" class="action-card ac-pink">
+      <div class="action-icon">🎪</div>
+      <div class="action-title">All Events</div>
+      <div class="action-sub">Browse & manage</div>
+    </a>
+    <a href="{% url 'create_event' %}" class="action-card ac-sky">
+      <div class="action-icon">➕</div>
+      <div class="action-title">Create Event</div>
+      <div class="action-sub">Add a new event</div>
+    </a>
+    <a href="{% url 'verify_ticket' %}" class="action-card ac-mint">
+      <div class="action-icon">✅</div>
+      <div class="action-title">Verify Ticket</div>
+      <div class="action-sub">Scan & validate</div>
+    </a>
+    <a href="{% url 'my_bookings' %}" class="action-card ac-lemon">
+      <div class="action-icon">🎟️</div>
+      <div class="action-title">My Bookings</div>
+      <div class="action-sub">View your tickets</div>
+    </a>
+  </div>
+
 </div>
-</div>
-</div>
-
-<div class="col-md-3 mb-4">
-<div class="card text-center shadow-sm">
-<div class="card-body">
-<h5 class="card-title">Total Users</h5>
-<h3>{{ total_users }}</h3>
-</div>
-</div>
-</div>
-
-<div class="col-md-3 mb-4">
-<div class="card text-center shadow-sm">
-<div class="card-body">
-<h5 class="card-title">Total Revenue</h5>
-<h3>₹{{ total_revenue }}</h3>
-</div>
-</div>
-</div>
-
-</div>
-
-
-<!-- Most Popular Event -->
-{% if top_event %}
-
-<div class="card shadow-sm">
-
-<div class="card-body">
-
-<h4 class="mb-3">Most Popular Event</h4>
-
-<h5>{{ top_event.title }}</h5>
-
-<p>Total Bookings: <strong>{{ top_event.booking_count }}</strong></p>
-
-</div>
-
-</div>
-
-{% endif %}
 
 {% endblock %}

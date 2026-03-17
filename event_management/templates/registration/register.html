@@ -1,0 +1,88 @@
+{% extends 'events/base.html' %}
+{% block content %}
+<style>
+  body { background: #fff0fa !important; background-image: none !important; }
+  body::before { display: none !important; }
+  .container.mt-5 { margin-top: 0 !important; max-width: 100% !important; padding: 0 !important; }
+  :root { --pink: #ff6eb4; --sky: #74c7f5; --mint: #5ee7bf; --lemon: #ffe566; --lavender: #c084fc; --bg: #fff0fa; --dark: #1a1035; }
+  .reg-page { min-height: 90vh; display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem; position: relative; overflow: hidden; }
+  .reg-page::before { content: ''; position: fixed; width: 400px; height: 400px; background: var(--mint); border-radius: 50%; opacity: 0.1; top: -100px; right: -100px; pointer-events: none; }
+  .reg-page::after { content: ''; position: fixed; width: 300px; height: 300px; background: var(--lavender); border-radius: 50%; opacity: 0.08; bottom: -80px; left: -80px; pointer-events: none; }
+  .reg-card { background: #fff; border: 3px solid var(--dark); border-radius: 28px; overflow: hidden; box-shadow: 8px 8px 0 var(--dark); width: 100%; max-width: 480px; position: relative; z-index: 1; }
+  .reg-banner { background: var(--mint); border-bottom: 3px solid var(--dark); padding: 1.8rem 2rem; text-align: center; position: relative; overflow: hidden; }
+  .reg-banner::before { content: '🎉'; position: absolute; font-size: 10rem; opacity: 0.07; top: -2rem; right: -1rem; line-height: 1; pointer-events: none; }
+  .reg-banner h2 { font-family: 'Boogaloo', cursive; font-size: 2rem; color: var(--dark); margin: 0.5rem 0 0.2rem; }
+  .reg-banner p { color: rgba(26,16,53,0.6); font-size: 0.85rem; font-weight: 600; margin: 0; }
+  .reg-body { padding: 2rem; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .field-group { margin-bottom: 1.1rem; }
+  .field-label { font-family: 'Fredoka One', cursive; font-size: 0.9rem; color: var(--dark); display: block; margin-bottom: 0.4rem; }
+  .field-input { width: 100%; background: var(--bg) !important; border: 2.5px solid var(--dark) !important; border-radius: 100px !important; padding: 0.7rem 1.3rem !important; font-family: 'Nunito', sans-serif !important; font-size: 0.92rem !important; font-weight: 700 !important; outline: none !important; box-shadow: 3px 3px 0 var(--dark) !important; color: var(--dark) !important; transition: all 0.2s !important; box-sizing: border-box; }
+  .field-input:focus { border-color: var(--mint) !important; box-shadow: 4px 4px 0 #3dd6a0 !important; }
+  .btn-register { width: 100%; background: var(--mint) !important; color: var(--dark) !important; border: 2.5px solid var(--dark) !important; border-radius: 100px !important; padding: 0.85rem !important; font-family: 'Fredoka One', cursive !important; font-size: 1.1rem !important; cursor: pointer !important; box-shadow: 4px 4px 0 var(--dark) !important; transition: all 0.2s !important; margin-top: 0.5rem; }
+  .btn-register:hover { transform: translate(-2px,-2px) !important; box-shadow: 6px 6px 0 var(--dark) !important; }
+  .reg-footer { text-align: center; padding: 1.2rem 2rem; background: var(--bg); border-top: 2px solid rgba(26,16,53,0.08); font-size: 0.85rem; font-weight: 700; color: rgba(26,16,53,0.55); }
+  .reg-footer a { color: var(--pink) !important; font-weight: 800; text-decoration: none !important; border-bottom: 2px solid var(--pink); }
+  .msg-box { border: 2px solid var(--dark); border-radius: 14px; padding: 0.7rem 1rem; font-family: 'Fredoka One', cursive; font-size: 0.88rem; box-shadow: 2px 2px 0 var(--dark); margin-bottom: 1rem; text-align: center; }
+  .msg-error { background: #ffe4e0; color: var(--dark); }
+  .password-hint { font-size: 0.7rem; color: rgba(26,16,53,0.45); font-weight: 600; margin-top: 0.3rem; padding-left: 0.5rem; }
+  @media (max-width: 600px) { .field-row { grid-template-columns: 1fr; } }
+</style>
+
+<div class="reg-page">
+  <div class="reg-card">
+    <div class="reg-banner">
+      <div style="font-size:2.5rem;margin-bottom:0.3rem">🎉</div>
+      <h2>Join EventHub!</h2>
+      <p>Create your account and start exploring events</p>
+    </div>
+
+    <div class="reg-body">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="msg-box msg-error">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="field-group">
+          <label class="field-label">👤 Username</label>
+          <input type="text" name="username" class="field-input" placeholder="Choose a username" required>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">📧 Email Address</label>
+          <input type="email" name="email" class="field-input" placeholder="your@email.com" required>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">📱 Mobile Number <span style="font-size:0.75rem;color:rgba(26,16,53,0.4)">(optional)</span></label>
+          <input type="text" name="mobile" class="field-input" placeholder="+91 XXXXXXXXXX">
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">🔒 Password</label>
+            <input type="password" name="password1" class="field-input" placeholder="Min 8 chars" required>
+          </div>
+          <div class="field-group">
+            <label class="field-label">🔒 Confirm</label>
+            <input type="password" name="password2" class="field-input" placeholder="Repeat password" required>
+          </div>
+        </div>
+        <div class="password-hint">Password must be at least 8 characters long</div>
+
+        <button type="submit" class="btn-register" style="margin-top:1rem">
+          📨 Send Verification OTP
+        </button>
+      </form>
+    </div>
+
+    <div class="reg-footer">
+      Already have an account? <a href="{% url 'login' %}">Sign in here</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

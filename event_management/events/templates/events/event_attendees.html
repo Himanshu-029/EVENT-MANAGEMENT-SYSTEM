@@ -2,80 +2,402 @@
 
 {% block content %}
 
-<h2 class="mb-4">Attendees - {{ event.title }}</h2>
+<style>
+  body {
+    background: #fff0fa !important;
+    background-image: none !important;
+  }
+  body::before { display: none !important; }
+  .container.mt-5 {
+    margin-top: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
 
-<!-- Summary Cards -->
-<div class="row mb-4">
+  :root {
+    --pink: #ff6eb4;
+    --sky: #74c7f5;
+    --mint: #5ee7bf;
+    --lemon: #ffe566;
+    --lavender: #c084fc;
+    --coral: #ff7f6e;
+    --bg: #fff0fa;
+    --dark: #1a1035;
+  }
 
-<div class="col-md-6">
-<div class="card shadow-sm text-center">
-<div class="card-body">
-<h5>Total Bookings</h5>
-<h3>{{ bookings|length }}</h3>
+  /* ── PAGE HEADER ── */
+  .attendees-header {
+    background: linear-gradient(135deg, var(--dark), #2d1a5e);
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 3px solid var(--dark);
+  }
+  .attendees-header::before {
+    content: '👥';
+    position: absolute;
+    font-size: 16rem;
+    opacity: 0.05;
+    top: -3rem; right: -2rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 100px;
+    padding: 0.35rem 1rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.7) !important;
+    text-decoration: none !important;
+    transition: all 0.2s;
+    margin-bottom: 1.2rem;
+    display: inline-block;
+  }
+  .back-btn:hover {
+    background: rgba(255,255,255,0.18);
+    color: #fff !important;
+    text-decoration: none !important;
+  }
+  .attendees-header h1 {
+    font-family: 'Boogaloo', cursive;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    color: #fff;
+    margin-bottom: 0.3rem;
+    line-height: 1.2;
+  }
+  .attendees-header h1 em { color: var(--lemon); font-style: normal; }
+  .attendees-header p {
+    color: rgba(255,255,255,0.5);
+    font-weight: 600;
+    font-size: 0.88rem;
+    margin: 0;
+  }
+
+  /* ── MAIN WRAP ── */
+  .attendees-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 3rem 5rem;
+  }
+
+  /* ── STATS ROW ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 2.5rem;
+  }
+  .stat-card {
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 20px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 5px 5px 0 var(--dark);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card:hover {
+    transform: translate(-3px,-3px);
+    box-shadow: 8px 8px 0 var(--dark);
+  }
+  .stat-card::before {
+    content: attr(data-emoji);
+    position: absolute;
+    font-size: 5rem;
+    opacity: 0.06;
+    bottom: -0.5rem; right: 0.5rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .stat-label {
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: rgba(26,16,53,0.4);
+    margin-bottom: 0.4rem;
+  }
+  .stat-value {
+    font-family: 'Boogaloo', cursive;
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 0.2rem;
+  }
+  .stat-sub {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(26,16,53,0.35);
+  }
+  .stat-pink  { border-color: var(--pink) !important; box-shadow: 5px 5px 0 var(--pink) !important; }
+  .stat-pink:hover { box-shadow: 8px 8px 0 var(--pink) !important; }
+  .stat-pink .stat-value { color: var(--pink); }
+  .stat-mint  { border-color: #3dd6a0 !important; box-shadow: 5px 5px 0 #3dd6a0 !important; }
+  .stat-mint:hover { box-shadow: 8px 8px 0 #3dd6a0 !important; }
+  .stat-mint .stat-value { color: #2bbf8a; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.6rem;
+    color: var(--dark);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* ── TABLE CARD ── */
+  .table-card {
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 var(--dark);
+    margin-bottom: 2rem;
+  }
+
+  /* Table */
+  .attendees-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .attendees-table thead tr {
+    background: var(--dark);
+  }
+  .attendees-table thead th {
+    padding: 1rem 1.2rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+    color: var(--lemon);
+    font-weight: 400;
+    text-transform: uppercase;
+    border: none;
+    white-space: nowrap;
+  }
+  .attendees-table tbody tr {
+    border-bottom: 2px solid rgba(26,16,53,0.07);
+    transition: background 0.15s;
+  }
+  .attendees-table tbody tr:last-child {
+    border-bottom: none;
+  }
+  .attendees-table tbody tr:hover {
+    background: var(--bg);
+  }
+  .attendees-table tbody td {
+    padding: 0.9rem 1.2rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--dark);
+    vertical-align: middle;
+  }
+
+  /* Row number badge */
+  .row-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    background: var(--bg);
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.75rem;
+    color: var(--dark);
+    box-shadow: 1px 1px 0 var(--dark);
+  }
+
+  /* Username badge */
+  .user-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #fff;
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.2rem 0.8rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.82rem;
+    color: var(--dark);
+    box-shadow: 2px 2px 0 var(--dark);
+  }
+
+  /* Ticket type badge */
+  .ticket-badge {
+    display: inline-block;
+    padding: 0.2rem 0.8rem;
+    border-radius: 100px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.75rem;
+    border: 2px solid var(--dark);
+    box-shadow: 2px 2px 0 var(--dark);
+  }
+  .badge-vip     { background: var(--lavender); color: #fff; }
+  .badge-regular { background: var(--lemon);    color: var(--dark); }
+
+  /* Date badge */
+  .date-badge {
+    display: inline-block;
+    background: var(--bg);
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.2rem 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: rgba(26,16,53,0.6);
+    box-shadow: 1px 1px 0 var(--dark);
+  }
+
+  /* Empty state */
+  .empty-row td {
+    text-align: center;
+    padding: 3rem !important;
+  }
+  .empty-emoji-big { font-size: 3rem; display: block; margin-bottom: 0.5rem; }
+  .empty-msg {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: rgba(26,16,53,0.4);
+  }
+
+  /* Back button bottom */
+  .btn-back-bottom {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.65rem 1.5rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.95rem;
+    color: var(--dark) !important;
+    text-decoration: none !important;
+    box-shadow: 4px 4px 0 var(--dark);
+    transition: all 0.2s;
+  }
+  .btn-back-bottom:hover {
+    transform: translate(-2px,-2px);
+    box-shadow: 6px 6px 0 var(--dark);
+    text-decoration: none !important;
+    color: var(--dark) !important;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .attendees-wrap { padding: 2rem 1rem 4rem; }
+    .attendees-header { padding: 2rem 1.5rem; }
+    .attendees-table thead th,
+    .attendees-table tbody td { padding: 0.7rem 0.8rem; }
+    .table-card { overflow-x: auto; }
+  }
+</style>
+
+<!-- ══ HEADER ══ -->
+<div class="attendees-header">
+  <a href="{% url 'event_detail' event.id %}" class="back-btn">
+    ← Back to Event
+  </a>
+  <h1>👥 <em>{{ event.title }}</em></h1>
+  <p>Attendees & booking details</p>
 </div>
+
+<div class="attendees-wrap">
+
+  <!-- ══ STATS ══ -->
+  <div class="stats-row">
+    <div class="stat-card stat-pink" data-emoji="🎟️">
+      <div class="stat-label">Total Bookings</div>
+      <div class="stat-value">{{ bookings|length }}</div>
+      <div class="stat-sub">People attending</div>
+    </div>
+    <div class="stat-card stat-mint" data-emoji="💰">
+      <div class="stat-label">Total Revenue</div>
+      <div class="stat-value">₹{{ total_revenue }}</div>
+      <div class="stat-sub">Collected so far</div>
+    </div>
+  </div>
+
+  <!-- ══ TABLE ══ -->
+  <div class="section-title">🎟️ Attendee List</div>
+  <div class="table-card">
+    <table class="attendees-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>👤 User</th>
+          <th>🎫 Ticket Type</th>
+          <th>💰 Price</th>
+          <th>🕐 Booked At</th>
+          <th>✅ Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for booking in bookings %}
+        <tr>
+          <td><span class="row-num">{{ forloop.counter }}</span></td>
+          <td>
+            <span class="user-badge">
+              👤 {{ booking.user.username }}
+            </span>
+          </td>
+          <td>
+            <span class="ticket-badge
+              {% if booking.ticket_type == 'VIP' %}badge-vip
+              {% else %}badge-regular{% endif %}">
+              {% if booking.ticket_type == 'VIP' %}👑{% else %}🎟️{% endif %}
+              {{ booking.ticket_type }}
+            </span>
+          </td>
+          <td>
+            <span style="font-family:'Fredoka One',cursive;color:var(--pink)">
+              ₹{{ booking.price }}
+            </span>
+          </td>
+          <td>
+            <span class="date-badge">
+              {{ booking.booked_at|date:"M d, Y · g A" }}
+            </span>
+          </td>
+          <td>
+            {% if booking.is_used %}
+              <span class="ticket-badge"
+                style="background:rgba(26,16,53,0.1);color:rgba(26,16,53,0.5)">
+                ✓ Used
+              </span>
+            {% else %}
+              <span class="ticket-badge"
+                style="background:var(--mint);color:var(--dark)">
+                ● Valid
+              </span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row">
+          <td colspan="6">
+            <span class="empty-emoji-big">🎪</span>
+            <span class="empty-msg">No attendees yet!</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Back button -->
+  <a href="{% url 'event_detail' event.id %}" class="btn-back-bottom">
+    ← Back to Event
+  </a>
+
 </div>
-</div>
-
-<div class="col-md-6">
-<div class="card shadow-sm text-center">
-<div class="card-body">
-<h5>Total Revenue</h5>
-<h3>₹{{ total_revenue }}</h3>
-</div>
-</div>
-</div>
-
-</div>
-
-
-<!-- Attendees Table -->
-<div class="card shadow-sm">
-
-<div class="card-body">
-
-<table class="table table-striped table-hover">
-
-<thead class="table-dark">
-<tr>
-<th>#</th>
-<th>User</th>
-<th>Ticket Type</th>
-<th>Booked At</th>
-</tr>
-</thead>
-
-<tbody>
-
-{% for booking in bookings %}
-
-<tr>
-<td>{{ forloop.counter }}</td>
-<td>{{ booking.user.username }}</td>
-<td>{{ booking.ticket_type }}</td>
-<td>{{ booking.booked_at }}</td>
-</tr>
-
-{% empty %}
-
-<tr>
-<td colspan="4" class="text-center">
-No attendees yet.
-</td>
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-
-<a href="{% url 'event_detail' event.id %}" class="btn btn-secondary mt-3">
-← Back to Event
-</a>
 
 {% endblock %}

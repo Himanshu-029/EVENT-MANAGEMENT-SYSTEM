@@ -1,0 +1,122 @@
+{% extends 'events/base.html' %}
+{% block content %}
+<style>
+  body { background: #fff0fa !important; background-image: none !important; }
+  body::before { display: none !important; }
+  .container.mt-5 { margin-top: 0 !important; max-width: 100% !important; padding: 0 !important; }
+  :root { --pink: #ff6eb4; --sky: #74c7f5; --mint: #5ee7bf; --lemon: #ffe566; --lavender: #c084fc; --bg: #fff0fa; --dark: #1a1035; }
+  .otp-page { min-height: 90vh; display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem; }
+  .otp-card { background: #fff; border: 3px solid var(--dark); border-radius: 28px; overflow: hidden; box-shadow: 8px 8px 0 var(--dark); width: 100%; max-width: 440px; }
+  .otp-banner { padding: 2rem; text-align: center; border-bottom: 3px solid var(--dark); }
+  .otp-banner h2 { font-family: 'Boogaloo', cursive; font-size: 2rem; color: var(--dark); margin: 0.5rem 0 0.2rem; }
+  .otp-banner p { color: rgba(26,16,53,0.6); font-size: 0.85rem; font-weight: 600; margin: 0; }
+  .otp-body { padding: 2rem; }
+  .email-badge { background: var(--lemon); border: 2px solid var(--dark); border-radius: 14px; padding: 0.6rem 1rem; font-family: 'Fredoka One', cursive; font-size: 0.88rem; color: var(--dark); box-shadow: 2px 2px 0 var(--dark); text-align: center; margin-bottom: 1.5rem; }
+  .otp-inputs { display: flex; gap: 0.6rem; justify-content: center; margin-bottom: 1.5rem; }
+  .otp-box { width: 52px; height: 60px; border: 2.5px solid var(--dark); border-radius: 14px; text-align: center; font-family: 'Boogaloo', cursive; font-size: 1.8rem; color: var(--dark); background: var(--bg); box-shadow: 3px 3px 0 var(--dark); outline: none; transition: all 0.2s; }
+  .otp-box:focus { border-color: var(--pink); box-shadow: 4px 4px 0 var(--pink); }
+  .btn-verify { width: 100%; background: var(--pink) !important; color: #fff !important; border: 2.5px solid var(--dark) !important; border-radius: 100px !important; padding: 0.85rem !important; font-family: 'Fredoka One', cursive !important; font-size: 1.1rem !important; cursor: pointer !important; box-shadow: 4px 4px 0 var(--dark) !important; transition: all 0.2s !important; }
+  .btn-verify:hover { transform: translate(-2px,-2px) !important; box-shadow: 6px 6px 0 var(--dark) !important; }
+  .resend-row { text-align: center; margin-top: 1rem; font-size: 0.85rem; font-weight: 700; color: rgba(26,16,53,0.5); }
+  .resend-row a { color: var(--sky) !important; font-weight: 800; text-decoration: none !important; border-bottom: 2px solid var(--sky); }
+  .timer-text { font-size: 0.78rem; color: rgba(26,16,53,0.4); font-weight: 600; margin-top: 0.4rem; }
+  .msg-box { border: 2px solid var(--dark); border-radius: 14px; padding: 0.7rem 1rem; font-family: 'Fredoka One', cursive; font-size: 0.88rem; box-shadow: 2px 2px 0 var(--dark); margin-bottom: 1rem; text-align: center; }
+  .msg-error { background: #ffe4e0; }
+  .msg-success { background: #d4fce8; }
+  #otp-hidden { display: none; }
+</style>
+
+<div class="otp-page">
+  <div class="otp-card">
+    <div class="otp-banner" style="background: {% if otp_type == 'password_reset' %}var(--lavender){% else %}var(--sky){% endif %};">
+      <div style="font-size:3rem">📨</div>
+      <h2>{% if otp_type == 'password_reset' %}Password Reset OTP{% else %}Verify Your Email{% endif %}</h2>
+      <p>We sent a 6-digit OTP to your email</p>
+    </div>
+
+    <div class="otp-body">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="msg-box {% if 'sent' in message.tags or message.tags == 'success' %}msg-success{% else %}msg-error{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="email-badge">
+        📧 OTP sent to: <strong>{{ email }}</strong>
+      </div>
+
+      <form method="post" id="otp-form">
+        {% csrf_token %}
+        <input type="hidden" name="otp" id="otp-hidden">
+
+        <div class="otp-inputs">
+          <input type="text" class="otp-box" maxlength="1" data-index="0" inputmode="numeric">
+          <input type="text" class="otp-box" maxlength="1" data-index="1" inputmode="numeric">
+          <input type="text" class="otp-box" maxlength="1" data-index="2" inputmode="numeric">
+          <input type="text" class="otp-box" maxlength="1" data-index="3" inputmode="numeric">
+          <input type="text" class="otp-box" maxlength="1" data-index="4" inputmode="numeric">
+          <input type="text" class="otp-box" maxlength="1" data-index="5" inputmode="numeric">
+        </div>
+
+        <button type="submit" class="btn-verify">
+          ✅ Verify OTP
+        </button>
+      </form>
+
+      <div class="resend-row">
+        Didn't receive the OTP?
+        <a href="{% url 'resend_otp' %}">Resend OTP</a>
+        <div class="timer-text" id="timer-text">OTP expires in <span id="countdown">10:00</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Auto-advance OTP boxes
+  const boxes = document.querySelectorAll('.otp-box');
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', (e) => {
+      const val = e.target.value.replace(/\D/g, '');
+      e.target.value = val;
+      if (val && i < boxes.length - 1) boxes[i + 1].focus();
+      updateHidden();
+    });
+    box.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !box.value && i > 0) {
+        boxes[i - 1].focus();
+      }
+    });
+    box.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+      paste.split('').forEach((char, idx) => {
+        if (boxes[idx]) boxes[idx].value = char;
+      });
+      updateHidden();
+      boxes[Math.min(paste.length, boxes.length - 1)].focus();
+    });
+  });
+
+  function updateHidden() {
+    document.getElementById('otp-hidden').value = [...boxes].map(b => b.value).join('');
+  }
+
+  // Countdown timer
+  let seconds = 600;
+  const countdown = document.getElementById('countdown');
+  const timer = setInterval(() => {
+    seconds--;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    countdown.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (seconds <= 0) {
+      clearInterval(timer);
+      countdown.textContent = 'Expired';
+      document.getElementById('timer-text').style.color = '#ff6eb4';
+    }
+  }, 1000);
+</script>
+{% endblock %}

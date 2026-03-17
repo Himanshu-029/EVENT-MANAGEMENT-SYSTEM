@@ -2,205 +2,614 @@
 
 {% block content %}
 
-<div class="row">
+<style>
+  body {
+    background: #fff0fa !important;
+    background-image: none !important;
+  }
+  body::before { display: none !important; }
+  .container.mt-5 {
+    margin-top: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
 
-<!-- EVENT DETAILS -->
-<div class="col-md-8">
+  :root {
+    --pink: #ff6eb4;
+    --sky: #74c7f5;
+    --mint: #5ee7bf;
+    --lemon: #ffe566;
+    --lavender: #c084fc;
+    --coral: #ff7f6e;
+    --bg: #fff0fa;
+    --dark: #1a1035;
+  }
 
-<div class="card shadow-sm mb-4">
+  /* ── PAGE WRAPPER ── */
+  .detail-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 3rem 5rem;
+  }
 
-{% if event.image %}
-<img src="{{ event.image.url }}" class="card-img-top">
-{% endif %}
+  /* ── BACK BUTTON ── */
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.45rem 1.2rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.9rem;
+    color: var(--dark) !important;
+    text-decoration: none !important;
+    box-shadow: 3px 3px 0 var(--dark);
+    transition: all 0.2s;
+    margin-bottom: 2rem;
+  }
+  .btn-back:hover {
+    transform: translate(-2px,-2px);
+    box-shadow: 5px 5px 0 var(--dark);
+  }
 
-<div class="card-body">
+  /* ── GRID LAYOUT ── */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 2rem;
+    align-items: start;
+  }
 
-<h2 class="card-title">{{ event.title }}</h2>
+  /* ── MAIN CARD ── */
+  .main-card {
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 var(--dark);
+  }
 
-<span class="badge bg-primary mb-3">
-{{ event.category }}
-</span>
+  .main-card-img {
+    width: 100%;
+    max-height: 380px;
+    object-fit: cover;
+    border-bottom: 2.5px solid var(--dark);
+    display: block;
+  }
 
-<p class="card-text">{{ event.description }}</p>
+  /* No image top */
+  .main-card-top {
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 7rem;
+    border-bottom: 2.5px solid var(--dark);
+  }
+  .top-tech     { background: linear-gradient(135deg, #d4f0ff, #e0f7ff); }
+  .top-music    { background: linear-gradient(135deg, #ffd6ec, #ffe4f8); }
+  .top-sports   { background: linear-gradient(135deg, #d4fce8, #e0fff0); }
+  .top-business { background: linear-gradient(135deg, #fff3cc, #fffae0); }
+  .top-default  { background: linear-gradient(135deg, #f0e0ff, #fce0ff); }
 
-<p><strong>Location:</strong> {{ event.location }}</p>
+  .main-card-body { padding: 2rem; }
 
-<p><strong>Date:</strong> {{ event.date }}</p>
+  .mini-tag {
+    display: inline-block;
+    padding: 0.15rem 0.8rem;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    border: 2px solid var(--dark);
+    margin-bottom: 1rem;
+  }
+  .t-sky    { background: var(--sky);      color: var(--dark); }
+  .t-pink   { background: var(--pink);     color: #fff; }
+  .t-mint   { background: var(--mint);     color: var(--dark); }
+  .t-lemon  { background: var(--lemon);    color: var(--dark); }
+  .t-lav    { background: var(--lavender); color: #fff; }
 
-<p>
-<strong>Countdown:</strong>
-<span id="countdown" class="text-danger"></span>
-</p>
+  .event-title-big {
+    font-family: 'Boogaloo', cursive;
+    font-size: clamp(2rem, 4vw, 3rem);
+    color: var(--dark);
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
 
-<p><strong>Capacity:</strong> {{ event.capacity }}</p>
+  .event-desc {
+    font-size: 0.95rem;
+    color: rgba(26,16,53,0.65);
+    font-weight: 600;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px dashed rgba(26,16,53,0.1);
+  }
 
-<p><strong>Seats Left:</strong> {{ seats_left }}</p>
+  /* Info grid */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .info-item {
+    background: var(--bg);
+    border: 2px solid var(--dark);
+    border-radius: 14px;
+    padding: 0.8rem 1rem;
+    box-shadow: 2px 2px 0 var(--dark);
+  }
+  .info-label {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: rgba(26,16,53,0.45);
+    margin-bottom: 0.2rem;
+  }
+  .info-value {
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.95rem;
+    color: var(--dark);
+  }
 
-<p><strong>Created by:</strong> {{ event.created_by.username }}</p>
+  /* Countdown */
+  .countdown-box {
+    background: var(--dark);
+    border: 2.5px solid var(--dark);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    box-shadow: 4px 4px 0 rgba(26,16,53,0.3);
+  }
+  .countdown-label {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    font-weight: 700;
+  }
+  #countdown {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.6rem;
+    color: var(--lemon);
+    letter-spacing: 2px;
+  }
 
-<!-- SEATS PROGRESS BAR -->
-<div class="progress mt-3">
+  /* Progress bar */
+  .seats-section { margin-bottom: 1.5rem; }
+  .seats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .seats-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.9rem;
+    color: var(--dark);
+  }
+  .seats-count {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.1rem;
+    color: var(--pink);
+  }
+  .progress-y2k {
+    height: 16px;
+    background: rgba(26,16,53,0.08);
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--mint), #3dd6a0);
+    border-radius: 100px;
+    transition: width 0.5s ease;
+  }
 
-<div class="progress-bar bg-success"
-style="width:{% widthratio seats_left event.capacity 100 %}%">
+  /* Organizer controls */
+  .organizer-bar {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    padding: 1.2rem 2rem;
+    background: var(--lemon);
+    border-top: 2px solid var(--dark);
+  }
+  .btn-org {
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 0.85rem !important;
+    padding: 0.4rem 1.2rem !important;
+    cursor: pointer !important;
+    box-shadow: 3px 3px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+  }
+  .btn-org:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 5px 5px 0 var(--dark) !important;
+    text-decoration: none !important;
+  }
+  .btn-edit   { background: var(--lemon) !important; color: var(--dark) !important; }
+  .btn-delete { background: var(--coral) !important; color: #fff !important; }
+  .btn-attend { background: var(--sky) !important;   color: var(--dark) !important; }
 
-{{ seats_left }} seats left
+  /* ── BOOKING PANEL ── */
+  .booking-panel {
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 var(--dark);
+    position: sticky;
+    top: 2rem;
+  }
+  .booking-header {
+    background: var(--dark);
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .booking-header h4 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    color: var(--lemon);
+    margin: 0;
+  }
+  .booking-body { padding: 1.5rem; }
 
+  /* Already booked state */
+  .booked-badge {
+    background: var(--mint);
+    border: 2px solid var(--dark);
+    border-radius: 16px;
+    padding: 0.8rem 1rem;
+    text-align: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: var(--dark);
+    margin-bottom: 1.2rem;
+    box-shadow: 2px 2px 0 var(--dark);
+  }
+
+  .qr-section {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg);
+    border: 2px solid var(--dark);
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    box-shadow: 2px 2px 0 var(--dark);
+  }
+  .qr-label {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: rgba(26,16,53,0.45);
+    margin-bottom: 0.5rem;
+  }
+  .qr-section img {
+    border: 2px solid var(--dark);
+    border-radius: 12px;
+    max-width: 180px;
+  }
+  .booking-id {
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.85rem;
+    color: rgba(26,16,53,0.5);
+    margin-top: 0.5rem;
+  }
+
+  /* Booking form */
+  .ticket-select-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.9rem;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .ticket-options { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.2rem; }
+  .ticket-option {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: var(--bg);
+    border: 2.5px solid var(--dark);
+    border-radius: 14px;
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--dark);
+    transition: all 0.2s;
+  }
+  .ticket-option:hover {
+    transform: translate(-2px,-2px);
+    box-shadow: 4px 4px 0 var(--dark);
+  }
+  .ticket-option input[type="radio"] { accent-color: var(--pink); width: 16px; height: 16px; }
+  .ticket-option-info { flex: 1; }
+  .ticket-type-name { font-family: 'Fredoka One', cursive; font-size: 0.95rem; color: var(--dark); }
+  .ticket-type-price { font-size: 0.75rem; font-weight: 700; color: rgba(26,16,53,0.5); }
+  .ticket-emoji { font-size: 1.5rem; }
+
+  .btn-book-now {
+    width: 100%;
+    background: var(--pink) !important;
+    color: #fff !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.8rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.1rem !important;
+    cursor: pointer !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+  }
+  .btn-book-now:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 6px 6px 0 var(--dark) !important;
+  }
+
+  .btn-cancel {
+    width: 100%;
+    background: var(--coral) !important;
+    color: #fff !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.6rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+    box-shadow: 3px 3px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+    display: block !important;
+    text-align: center !important;
+    margin-top: 0.8rem !important;
+  }
+  .btn-cancel:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 5px 5px 0 var(--dark) !important;
+  }
+
+  /* Alert boxes */
+  .alert-y2k {
+    border: 2px solid var(--dark);
+    border-radius: 14px;
+    padding: 0.8rem 1rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.9rem;
+    box-shadow: 2px 2px 0 var(--dark);
+    text-align: center;
+  }
+  .alert-full    { background: #ffe4e0; color: var(--dark); }
+  .alert-login   { background: var(--lemon); color: var(--dark); }
+  .alert-login a { color: var(--pink) !important; font-weight: 800; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .booking-panel { position: static; }
+    .detail-page { padding: 2rem 1.5rem 4rem; }
+    .info-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="detail-page">
+
+  <!-- Back button -->
+  <a href="{% url 'event_list' %}" class="btn-back">← Back to Events</a>
+
+  <div class="detail-grid">
+
+    <!-- ══ LEFT: MAIN EVENT CARD ══ -->
+    <div>
+      <div class="main-card">
+
+        <!-- Image or emoji top -->
+        {% if event.image %}
+          <img src="{{ event.image.url }}" class="main-card-img" alt="{{ event.title }}">
+        {% else %}
+          {% if event.category == 'Tech' %}
+            <div class="main-card-top top-tech">💻</div>
+          {% elif event.category == 'Music' %}
+            <div class="main-card-top top-music">🎵</div>
+          {% elif event.category == 'Sports' %}
+            <div class="main-card-top top-sports">⚽</div>
+          {% elif event.category == 'Business' %}
+            <div class="main-card-top top-business">💼</div>
+          {% else %}
+            <div class="main-card-top top-default">🎉</div>
+          {% endif %}
+        {% endif %}
+
+        <div class="main-card-body">
+
+          <!-- Category tag -->
+          {% if event.category == 'Tech' %}
+            <span class="mini-tag t-sky">💻 {{ event.category }}</span>
+          {% elif event.category == 'Music' %}
+            <span class="mini-tag t-pink">🎵 {{ event.category }}</span>
+          {% elif event.category == 'Sports' %}
+            <span class="mini-tag t-mint">⚽ {{ event.category }}</span>
+          {% elif event.category == 'Business' %}
+            <span class="mini-tag t-lemon">💼 {{ event.category }}</span>
+          {% else %}
+            <span class="mini-tag t-lav">🎉 {{ event.category }}</span>
+          {% endif %}
+
+          <div class="event-title-big">{{ event.title }}</div>
+          <div class="event-desc">{{ event.description }}</div>
+
+          <!-- Info grid -->
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">📍 Location</div>
+              <div class="info-value">{{ event.location }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">📅 Date & Time</div>
+              <div class="info-value">{{ event.date|date:"M d, Y · g A" }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">👥 Total Capacity</div>
+              <div class="info-value">{{ event.capacity }}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">🎟️ Seats Left</div>
+              <div class="info-value" style="color:var(--pink)">{{ seats_left }}</div>
+            </div>
+            <div class="info-item" style="grid-column: span 2">
+              <div class="info-label">👤 Organizer</div>
+              <div class="info-value">{{ event.created_by.username }}</div>
+            </div>
+          </div>
+
+          <!-- Countdown -->
+          <div class="countdown-box">
+            <div>
+              <div class="countdown-label">⏳ Event Countdown</div>
+              <div id="countdown">Loading...</div>
+            </div>
+            <div style="font-size:2.5rem">🚀</div>
+          </div>
+
+          <!-- Seats progress bar -->
+          <div class="seats-section">
+            <div class="seats-header">
+              <span class="seats-label">Seats Available</span>
+              <span class="seats-count">{{ seats_left }} / {{ event.capacity }}</span>
+            </div>
+            <div class="progress-y2k">
+              <div class="progress-fill"
+                style="width: {% widthratio seats_left event.capacity 100 %}%">
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Organizer controls -->
+        {% if user == event.created_by or user.is_superuser %}
+          <div class="organizer-bar">
+            <a href="{% url 'edit_event' event.id %}" class="btn-org btn-edit">✏️ Edit Event</a>
+            <a href="{% url 'delete_event' event.id %}" class="btn-org btn-delete">🗑️ Delete</a>
+            <a href="{% url 'event_attendees' event.id %}" class="btn-org btn-attend">👥 Attendees</a>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+    <!-- ══ RIGHT: BOOKING PANEL ══ -->
+    <div>
+      <div class="booking-panel">
+
+        <div class="booking-header">
+          <h4>🎟️ Book Your Ticket</h4>
+        </div>
+
+        <div class="booking-body">
+
+          {% if user.is_authenticated %}
+
+            {% if user_booked %}
+              <!-- Already booked -->
+              <div class="booked-badge">✅ You're going!</div>
+
+              {% for booking in event.booking_set.all %}
+                {% if booking.user == user %}
+                  <div class="qr-section">
+                    <div class="qr-label">Your QR Code</div>
+                    <img src="{{ booking.qr_code.url }}" alt="QR Code">
+                    <div class="booking-id">Booking #{{ booking.id }} · {{ booking.ticket_type }}</div>
+                  </div>
+                  <a href="{% url 'cancel_booking' booking.id %}" class="btn-cancel">
+                    ❌ Cancel Booking
+                  </a>
+                {% endif %}
+              {% endfor %}
+
+            {% elif seats_left > 0 %}
+              <!-- Booking form -->
+              <form method="post" action="{% url 'book_event' event.id %}">
+                {% csrf_token %}
+
+                <span class="ticket-select-label">🎫 Choose your ticket:</span>
+
+                <div class="ticket-options">
+                  <label class="ticket-option">
+                    <input type="radio" name="ticket_type" value="Regular" checked>
+                    <span class="ticket-emoji">🎟️</span>
+                    <div class="ticket-option-info">
+                      <div class="ticket-type-name">Regular</div>
+                      <div class="ticket-type-price">₹500 per ticket</div>
+                    </div>
+                  </label>
+                  <label class="ticket-option">
+                    <input type="radio" name="ticket_type" value="VIP">
+                    <span class="ticket-emoji">👑</span>
+                    <div class="ticket-option-info">
+                      <div class="ticket-type-name">VIP</div>
+                      <div class="ticket-type-price">₹1000 per ticket</div>
+                    </div>
+                  </label>
+                </div>
+
+                <button type="submit" class="btn-book-now">
+                  🚀 Book Now!
+                </button>
+
+              </form>
+
+            {% else %}
+              <div class="alert-y2k alert-full">😔 Event is Full!</div>
+            {% endif %}
+
+          {% else %}
+            <div class="alert-y2k alert-login">
+              <a href="/accounts/login/">🔑 Login</a> to book this event!
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
-
-</div>
-
-</div>
-</div>
-
-
-<!-- ORGANIZER CONTROLS -->
-{% if user == event.created_by or user.is_superuser %}
-
-<div class="mb-4">
-
-<a href="{% url 'edit_event' event.id %}" class="btn btn-warning">
-Edit
-</a>
-
-<a href="{% url 'delete_event' event.id %}" class="btn btn-danger">
-Delete
-</a>
-
-<a href="{% url 'event_attendees' event.id %}" class="btn btn-info">
-View Attendees
-</a>
-
-</div>
-
-{% endif %}
-
-</div>
-
-
-
-<!-- BOOKING PANEL -->
-<div class="col-md-4">
-
-<div class="card shadow-sm">
-
-<div class="card-body">
-
-<h4 class="card-title mb-3">Event Booking</h4>
-
-{% if user.is_authenticated %}
-
-{% if user_booked %}
-
-<div class="alert alert-success">
-You have already booked this event.
-</div>
-
-{% for booking in event.booking_set.all %}
-{% if booking.user == user %}
-
-<div class="text-center">
-
-<p><strong>Booking ID:</strong> {{ booking.id }}</p>
-
-<img src="{{ booking.qr_code.url }}" width="200" class="mb-3">
-
-<br>
-
-<a href="{% url 'cancel_booking' booking.id %}" class="btn btn-danger">
-Cancel Booking
-</a>
-
-</div>
-
-{% endif %}
-{% endfor %}
-
-{% elif seats_left > 0 %}
-
-<form method="post" action="{% url 'book_event' event.id %}">
-{% csrf_token %}
-
-<div class="mb-3">
-
-<label class="form-label">Select Ticket Type</label>
-
-<select name="ticket_type" class="form-select">
-
-<option value="Regular">Regular - ₹500</option>
-
-<option value="VIP">VIP - ₹1000</option>
-
-</select>
-
-</div>
-
-<button type="submit" class="btn btn-success w-100">
-Book Now
-</button>
-
-</form>
-
-{% else %}
-
-<div class="alert alert-danger">
-Event Full
-</div>
-
-{% endif %}
-
-{% else %}
-
-<div class="alert alert-warning">
-<a href="/accounts/login/">Login</a> to book this event.
-</div>
-
-{% endif %}
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<a href="/" class="btn btn-secondary mt-3">
-← Back to Events
-</a>
-
-
 
 <!-- COUNTDOWN SCRIPT -->
-
 <script>
-
-const eventDate = new Date("{{ event.date|date:'Y-m-d H:i:s' }}").getTime();
-
-const timer = setInterval(function(){
-
-const now = new Date().getTime();
-
-const distance = eventDate - now;
-
-if(distance < 0){
-document.getElementById("countdown").innerHTML = "Event Started";
-clearInterval(timer);
-return;
-}
-
-const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-
-const hours = Math.floor((distance % (1000*60*60*24)) / (1000*60*60));
-
-const minutes = Math.floor((distance % (1000*60*60)) / (1000*60));
-
-document.getElementById("countdown").innerHTML =
-days + "d " + hours + "h " + minutes + "m";
-
-},1000);
-
+  const eventDate = new Date("{{ event.date|date:'Y-m-d H:i:s' }}").getTime();
+  const timer = setInterval(function(){
+    const now = new Date().getTime();
+    const distance = eventDate - now;
+    if(distance < 0){
+      document.getElementById("countdown").innerHTML = "🎉 Event Started!";
+      clearInterval(timer);
+      return;
+    }
+    const days    = Math.floor(distance / (1000*60*60*24));
+    const hours   = Math.floor((distance % (1000*60*60*24)) / (1000*60*60));
+    const minutes = Math.floor((distance % (1000*60*60)) / (1000*60));
+    const seconds = Math.floor((distance % (1000*60)) / 1000);
+    document.getElementById("countdown").innerHTML =
+      days + "d " + hours + "h " + minutes + "m " + seconds + "s";
+  }, 1000);
 </script>
 
 {% endblock %}

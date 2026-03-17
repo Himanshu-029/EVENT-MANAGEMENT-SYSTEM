@@ -2,125 +2,247 @@
 
 {% block content %}
 
-<!-- HERO SECTION -->
+<style>
+body { background: #fff0fa !important; background-image: none !important; }
+body::before { display: none !important; }
+.container.mt-5 { margin-top: 0 !important; max-width: 100% !important; padding: 0 !important; }
+:root { --pink: #ff6eb4; --sky: #74c7f5; --mint: #5ee7bf; --lemon: #ffe566; --lavender: #c084fc; --bg: #fff0fa; --dark: #1a1035; }
+.y2k-hero { background: var(--bg); padding: 4rem 3rem 3rem; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 3rem; max-width: 1200px; margin: 0 auto; position: relative; }
+.hero-badge { display: inline-flex; align-items: center; background: var(--lemon); border: 2px solid var(--dark); border-radius: 100px; padding: 0.3rem 1rem; font-weight: 800; font-size: 0.82rem; margin-bottom: 1.5rem; box-shadow: 2px 2px 0 var(--dark); }
+.hero-text h1 { font-family: 'Boogaloo', cursive; font-size: clamp(3rem, 6vw, 5rem); line-height: 1.05; color: var(--dark); margin-bottom: 1rem; }
+.hero-text h1 .pink { color: var(--pink); }
+.hero-text h1 .blue { color: #4fa8d8; }
+.hero-text p { font-size: 1rem; color: rgba(26,16,53,0.65); font-weight: 600; line-height: 1.7; margin-bottom: 2rem; max-width: 420px; }
+.hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn-pop { border: 3px solid var(--dark) !important; border-radius: 100px !important; font-family: 'Fredoka One', cursive !important; font-size: 1rem !important; padding: 0.65rem 1.8rem !important; cursor: pointer !important; box-shadow: 4px 4px 0 var(--dark) !important; transition: all 0.2s !important; text-decoration: none !important; display: inline-block !important; line-height: 1.2 !important; }
+.btn-pop:hover { transform: translate(-2px,-2px) !important; box-shadow: 6px 6px 0 var(--dark) !important; text-decoration: none !important; }
+.btn-pop.pink { background: var(--pink) !important; color: #fff !important; }
+.btn-pop.white { background: #fff !important; color: var(--dark) !important; }
+.hero-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.mini-card { background: #fff; border: 2.5px solid var(--dark); border-radius: 18px; padding: 1rem; box-shadow: 4px 4px 0 var(--dark); transition: all 0.2s; cursor: pointer; }
+.mini-card:hover { transform: translate(-3px,-3px); box-shadow: 7px 7px 0 var(--dark); }
+.mini-card.featured { grid-column: span 2; display: flex; gap: 1rem; align-items: center; }
+.mini-emoji { font-size: 2.2rem; }
+.mini-tag { display: inline-block; padding: 0.12rem 0.6rem; border-radius: 100px; font-size: 0.65rem; font-weight: 800; border: 2px solid var(--dark); margin-bottom: 0.3rem; }
+.t-pink { background: var(--pink); color: #fff; }
+.t-sky { background: var(--sky); color: var(--dark); }
+.t-mint { background: var(--mint); color: var(--dark); }
+.t-lemon { background: var(--lemon); color: var(--dark); }
+.t-lav { background: var(--lavender); color: #fff; }
+.mini-title { font-family: 'Fredoka One', cursive; font-size: 0.92rem; color: var(--dark); }
+.mini-meta { font-size: 0.72rem; color: rgba(26,16,53,0.55); font-weight: 700; margin-top: 0.15rem; }
+.stats-bar { background: var(--dark); display: flex; justify-content: center; border-top: 3px solid var(--dark); border-bottom: 3px solid var(--dark); flex-wrap: wrap; }
+.stat-item { flex: 1; min-width: 150px; padding: 1.5rem 1rem; text-align: center; border-right: 1px solid rgba(255,255,255,0.08); }
+.stat-item:last-child { border-right: none; }
+.stat-num { font-family: 'Boogaloo', cursive; font-size: 2.5rem; line-height: 1; color: var(--lemon); }
+.stat-lbl { font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.5); font-weight: 700; margin-top: 0.2rem; }
+.search-section { background: var(--sky); border-bottom: 3px solid var(--dark); padding: 2.5rem 3rem; }
+.search-section h3 { font-family: 'Fredoka One', cursive; font-size: 1.4rem; color: var(--dark); margin-bottom: 1rem; }
+.search-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; max-width: 900px; }
+.search-row input { flex: 1; min-width: 200px; background: #fff !important; border: 3px solid var(--dark) !important; border-radius: 100px !important; padding: 0.65rem 1.5rem !important; font-size: 0.95rem !important; font-weight: 700 !important; outline: none !important; box-shadow: 3px 3px 0 var(--dark) !important; color: var(--dark) !important; }
+.search-row select { background: #fff !important; border: 3px solid var(--dark) !important; border-radius: 100px !important; padding: 0.65rem 1.2rem !important; font-size: 0.9rem !important; font-weight: 700 !important; cursor: pointer !important; outline: none !important; box-shadow: 3px 3px 0 var(--dark) !important; color: var(--dark) !important; }
+.btn-search { background: var(--pink) !important; color: #fff !important; border: 3px solid var(--dark) !important; border-radius: 100px !important; padding: 0.65rem 2rem !important; font-size: 1rem !important; cursor: pointer !important; box-shadow: 3px 3px 0 var(--dark) !important; transition: all 0.2s !important; font-weight: 700; }
+.btn-search:hover { transform: translate(-2px,-2px) !important; box-shadow: 5px 5px 0 var(--dark) !important; }
+.cats-section { padding: 2.5rem 3rem 1rem; max-width: 1200px; margin: 0 auto; }
+.cats-section h3 { font-family: 'Boogaloo', cursive; font-size: 1.8rem; color: var(--dark); margin-bottom: 0.3rem; }
+.cats-section p { color: rgba(26,16,53,0.55); font-weight: 600; margin-bottom: 1.2rem; font-size: 0.9rem; }
+.cats-pills { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+.cat-pill { display: flex; align-items: center; gap: 0.4rem; background: #fff; border: 2.5px solid var(--dark); border-radius: 100px; padding: 0.5rem 1.2rem; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 3px 3px 0 var(--dark); transition: all 0.2s; text-decoration: none; color: var(--dark); }
+.cat-pill:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--dark); text-decoration: none; color: var(--dark); }
+.cat-pill.active { background: var(--pink); color: #fff !important; }
+.events-section { padding: 1.5rem 3rem 4rem; max-width: 1200px; margin: 0 auto; }
+.events-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1.5rem; }
+.events-header h2 { font-family: 'Boogaloo', cursive; font-size: 2.2rem; color: var(--dark); }
+.see-all { color: var(--pink) !important; font-weight: 800; text-decoration: none !important; font-size: 0.9rem; border-bottom: 2px solid var(--pink); }
+.events-grid-y2k { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+.event-card-y2k { background: #fff; border: 2.5px solid var(--dark); border-radius: 20px; overflow: hidden; box-shadow: 5px 5px 0 var(--dark); transition: all 0.2s; }
+.event-card-y2k:hover { transform: translate(-4px,-4px); box-shadow: 9px 9px 0 var(--dark); }
+.card-top { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 4rem; border-bottom: 2px solid var(--dark); }
+.top-tech { background: linear-gradient(135deg, #d4f0ff, #e0f7ff); }
+.top-music { background: linear-gradient(135deg, #ffd6ec, #ffe4f8); }
+.top-sports { background: linear-gradient(135deg, #d4fce8, #e0fff0); }
+.top-business { background: linear-gradient(135deg, #fff3cc, #fffae0); }
+.top-default { background: linear-gradient(135deg, #f0e0ff, #fce0ff); }
+.card-body-y2k { padding: 1.1rem; }
+.card-title-y2k { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--dark); margin-bottom: 0.5rem; }
+.card-title-y2k a { color: var(--dark) !important; text-decoration: none !important; }
+.card-title-y2k a:hover { color: var(--pink) !important; }
+.card-desc { font-size: 0.82rem; color: rgba(26,16,53,0.6); font-weight: 600; line-height: 1.5; margin-bottom: 0.7rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-meta { font-size: 0.78rem; color: rgba(26,16,53,0.55); font-weight: 700; line-height: 1.8; margin-bottom: 0.8rem; }
+.card-meta b { color: var(--dark); }
+.card-footer-y2k { display: flex; justify-content: space-between; align-items: center; padding-top: 0.8rem; border-top: 2px dashed rgba(26,16,53,0.12); }
+.btn-view-pop { background: var(--pink) !important; color: #fff !important; border: 2px solid var(--dark) !important; border-radius: 100px !important; padding: 0.35rem 1rem !important; font-family: 'Fredoka One', cursive !important; font-size: 0.82rem !important; cursor: pointer !important; box-shadow: 2px 2px 0 var(--dark) !important; transition: all 0.2s !important; text-decoration: none !important; display: inline-block !important; }
+.btn-view-pop:hover { transform: translate(-1px,-1px) !important; box-shadow: 3px 3px 0 var(--dark) !important; }
+.empty-state { text-align: center; padding: 4rem 2rem; grid-column: 1 / -1; }
+.empty-state h3 { font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: var(--dark); margin-bottom: 0.5rem; }
+.empty-state p { color: rgba(26,16,53,0.55); font-weight: 600; }
+.cta-section { background: var(--lemon); border-top: 3px solid var(--dark); border-bottom: 3px solid var(--dark); padding: 4rem 3rem; text-align: center; }
+.cta-section h2 { font-family: 'Boogaloo', cursive; font-size: clamp(2rem, 5vw, 3.5rem); color: var(--dark); margin-bottom: 0.5rem; }
+.cta-section p { color: rgba(26,16,53,0.65); font-weight: 700; font-size: 1rem; margin-bottom: 2rem; }
+.cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.y2k-footer { background: var(--dark); color: rgba(255,255,255,0.5); padding: 2.5rem 3rem; text-align: center; font-size: 0.85rem; font-weight: 700; }
+.y2k-footer .footer-logo { font-family: 'Fredoka One', cursive; font-size: 1.6rem; color: #fff; margin-bottom: 0.4rem; }
+.y2k-footer .footer-logo em { color: var(--pink); font-style: normal; }
+@media (max-width: 768px) {
+  .y2k-hero { grid-template-columns: 1fr; padding: 2rem 1.5rem; }
+  .hero-cards { display: none; }
+  .search-section, .cats-section, .events-section { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .search-row { flex-direction: column; }
+}
+</style>
 
-<div class="hero-box mb-5">
-
-```
-<h1>Discover Amazing Events</h1>
-
-<p>
-    Book tickets, manage events, and explore experiences.
-</p>
-```
-
+<div class="y2k-hero">
+  <div class="hero-text">
+    <div class="hero-badge">{{ events|length }}+ Events Live Now!</div>
+    <h1>
+      Find Your<br>
+      <span class="pink">Next</span><br>
+      <span class="blue">Adventure!</span>
+    </h1>
+    <p>Book tickets, manage events, and explore experiences across India and beyond. Your vibe, your event.</p>
+    <div class="hero-btns">
+      <a href="{% url 'event_list' %}" class="btn-pop pink">Explore Events</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'create_event' %}" class="btn-pop white">+ Host an Event</a>
+      {% else %}
+        <a href="/accounts/login/" class="btn-pop white">Sign In</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="hero-cards">
+    {% for event in events|slice:":5" %}
+      {% if forloop.first %}
+        <div class="mini-card featured">
+          <div class="mini-emoji">
+            {% if event.category == 'Tech' %}💻{% endif %}
+            {% if event.category == 'Music' %}🎵{% endif %}
+            {% if event.category == 'Sports' %}⚽{% endif %}
+            {% if event.category == 'Business' %}💼{% endif %}
+          </div>
+          <div>
+            <span class="mini-tag t-pink">Featured</span>
+            <div class="mini-title">{{ event.title }}</div>
+            <div class="mini-meta">{{ event.location }} - {{ event.date|date:"M d, Y" }}</div>
+          </div>
+        </div>
+      {% else %}
+        <div class="mini-card" onclick="window.location='{% url 'event_detail' event.id %}'">
+          <div class="mini-emoji">
+            {% if event.category == 'Tech' %}💻{% endif %}
+            {% if event.category == 'Music' %}🎵{% endif %}
+            {% if event.category == 'Sports' %}⚽{% endif %}
+            {% if event.category == 'Business' %}💼{% endif %}
+          </div>
+          <div>
+            <span class="mini-tag {% if event.category == 'Tech' %}t-sky{% elif event.category == 'Music' %}t-pink{% elif event.category == 'Sports' %}t-mint{% elif event.category == 'Business' %}t-lemon{% else %}t-lav{% endif %}">{{ event.category }}</span>
+            <div class="mini-title">{{ event.title|truncatechars:22 }}</div>
+            <div class="mini-meta">{{ event.location }}</div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
 </div>
 
-<!-- EVENTS SECTION -->
-
-<h2 class="text-light mb-4">All Events</h2>
-
-<!-- SEARCH + FILTER -->
-
-<form method="get" class="row mb-4">
-
-```
-<div class="col-md-5">
-    <input 
-        type="text"
-        name="q"
-        class="form-control"
-        placeholder="Search by title"
-    >
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-num">{{ events|length }}+</div><div class="stat-lbl">Events Live</div></div>
+  <div class="stat-item"><div class="stat-num">500K</div><div class="stat-lbl">Tickets Sold</div></div>
+  <div class="stat-item"><div class="stat-num">80+</div><div class="stat-lbl">Cities</div></div>
+  <div class="stat-item"><div class="stat-num">4</div><div class="stat-lbl">Categories</div></div>
 </div>
 
-<div class="col-md-4">
-    <select name="category" class="form-select">
-
-        <option value="">Categories</option>
-
-        <option value="Tech">Tech</option>
-
-        <option value="Sports">Sports</option>
-
-        <option value="Music">Music</option>
-
-        <option value="Gaming">Gaming</option>
-
-    </select>
+<div class="search-section">
+  <h3>Search events near you!</h3>
+  <form method="get" action="{% url 'event_list' %}">
+    <div class="search-row">
+      <input type="text" name="q" placeholder="Search by title, artist, city..." value="{{ request.GET.q }}">
+      <select name="category">
+        <option value="">All Categories</option>
+        <option value="Tech" {% if request.GET.category == 'Tech' %}selected{% endif %}>Tech</option>
+        <option value="Music" {% if request.GET.category == 'Music' %}selected{% endif %}>Music</option>
+        <option value="Sports" {% if request.GET.category == 'Sports' %}selected{% endif %}>Sports</option>
+        <option value="Business" {% if request.GET.category == 'Business' %}selected{% endif %}>Business</option>
+      </select>
+      <button type="submit" class="btn-search">Search!</button>
+    </div>
+  </form>
 </div>
 
-<div class="col-md-3">
-    <button class="btn btn-primary w-100">
-        Filter
-    </button>
-</div>
-```
-
-</form>
-
-<!-- EVENT CARDS -->
-
-<div class="row">
-
-{% for event in events %}
-
-<div class="col-md-4 mb-4">
-
-<div class="event-card">
-
-<h4>
-
-<a href="{% url 'event_detail' event.id %}">
-{{ event.title }}
-</a>
-
-</h4>
-
-<span class="badge bg-primary">
-
-{{ event.category }}
-
-</span>
-
-<p class="mt-2">
-
-{{ event.description }}
-
-</p>
-
-<p>
-
-<b>Location:</b> {{ event.location }}
-
-</p>
-
-<p>
-
-<b>Date:</b> {{ event.date }}
-
-</p>
-
-<a
-href="{% url 'event_detail' event.id %}"
-class="btn btn-primary"
-
->
-
-View Details
-
-</a>
-
+<div class="cats-section">
+  <h3>Browse Categories</h3>
+  <p>What are you into?</p>
+  <div class="cats-pills">
+    <a href="{% url 'event_list' %}" class="cat-pill active">All</a>
+    <a href="{% url 'event_list' %}?category=Tech" class="cat-pill">Tech</a>
+    <a href="{% url 'event_list' %}?category=Music" class="cat-pill">Music</a>
+    <a href="{% url 'event_list' %}?category=Sports" class="cat-pill">Sports</a>
+    <a href="{% url 'event_list' %}?category=Business" class="cat-pill">Business</a>
+  </div>
 </div>
 
+<div class="events-section">
+  <div class="events-header">
+    <h2>Trending Events</h2>
+    <a href="{% url 'event_list' %}" class="see-all">See All</a>
+  </div>
+  <div class="events-grid-y2k">
+    {% for event in events|slice:":6" %}
+      <div class="event-card-y2k">
+        {% if event.category == 'Tech' %}<div class="card-top top-tech">💻</div>
+        {% elif event.category == 'Music' %}<div class="card-top top-music">🎵</div>
+        {% elif event.category == 'Sports' %}<div class="card-top top-sports">⚽</div>
+        {% elif event.category == 'Business' %}<div class="card-top top-business">💼</div>
+        {% else %}<div class="card-top top-default">🎉</div>{% endif %}
+        <div class="card-body-y2k">
+          <div style="margin-bottom:0.5rem">
+            {% if event.category == 'Tech' %}<span class="mini-tag t-sky">Tech</span>
+            {% elif event.category == 'Music' %}<span class="mini-tag t-pink">Music</span>
+            {% elif event.category == 'Sports' %}<span class="mini-tag t-mint">Sports</span>
+            {% elif event.category == 'Business' %}<span class="mini-tag t-lemon">Business</span>
+            {% else %}<span class="mini-tag t-lav">Other</span>{% endif %}
+          </div>
+          <div class="card-title-y2k"><a href="{% url 'event_detail' event.id %}">{{ event.title }}</a></div>
+          <div class="card-desc">{{ event.description }}</div>
+          <div class="card-meta">
+            Location: <b>{{ event.location }}</b><br>
+            Date: <b>{{ event.date|date:"M d, Y" }}</b><br>
+            Capacity: <b>{{ event.capacity }}</b>
+          </div>
+          <div class="card-footer-y2k">
+            <span style="font-family:'Fredoka One',cursive;font-size:0.8rem;color:rgba(26,16,53,0.35)">#{{ forloop.counter }}</span>
+            <a href="{% url 'event_detail' event.id %}" class="btn-view-pop">View Event!</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="empty-state">
+        <h3>No events yet!</h3>
+        <p>Be the first to create an amazing event.</p>
+        {% if user.is_authenticated %}
+          <a href="{% url 'create_event' %}" class="btn-pop pink" style="margin-top:1rem">Create Event</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
 </div>
 
-{% empty %}
+<div class="cta-section">
+  <h2>Ready to host?</h2>
+  <p>Join thousands of organizers already selling out their events on EventHub!</p>
+  <div class="cta-btns">
+    {% if user.is_authenticated %}
+      <a href="{% url 'create_event' %}" class="btn-pop pink">Create My Event</a>
+      <a href="{% url 'event_list' %}" class="btn-pop white">Browse Events</a>
+    {% else %}
+      <a href="/accounts/login/" class="btn-pop pink">Get Started Free</a>
+      <a href="{% url 'event_list' %}" class="btn-pop white">Browse Events</a>
+    {% endif %}
+  </div>
+</div>
 
-<p class="text-light">No events available.</p>
-
-{% endfor %}
-
+<div class="y2k-footer">
+  <div class="footer-logo">Event<em>Hub</em></div>
+  <p>2026 EventHub - Made with love for event lovers everywhere</p>
 </div>
 
 {% endblock %}

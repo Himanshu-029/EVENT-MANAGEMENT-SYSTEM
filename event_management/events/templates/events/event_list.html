@@ -2,148 +2,264 @@
 
 {% block content %}
 
-<!-- HERO SECTION -->
+<style>
+  body { background: #fff0fa !important; background-image: none !important; }
+  body::before { display: none !important; }
+  .container.mt-5 { margin-top: 0 !important; max-width: 100% !important; padding: 0 !important; }
 
-<div class="hero-box text-center mb-5">
+  :root {
+    --pink: #ff6eb4; --sky: #74c7f5; --mint: #5ee7bf;
+    --lemon: #ffe566; --lavender: #c084fc; --bg: #fff0fa; --dark: #1a1035;
+  }
 
-    <div class="hero-map"></div>
+  .el-hero {
+    background: linear-gradient(135deg, #fff0fa, #e8f7ff);
+    border-bottom: 3px solid var(--dark);
+    padding: 3.5rem 3rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .el-hero::before {
+    content: '🎉';
+    position: absolute;
+    font-size: 18rem;
+    opacity: 0.04;
+    top: -3rem; right: -2rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .el-hero h1 { font-family: 'Boogaloo', cursive; font-size: clamp(2.5rem, 6vw, 4.5rem); color: var(--dark); margin-bottom: 0.5rem; line-height: 1.1; }
+  .el-hero h1 span { color: var(--pink); }
+  .el-hero p { color: rgba(26,16,53,0.6); font-weight: 600; font-size: 1rem; max-width: 500px; margin: 0 auto; }
 
-    <h1 class="display-5">Discover Amazing Events</h1>
+  .search-bar-wrap { background: var(--sky); border-bottom: 3px solid var(--dark); padding: 2rem 3rem; }
+  .search-bar-inner { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; max-width: 1000px; margin: 0 auto; }
+  .search-bar-inner input[type="text"] { flex: 1; min-width: 200px; background: #fff !important; border: 3px solid var(--dark) !important; border-radius: 100px !important; padding: 0.65rem 1.5rem !important; font-family: 'Nunito', sans-serif !important; font-size: 0.95rem !important; font-weight: 700 !important; outline: none !important; box-shadow: 3px 3px 0 var(--dark) !important; color: var(--dark) !important; }
+  .search-bar-inner select { background: #fff !important; border: 3px solid var(--dark) !important; border-radius: 100px !important; padding: 0.65rem 1.2rem !important; font-family: 'Nunito', sans-serif !important; font-size: 0.9rem !important; font-weight: 700 !important; cursor: pointer !important; outline: none !important; box-shadow: 3px 3px 0 var(--dark) !important; color: var(--dark) !important; min-width: 160px; }
+  .btn-filter { background: var(--pink) !important; color: #fff !important; border: 3px solid var(--dark) !important; border-radius: 100px !important; padding: 0.65rem 2rem !important; font-family: 'Fredoka One', cursive !important; font-size: 1rem !important; cursor: pointer !important; box-shadow: 3px 3px 0 var(--dark) !important; transition: all 0.2s !important; white-space: nowrap; }
+  .btn-filter:hover { transform: translate(-2px,-2px) !important; box-shadow: 5px 5px 0 var(--dark) !important; }
 
-    <p class="lead">
-        Book tickets, manage events, and explore experiences.
-    </p>
+  .cats-wrap { padding: 1.5rem 3rem 0.5rem; max-width: 1200px; margin: 0 auto; }
+  .cats-pills { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+  .cat-pill { display: flex; align-items: center; gap: 0.4rem; background: #fff; border: 2.5px solid var(--dark); border-radius: 100px; padding: 0.45rem 1.1rem; font-weight: 800; font-size: 0.82rem; cursor: pointer; box-shadow: 3px 3px 0 var(--dark); transition: all 0.2s; text-decoration: none !important; color: var(--dark) !important; }
+  .cat-pill:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--dark); color: var(--dark) !important; }
+  .cat-pill.active { background: var(--pink); color: #fff !important; }
 
+  .section-header { display: flex; align-items: baseline; justify-content: space-between; padding: 1.5rem 3rem 1rem; max-width: 1200px; margin: 0 auto; }
+  .section-header h2 { font-family: 'Boogaloo', cursive; font-size: 2rem; color: var(--dark); margin: 0; }
+  .section-header h2 span { color: var(--pink); }
+  .result-count { font-size: 0.82rem; font-weight: 700; color: rgba(26,16,53,0.45); background: #fff; border: 2px solid var(--dark); border-radius: 100px; padding: 0.2rem 0.8rem; box-shadow: 2px 2px 0 var(--dark); }
+
+  .events-wrap { padding: 0 3rem 4rem; max-width: 1200px; margin: 0 auto; }
+  .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+
+  .ev-card { background: #fff; border: 2.5px solid var(--dark); border-radius: 20px; overflow: hidden; box-shadow: 5px 5px 0 var(--dark); transition: all 0.2s; }
+  .ev-card:hover { transform: translate(-4px,-4px); box-shadow: 9px 9px 0 var(--dark); }
+
+  .ev-img { width: 100%; height: 180px; object-fit: cover; border-bottom: 2px solid var(--dark); display: block; }
+
+  .ev-top-nimg { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 4rem; border-bottom: 2px solid var(--dark); }
+  .top-tech     { background: linear-gradient(135deg, #d4f0ff, #e0f7ff); }
+  .top-music    { background: linear-gradient(135deg, #ffd6ec, #ffe4f8); }
+  .top-sports   { background: linear-gradient(135deg, #d4fce8, #e0fff0); }
+  .top-business { background: linear-gradient(135deg, #fff3cc, #fffae0); }
+  .top-default  { background: linear-gradient(135deg, #f0e0ff, #fce0ff); }
+
+  .ev-body { padding: 1.1rem; }
+  .mini-tag { display: inline-block; padding: 0.12rem 0.65rem; border-radius: 100px; font-size: 0.68rem; font-weight: 800; border: 2px solid var(--dark); margin-bottom: 0.5rem; }
+  .t-sky    { background: var(--sky);      color: var(--dark); }
+  .t-pink   { background: var(--pink);     color: #fff; }
+  .t-mint   { background: var(--mint);     color: var(--dark); }
+  .t-lemon  { background: var(--lemon);    color: var(--dark); }
+  .t-lav    { background: var(--lavender); color: #fff; }
+
+  .ev-title { font-family: 'Fredoka One', cursive; font-size: 1.1rem; margin-bottom: 0.4rem; }
+  .ev-title a { color: var(--dark) !important; text-decoration: none !important; }
+  .ev-title a:hover { color: var(--pink) !important; }
+  .ev-desc { font-size: 0.82rem; color: rgba(26,16,53,0.6); font-weight: 600; line-height: 1.5; margin-bottom: 0.7rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ev-meta { font-size: 0.78rem; color: rgba(26,16,53,0.55); font-weight: 700; line-height: 1.9; margin-bottom: 0.8rem; }
+  .ev-meta b { color: var(--dark); }
+  .ev-footer { display: flex; justify-content: flex-end; align-items: center; padding-top: 0.8rem; border-top: 2px dashed rgba(26,16,53,0.12); }
+  .btn-view { background: var(--pink) !important; color: #fff !important; border: 2px solid var(--dark) !important; border-radius: 100px !important; padding: 0.35rem 1.1rem !important; font-family: 'Fredoka One', cursive !important; font-size: 0.82rem !important; cursor: pointer !important; box-shadow: 2px 2px 0 var(--dark) !important; transition: all 0.2s !important; text-decoration: none !important; display: inline-block !important; }
+  .btn-view:hover { transform: translate(-1px,-1px) !important; box-shadow: 4px 4px 0 var(--dark) !important; text-decoration: none !important; }
+
+  .empty-state { text-align: center; padding: 4rem 2rem; grid-column: 1 / -1; }
+  .empty-emoji { font-size: 4rem; margin-bottom: 1rem; }
+  .empty-state h3 { font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: var(--dark); margin-bottom: 0.5rem; }
+  .empty-state p { color: rgba(26,16,53,0.55); font-weight: 600; }
+
+  .pagination-wrap { display: flex; justify-content: center; align-items: center; gap: 0.8rem; padding: 0 3rem 4rem; flex-wrap: wrap; }
+  .page-btn { background: #fff; border: 2.5px solid var(--dark); border-radius: 100px; padding: 0.5rem 1.4rem; font-family: 'Fredoka One', cursive; font-size: 0.9rem; color: var(--dark) !important; text-decoration: none !important; box-shadow: 3px 3px 0 var(--dark); transition: all 0.2s; cursor: pointer; }
+  .page-btn:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--dark); }
+  .page-btn.active { background: var(--pink); color: #fff !important; }
+  .page-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+  @media (max-width: 768px) {
+    .el-hero, .search-bar-wrap { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .cats-wrap, .section-header, .events-wrap { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .search-bar-inner { flex-direction: column; }
+    .search-bar-inner input, .search-bar-inner select, .btn-filter { width: 100%; }
+  }
+</style>
+
+<!-- ══ HERO ══ -->
+<div class="el-hero">
+  <h1>Discover <span>Amazing</span> Events!</h1>
+  <p>Book tickets, manage events, and explore experiences. 🎟️</p>
 </div>
 
-
-
-<!-- ALL EVENTS -->
-
-<h2 class="mb-4 text-dark">All Events</h2>
-
-
-
-<!-- SEARCH + FILTER -->
-
-<form method="get" class="row g-3 mb-4">
-
-<div class="col-md-5">
-<input type="text" name="q" class="form-control" placeholder="Search by title">
+<!-- ══ SEARCH BAR ══ -->
+<div class="search-bar-wrap">
+  <form method="get">
+    <div class="search-bar-inner">
+      <input
+        type="text"
+        name="q"
+        placeholder="🔍 Search by title, artist, city..."
+        value="{{ query }}"
+      >
+      <select name="category">
+        <option value="">All Categories</option>
+        <option value="Tech"
+          {% if selected_category == 'Tech' %}selected{% endif %}>
+          💻 Tech
+        </option>
+        <option value="Music"
+          {% if selected_category == 'Music' %}selected{% endif %}>
+          🎵 Music
+        </option>
+        <option value="Sports"
+          {% if selected_category == 'Sports' %}selected{% endif %}>
+          ⚽ Sports
+        </option>
+        <option value="Business"
+          {% if selected_category == 'Business' %}selected{% endif %}>
+          💼 Business
+        </option>
+      </select>
+      <button type="submit" class="btn-filter">Filter! 🎯</button>
+    </div>
+  </form>
 </div>
 
-<div class="col-md-5">
-<select name="category" class="form-select">
-
-<option value="">Categories</option>
-<option value="Tech">Tech</option>
-<option value="Music">Music</option>
-<option value="Sports">Sports</option>
-<option value="Business">Business</option>
-
-</select>
+<!-- ══ CATEGORY PILLS ══ -->
+<div class="cats-wrap">
+  <div class="cats-pills">
+    <a href="{% url 'event_list' %}{% if query %}?q={{ query }}{% endif %}"
+      class="cat-pill {% if not selected_category %}active{% endif %}">
+      🌟 All
+    </a>
+    <a href="?category=Tech{% if query %}&q={{ query }}{% endif %}"
+      class="cat-pill {% if selected_category == 'Tech' %}active{% endif %}">
+      💻 Tech
+    </a>
+    <a href="?category=Music{% if query %}&q={{ query }}{% endif %}"
+      class="cat-pill {% if selected_category == 'Music' %}active{% endif %}">
+      🎵 Music
+    </a>
+    <a href="?category=Sports{% if query %}&q={{ query }}{% endif %}"
+      class="cat-pill {% if selected_category == 'Sports' %}active{% endif %}">
+      ⚽ Sports
+    </a>
+    <a href="?category=Business{% if query %}&q={{ query }}{% endif %}"
+      class="cat-pill {% if selected_category == 'Business' %}active{% endif %}">
+      💼 Business
+    </a>
+  </div>
 </div>
 
-<div class="col-md-2">
-<button type="submit" class="btn btn-primary w-100">
-Filter
-</button>
+<!-- ══ SECTION HEADER ══ -->
+<div class="section-header">
+  <h2>All <span>Events</span> 🔥</h2>
+  <span class="result-count">
+    {{ page_obj.paginator.count }} events found
+  </span>
 </div>
 
-</form>
+<!-- ══ EVENTS GRID ══ -->
+<div class="events-wrap">
+  <div class="events-grid">
 
+    {% for event in page_obj %}
+    <div class="ev-card">
 
+      {% if event.image %}
+        <img src="{{ event.image.url }}" class="ev-img" alt="{{ event.title }}">
+      {% else %}
+        {% if event.category == 'Tech' %}
+          <div class="ev-top-nimg top-tech">💻</div>
+        {% elif event.category == 'Music' %}
+          <div class="ev-top-nimg top-music">🎵</div>
+        {% elif event.category == 'Sports' %}
+          <div class="ev-top-nimg top-sports">⚽</div>
+        {% elif event.category == 'Business' %}
+          <div class="ev-top-nimg top-business">💼</div>
+        {% else %}
+          <div class="ev-top-nimg top-default">🎉</div>
+        {% endif %}
+      {% endif %}
 
-<!-- EVENT CARDS -->
+      <div class="ev-body">
+        {% if event.category == 'Tech' %}
+          <span class="mini-tag t-sky">💻 {{ event.category }}</span>
+        {% elif event.category == 'Music' %}
+          <span class="mini-tag t-pink">🎵 {{ event.category }}</span>
+        {% elif event.category == 'Sports' %}
+          <span class="mini-tag t-mint">⚽ {{ event.category }}</span>
+        {% elif event.category == 'Business' %}
+          <span class="mini-tag t-lemon">💼 {{ event.category }}</span>
+        {% else %}
+          <span class="mini-tag t-lav">🎉 {{ event.category }}</span>
+        {% endif %}
 
-<div class="row">
+        <div class="ev-title">
+          <a href="{% url 'event_detail' event.id %}">{{ event.title }}</a>
+        </div>
+        <div class="ev-desc">{{ event.description|truncatewords:20 }}</div>
+        <div class="ev-meta">
+          📍 <b>{{ event.location }}</b><br>
+          📅 <b>{{ event.date|date:"M d, Y · g A" }}</b><br>
+          👥 <b>Capacity:</b> {{ event.capacity }}
+        </div>
+        <div class="ev-footer">
+          <a href="{% url 'event_detail' event.id %}" class="btn-view">
+            View Event!
+          </a>
+        </div>
+      </div>
+    </div>
 
-{% for event in page_obj %}
+    {% empty %}
+      <div class="empty-state">
+        <div class="empty-emoji">🎪</div>
+        <h3>No events found!</h3>
+        <p>Try a different search or category.</p>
+      </div>
+    {% endfor %}
 
-<div class="col-md-4 mb-4">
-
-<div class="card shadow-sm h-100 event-card">
-
-{% if event.image %}
-<img src="{{ event.image.url }}" class="card-img-top">
-{% endif %}
-
-<div class="card-body">
-
-<h5 class="card-title">
-
-<a href="{% url 'event_detail' event.id %}">
-{{ event.title }}
-</a>
-
-</h5>
-
-<span class="badge bg-primary mb-2">
-{{ event.category }}
-</span>
-
-<p class="card-text">
-{{ event.description|truncatewords:20 }}
-</p>
-
-<p class="mb-1"><strong>Location:</strong> {{ event.location }}</p>
-
-<p class="mb-1"><strong>Date:</strong> {{ event.date }}</p>
-
-<p class="mb-1"><strong>Capacity:</strong> {{ event.capacity }}</p>
-
-<a href="{% url 'event_detail' event.id %}" class="btn btn-primary mt-2">
-View Event
-</a>
-
+  </div>
 </div>
 
+<!-- ══ PAGINATION ══ -->
+<div class="pagination-wrap">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"
+      class="page-btn">← Previous</a>
+  {% else %}
+    <span class="page-btn disabled">← Previous</span>
+  {% endif %}
+
+  <span class="page-btn active">
+    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+  </span>
+
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"
+      class="page-btn">Next →</a>
+  {% else %}
+    <span class="page-btn disabled">Next →</span>
+  {% endif %}
 </div>
-
-</div>
-
-{% empty %}
-
-<div class="alert alert-info">
-No events available.
-</div>
-
-{% endfor %}
-
-</div>
-
-
-
-<!-- PAGINATION -->
-
-<nav class="mt-4">
-
-<ul class="pagination justify-content-center">
-
-{% if page_obj.has_previous %}
-<li class="page-item">
-<a class="page-link" href="?page={{ page_obj.previous_page_number }}">
-Previous
-</a>
-</li>
-{% endif %}
-
-<li class="page-item active">
-<a class="page-link">
-Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-</a>
-</li>
-
-{% if page_obj.has_next %}
-<li class="page-item">
-<a class="page-link" href="?page={{ page_obj.next_page_number }}">
-Next
-</a>
-</li>
-{% endif %}
-
-</ul>
-
-</nav>
 
 {% endblock %}

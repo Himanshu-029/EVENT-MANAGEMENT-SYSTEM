@@ -2,58 +2,475 @@
 
 {% block content %}
 
-<h2 class="mb-4">My Bookings</h2>
+<style>
+  body {
+    background: #fff0fa !important;
+    background-image: none !important;
+  }
+  body::before { display: none !important; }
+  .container.mt-5 {
+    margin-top: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
 
-<div class="row">
+  :root {
+    --pink: #ff6eb4;
+    --sky: #74c7f5;
+    --mint: #5ee7bf;
+    --lemon: #ffe566;
+    --lavender: #c084fc;
+    --coral: #ff7f6e;
+    --bg: #fff0fa;
+    --dark: #1a1035;
+  }
 
-{% for booking in bookings %}
+  /* ── PAGE HEADER ── */
+  .page-header {
+    background: linear-gradient(135deg, var(--dark), #2d1a5e);
+    padding: 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 3px solid var(--dark);
+  }
+  .page-header::before {
+    content: '🎟️';
+    position: absolute;
+    font-size: 16rem;
+    opacity: 0.05;
+    top: -3rem; right: -2rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .page-header h1 {
+    font-family: 'Boogaloo', cursive;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: #fff;
+    margin-bottom: 0.3rem;
+  }
+  .page-header h1 em {
+    color: var(--lemon);
+    font-style: normal;
+  }
+  .page-header p {
+    color: rgba(255,255,255,0.5);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .booking-count-badge {
+    display: inline-block;
+    background: var(--lemon);
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.3rem 1rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.85rem;
+    color: var(--dark);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+    margin-top: 0.8rem;
+  }
 
-<div class="col-md-4 mb-4">
+  /* ── MAIN CONTENT ── */
+  .bookings-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 3rem 5rem;
+  }
 
-<div class="card shadow-sm h-100">
+  /* ── BOOKINGS GRID ── */
+  .bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
 
-{% if booking.event.image %}
-<img src="{{ booking.event.image.url }}" class="card-img-top">
-{% endif %}
+  /* ── BOOKING CARD ── */
+  .booking-card {
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 5px 5px 0 var(--dark);
+    transition: all 0.2s;
+  }
+  .booking-card:hover {
+    transform: translate(-4px,-4px);
+    box-shadow: 9px 9px 0 var(--dark);
+  }
 
-<div class="card-body">
+  /* Card image */
+  .booking-card-img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-bottom: 2px solid var(--dark);
+    display: block;
+  }
 
-<h5 class="card-title">{{ booking.event.title }}</h5>
+  /* Card top (no image) */
+  .booking-card-top {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    border-bottom: 2px solid var(--dark);
+    position: relative;
+  }
+  .top-tech     { background: linear-gradient(135deg, #d4f0ff, #e0f7ff); }
+  .top-music    { background: linear-gradient(135deg, #ffd6ec, #ffe4f8); }
+  .top-sports   { background: linear-gradient(135deg, #d4fce8, #e0fff0); }
+  .top-business { background: linear-gradient(135deg, #fff3cc, #fffae0); }
+  .top-default  { background: linear-gradient(135deg, #f0e0ff, #fce0ff); }
 
-<p class="mb-1"><strong>Location:</strong> {{ booking.event.location }}</p>
-<p class="mb-1"><strong>Date:</strong> {{ booking.event.date }}</p>
-<p class="mb-2"><strong>Ticket Type:</strong> {{ booking.ticket_type }}</p>
+  /* Ticket type badge on top */
+  .ticket-badge-float {
+    position: absolute;
+    top: 10px; right: 10px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.7rem;
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    box-shadow: 2px 2px 0 var(--dark);
+  }
+  .badge-vip     { background: var(--lavender); color: #fff; }
+  .badge-regular { background: var(--lemon);    color: var(--dark); }
 
-<div class="text-center mt-3">
+  /* Card body */
+  .booking-card-body { padding: 1.2rem; }
 
-<p><strong>Booking ID:</strong> {{ booking.id }}</p>
+  .mini-tag {
+    display: inline-block;
+    padding: 0.12rem 0.65rem;
+    border-radius: 100px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    border: 2px solid var(--dark);
+    margin-bottom: 0.5rem;
+  }
+  .t-sky    { background: var(--sky);      color: var(--dark); }
+  .t-pink   { background: var(--pink);     color: #fff; }
+  .t-mint   { background: var(--mint);     color: var(--dark); }
+  .t-lemon  { background: var(--lemon);    color: var(--dark); }
+  .t-lav    { background: var(--lavender); color: #fff; }
 
-{% if booking.qr_code %}
-<img src="{{ booking.qr_code.url }}" width="150" class="mb-3">
-{% endif %}
+  .booking-event-title {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.3rem;
+    color: var(--dark);
+    margin-bottom: 0.7rem;
+    line-height: 1.2;
+  }
 
-<br>
+  .booking-meta {
+    font-size: 0.8rem;
+    color: rgba(26,16,53,0.55);
+    font-weight: 700;
+    line-height: 1.9;
+    margin-bottom: 1rem;
+  }
+  .booking-meta b { color: var(--dark); }
 
-<a href="{% url 'cancel_booking' booking.id %}" class="btn btn-danger btn-sm">
-Cancel Booking
-</a>
+  /* Booking ID pill */
+  .booking-id-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--bg);
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.25rem 0.8rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.75rem;
+    color: var(--dark);
+    box-shadow: 2px 2px 0 var(--dark);
+    margin-bottom: 1rem;
+  }
 
+  /* QR code section */
+  .qr-wrap {
+    background: var(--bg);
+    border: 2px solid var(--dark);
+    border-radius: 16px;
+    padding: 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    box-shadow: 2px 2px 0 var(--dark);
+  }
+  .qr-label {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: rgba(26,16,53,0.4);
+    margin-bottom: 0.6rem;
+  }
+  .qr-wrap img {
+    border: 2px solid var(--dark);
+    border-radius: 12px;
+    max-width: 150px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* Status indicator */
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--dark);
+    flex-shrink: 0;
+  }
+  .dot-active  { background: var(--mint); }
+  .dot-used    { background: rgba(26,16,53,0.2); }
+  .status-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.82rem;
+    color: var(--dark);
+  }
+
+  /* Card footer */
+  .booking-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 2px dashed rgba(26,16,53,0.12);
+  }
+
+  .btn-view-event {
+    background: var(--sky) !important;
+    color: var(--dark) !important;
+    border: 2px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.35rem 1rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 0.82rem !important;
+    cursor: pointer !important;
+    box-shadow: 2px 2px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+  }
+  .btn-view-event:hover {
+    transform: translate(-1px,-1px) !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    text-decoration: none !important;
+  }
+
+  .btn-cancel {
+    background: var(--coral) !important;
+    color: #fff !important;
+    border: 2px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.35rem 1rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 0.82rem !important;
+    cursor: pointer !important;
+    box-shadow: 2px 2px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+  }
+  .btn-cancel:hover {
+    transform: translate(-1px,-1px) !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    text-decoration: none !important;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 5rem 2rem;
+    grid-column: 1 / -1;
+  }
+  .empty-emoji { font-size: 5rem; margin-bottom: 1rem; }
+  .empty-state h3 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.6rem;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+  }
+  .empty-state p {
+    color: rgba(26,16,53,0.55);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+  .btn-explore {
+    display: inline-block;
+    background: var(--pink) !important;
+    color: #fff !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.7rem 2rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1rem !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+  }
+  .btn-explore:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 6px 6px 0 var(--dark) !important;
+    text-decoration: none !important;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .bookings-wrap { padding: 2rem 1.5rem 4rem; }
+    .page-header { padding: 2rem 1.5rem; }
+  }
+</style>
+
+<!-- ══ PAGE HEADER ══ -->
+<div class="page-header">
+  <h1>My <em>Bookings</em> 🎟️</h1>
+  <p>All your upcoming events in one place!</p>
+  <div class="booking-count-badge">
+    🎫 {{ bookings|length }} booking{% if bookings|length != 1 %}s{% endif %}
+  </div>
 </div>
 
-</div>
+<!-- ══ BOOKINGS GRID ══ -->
+<div class="bookings-wrap">
+  <div class="bookings-grid">
 
-</div>
+    {% for booking in bookings %}
+    <div class="booking-card">
 
-</div>
+      <!-- Image or colored top -->
+      {% if booking.event.image %}
+        <div style="position:relative">
+          <img src="{{ booking.event.image.url }}"
+               class="booking-card-img"
+               alt="{{ booking.event.title }}">
+          <span class="ticket-badge-float
+            {% if booking.ticket_type == 'VIP' %}badge-vip{% else %}badge-regular{% endif %}">
+            {% if booking.ticket_type == 'VIP' %}👑 VIP{% else %}🎟️ Regular{% endif %}
+          </span>
+        </div>
+      {% else %}
+        {% if booking.event.category == 'Tech' %}
+          <div class="booking-card-top top-tech">
+            💻
+            <span class="ticket-badge-float
+              {% if booking.ticket_type == 'VIP' %}badge-vip{% else %}badge-regular{% endif %}">
+              {% if booking.ticket_type == 'VIP' %}👑 VIP{% else %}🎟️ Regular{% endif %}
+            </span>
+          </div>
+        {% elif booking.event.category == 'Music' %}
+          <div class="booking-card-top top-music">
+            🎵
+            <span class="ticket-badge-float
+              {% if booking.ticket_type == 'VIP' %}badge-vip{% else %}badge-regular{% endif %}">
+              {% if booking.ticket_type == 'VIP' %}👑 VIP{% else %}🎟️ Regular{% endif %}
+            </span>
+          </div>
+        {% elif booking.event.category == 'Sports' %}
+          <div class="booking-card-top top-sports">
+            ⚽
+            <span class="ticket-badge-float
+              {% if booking.ticket_type == 'VIP' %}badge-vip{% else %}badge-regular{% endif %}">
+              {% if booking.ticket_type == 'VIP' %}👑 VIP{% else %}🎟️ Regular{% endif %}
+            </span>
+          </div>
+        {% elif booking.event.category == 'Business' %}
+          <div class="booking-card-top top-business">
+            💼
+            <span class="ticket-badge-float
+              {% if booking.ticket_type == 'VIP' %}badge-vip{% else %}badge-regular{% endif %}">
+              {% if booking.ticket_type == 'VIP' %}👑 VIP{% else %}🎟️ Regular{% endif %}
+            </span>
+          </div>
+        {% else %}
+          <div class="booking-card-top top-default">
+            🎉
+            <span class="ticket-badge-float
+              {% if booking.ticket_type == 'VIP' %}badge-vip{% else %}badge-regular{% endif %}">
+              {% if booking.ticket_type == 'VIP' %}👑 VIP{% else %}🎟️ Regular{% endif %}
+            </span>
+          </div>
+        {% endif %}
+      {% endif %}
 
-{% empty %}
+      <div class="booking-card-body">
 
-<div class="alert alert-info">
-You have not booked any events yet.
-</div>
+        <!-- Category tag -->
+        {% if booking.event.category == 'Tech' %}
+          <span class="mini-tag t-sky">💻 {{ booking.event.category }}</span>
+        {% elif booking.event.category == 'Music' %}
+          <span class="mini-tag t-pink">🎵 {{ booking.event.category }}</span>
+        {% elif booking.event.category == 'Sports' %}
+          <span class="mini-tag t-mint">⚽ {{ booking.event.category }}</span>
+        {% elif booking.event.category == 'Business' %}
+          <span class="mini-tag t-lemon">💼 {{ booking.event.category }}</span>
+        {% else %}
+          <span class="mini-tag t-lav">🎉 {{ booking.event.category }}</span>
+        {% endif %}
 
-{% endfor %}
+        <div class="booking-event-title">{{ booking.event.title }}</div>
 
+        <div class="booking-meta">
+          📍 <b>{{ booking.event.location }}</b><br>
+          📅 <b>{{ booking.event.date|date:"M d, Y · g A" }}</b><br>
+          💰 <b>Price:</b> ₹{{ booking.price }}<br>
+          🕐 <b>Booked:</b> {{ booking.booked_at|date:"M d, Y" }}
+        </div>
+
+        <!-- Booking ID -->
+        <div class="booking-id-pill">
+          🎫 Booking #{{ booking.id }}
+        </div>
+
+        <!-- Ticket status -->
+        <div class="status-row">
+          <div class="status-dot {% if booking.is_used %}dot-used{% else %}dot-active{% endif %}"></div>
+          <span class="status-text">
+            {% if booking.is_used %}Ticket Used{% else %}Valid · Ready to Use{% endif %}
+          </span>
+        </div>
+
+        <!-- QR Code -->
+        {% if booking.qr_code %}
+          <div class="qr-wrap">
+            <div class="qr-label">Your QR Code</div>
+            <img src="{{ booking.qr_code.url }}" alt="QR Code">
+          </div>
+        {% endif %}
+
+        <!-- Footer actions -->
+        <div class="booking-card-footer">
+          <a href="{% url 'event_detail' booking.event.id %}"
+             class="btn-view-event">
+            View Event
+          </a>
+          <a href="{% url 'cancel_booking' booking.id %}"
+             class="btn-cancel">
+            ❌ Cancel
+          </a>
+        </div>
+
+      </div>
+    </div>
+    {% empty %}
+      <div class="empty-state">
+        <div class="empty-emoji">🎪</div>
+        <h3>No bookings yet!</h3>
+        <p>You haven't booked any events yet.<br>Go find something amazing! ✨</p>
+        <a href="{% url 'event_list' %}" class="btn-explore">
+          🎟️ Explore Events
+        </a>
+      </div>
+    {% endfor %}
+
+  </div>
 </div>
 
 {% endblock %}

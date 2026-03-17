@@ -2,43 +2,313 @@
 
 {% block content %}
 
-<div class="row justify-content-center">
+<style>
+  body {
+    background: #fff0fa !important;
+    background-image: none !important;
+  }
+  body::before { display: none !important; }
+  .container.mt-5 {
+    margin-top: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
 
-<div class="col-md-6">
+  :root {
+    --pink: #ff6eb4;
+    --sky: #74c7f5;
+    --mint: #5ee7bf;
+    --lemon: #ffe566;
+    --lavender: #c084fc;
+    --coral: #ff7f6e;
+    --bg: #fff0fa;
+    --dark: #1a1035;
+  }
 
-<div class="card shadow-sm">
+  /* ── PAGE WRAPPER ── */
+  .cancel-page {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
 
-<div class="card-body text-center">
+  /* Blobs */
+  .cancel-page::before {
+    content: '';
+    position: fixed;
+    width: 350px; height: 350px;
+    background: var(--pink);
+    border-radius: 50%;
+    opacity: 0.08;
+    top: -80px; left: -80px;
+    pointer-events: none;
+  }
+  .cancel-page::after {
+    content: '';
+    position: fixed;
+    width: 250px; height: 250px;
+    background: var(--lavender);
+    border-radius: 50%;
+    opacity: 0.08;
+    bottom: -60px; right: -60px;
+    pointer-events: none;
+  }
 
-<h3 class="mb-3 text-danger">Cancel Booking</h3>
+  /* ── CARD ── */
+  .cancel-card {
+    background: #fff;
+    border: 3px solid var(--dark);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 8px 8px 0 var(--dark);
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    z-index: 1;
+  }
 
-<div class="alert alert-warning">
+  /* Banner */
+  .cancel-banner {
+    background: var(--dark);
+    border-bottom: 3px solid var(--dark);
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cancel-banner::before {
+    content: '🎟️';
+    position: absolute;
+    font-size: 10rem;
+    opacity: 0.06;
+    top: -2rem; right: -1rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .cancel-banner-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+  .cancel-banner h2 {
+    font-family: 'Boogaloo', cursive;
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 0.2rem;
+  }
+  .cancel-banner h2 em { color: var(--coral); font-style: normal; }
+  .cancel-banner p {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0;
+  }
 
-<p class="mb-1">Are you sure you want to cancel your booking for:</p>
+  /* Body */
+  .cancel-body { padding: 2rem; }
 
-<h5 class="mt-2"><strong>{{ booking.event.title }}</strong></h5>
+  /* Booking info card */
+  .booking-info-box {
+    background: var(--bg);
+    border: 2.5px solid var(--dark);
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 4px 4px 0 var(--dark);
+    position: relative;
+    overflow: hidden;
+  }
+  .booking-info-box::before {
+    content: '😢';
+    position: absolute;
+    font-size: 7rem;
+    opacity: 0.05;
+    bottom: -1rem; right: -1rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .booking-info-label {
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: rgba(26,16,53,0.4);
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+  .booking-event-name {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.6rem;
+    color: var(--dark);
+    text-align: center;
+    margin-bottom: 0.8rem;
+    line-height: 1.2;
+  }
 
-</div>
+  /* Booking details row */
+  .booking-details {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .detail-chip {
+    background: #fff;
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.25rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--dark);
+    box-shadow: 2px 2px 0 var(--dark);
+  }
 
-<form method="post">
-{% csrf_token %}
+  /* Warning strip */
+  .warning-strip {
+    background: linear-gradient(135deg, #ffe4e0, #fff0ee);
+    border: 2px solid var(--dark);
+    border-radius: 14px;
+    padding: 0.8rem 1rem;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--dark);
+    box-shadow: 2px 2px 0 var(--dark);
+    margin-bottom: 1.5rem;
+  }
 
-<button type="submit" class="btn btn-danger">
-Yes, Cancel Booking
-</button>
+  /* Buttons */
+  .cancel-btns {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .btn-confirm-cancel {
+    flex: 1;
+    background: var(--coral) !important;
+    color: #fff !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.85rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-align: center;
+  }
+  .btn-confirm-cancel:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 6px 6px 0 var(--dark) !important;
+  }
+  .btn-keep-booking {
+    flex: 1;
+    background: var(--mint) !important;
+    color: var(--dark) !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.85rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+    text-align: center;
+    display: block;
+  }
+  .btn-keep-booking:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 6px 6px 0 var(--dark) !important;
+    text-decoration: none !important;
+    color: var(--dark) !important;
+  }
 
-<a href="{% url 'event_detail' booking.event.id %}" class="btn btn-secondary ms-2">
-Go Back
-</a>
+  /* Footer */
+  .cancel-footer {
+    text-align: center;
+    padding: 1.2rem 2rem;
+    background: var(--bg);
+    border-top: 2px solid rgba(26,16,53,0.08);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: rgba(26,16,53,0.45);
+  }
+  .cancel-footer a {
+    color: var(--pink) !important;
+    font-weight: 800;
+    text-decoration: none !important;
+    border-bottom: 2px solid var(--pink);
+  }
 
-</form>
+  @media (max-width: 600px) {
+    .cancel-page { padding: 2rem 1rem; }
+    .cancel-btns { flex-direction: column; }
+  }
+</style>
 
-</div>
+<div class="cancel-page">
+  <div class="cancel-card">
 
-</div>
+    <!-- Banner -->
+    <div class="cancel-banner">
+      <div class="cancel-banner-icon">😢</div>
+      <h2>Cancel <em>Booking</em></h2>
+      <p>We're sad to see you go!</p>
+    </div>
 
-</div>
+    <!-- Body -->
+    <div class="cancel-body">
 
+      <!-- Booking info -->
+      <div class="booking-info-box">
+        <div class="booking-info-label">You're cancelling your ticket for</div>
+        <div class="booking-event-name">{{ booking.event.title }}</div>
+
+        <div class="booking-details">
+          <span class="detail-chip">
+            📍 {{ booking.event.location }}
+          </span>
+          <span class="detail-chip">
+            📅 {{ booking.event.date|date:"M d, Y" }}
+          </span>
+          <span class="detail-chip">
+            🎟️ {{ booking.ticket_type }}
+          </span>
+          <span class="detail-chip">
+            💰 ₹{{ booking.price }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Warning -->
+      <div class="warning-strip">
+        ⚠️ Are you sure? This action cannot be undone!
+      </div>
+
+      <!-- Buttons -->
+      <form method="post">
+        {% csrf_token %}
+        <div class="cancel-btns">
+          <button type="submit" class="btn-confirm-cancel">
+            ❌ Yes, Cancel It
+          </button>
+          <a href="{% url 'event_detail' booking.event.id %}"
+             class="btn-keep-booking">
+            💚 Keep Booking
+          </a>
+        </div>
+      </form>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="cancel-footer">
+      <a href="{% url 'my_bookings' %}">← Back to My Bookings</a>
+    </div>
+
+  </div>
 </div>
 
 {% endblock %}

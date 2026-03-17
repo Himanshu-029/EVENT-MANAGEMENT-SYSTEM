@@ -2,45 +2,284 @@
 
 {% block content %}
 
-<div class="row justify-content-center">
+<style>
+  body {
+    background: #fff0fa !important;
+    background-image: none !important;
+  }
+  body::before { display: none !important; }
+  .container.mt-5 {
+    margin-top: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
 
-<div class="col-md-6">
+  :root {
+    --pink: #ff6eb4;
+    --sky: #74c7f5;
+    --mint: #5ee7bf;
+    --lemon: #ffe566;
+    --lavender: #c084fc;
+    --coral: #ff7f6e;
+    --bg: #fff0fa;
+    --dark: #1a1035;
+  }
 
-<div class="card shadow-sm">
+  /* ── PAGE WRAPPER ── */
+  .delete-page {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
 
-<div class="card-body text-center">
+  /* Blobs */
+  .delete-page::before {
+    content: '';
+    position: fixed;
+    width: 350px; height: 350px;
+    background: var(--coral);
+    border-radius: 50%;
+    opacity: 0.08;
+    top: -80px; right: -80px;
+    pointer-events: none;
+  }
+  .delete-page::after {
+    content: '';
+    position: fixed;
+    width: 250px; height: 250px;
+    background: var(--pink);
+    border-radius: 50%;
+    opacity: 0.07;
+    bottom: -60px; left: -60px;
+    pointer-events: none;
+  }
 
-<h3 class="text-danger mb-3">Delete Event</h3>
+  /* ── CARD ── */
+  .delete-card {
+    background: #fff;
+    border: 3px solid var(--dark);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 8px 8px 0 var(--dark);
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    z-index: 1;
+  }
 
-<div class="alert alert-warning">
+  /* Banner */
+  .delete-banner {
+    background: var(--coral);
+    border-bottom: 3px solid var(--dark);
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .delete-banner::before {
+    content: '🗑️';
+    position: absolute;
+    font-size: 10rem;
+    opacity: 0.08;
+    top: -2rem; right: -1rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .delete-banner-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+  .delete-banner h2 {
+    font-family: 'Boogaloo', cursive;
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 0.2rem;
+  }
+  .delete-banner p {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0;
+  }
 
-<p class="mb-1">Are you sure you want to delete this event?</p>
+  /* Body */
+  .delete-body { padding: 2rem; }
 
-<h5 class="mt-2"><strong>{{ event.title }}</strong></h5>
+  /* Warning box */
+  .warning-box {
+    background: linear-gradient(135deg, #ffe4e0, #fff0ee);
+    border: 2.5px solid var(--dark);
+    border-radius: 20px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 4px 4px 0 var(--dark);
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .warning-box::before {
+    content: '⚠️';
+    position: absolute;
+    font-size: 8rem;
+    opacity: 0.05;
+    bottom: -1rem; right: -1rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .warning-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+  .warning-text {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: rgba(26,16,53,0.65);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
 
-<p class="text-muted">This action cannot be undone.</p>
+  /* Event title pill */
+  .event-title-pill {
+    display: inline-block;
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 14px;
+    padding: 0.6rem 1.2rem;
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.2rem;
+    color: var(--dark);
+    box-shadow: 3px 3px 0 var(--dark);
+    margin-bottom: 0.8rem;
+    max-width: 100%;
+    word-break: break-word;
+  }
 
-</div>
+  /* Cannot undo badge */
+  .undo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--coral);
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.2rem 0.8rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #fff;
+    box-shadow: 2px 2px 0 var(--dark);
+  }
 
-<form method="post">
-{% csrf_token %}
+  /* Buttons */
+  .delete-btns {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .btn-confirm-delete {
+    flex: 1;
+    background: var(--coral) !important;
+    color: #fff !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.85rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-align: center;
+  }
+  .btn-confirm-delete:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 6px 6px 0 var(--dark) !important;
+  }
+  .btn-keep {
+    flex: 1;
+    background: var(--mint) !important;
+    color: var(--dark) !important;
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.85rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+    text-align: center;
+    display: block;
+  }
+  .btn-keep:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 6px 6px 0 var(--dark) !important;
+    text-decoration: none !important;
+    color: var(--dark) !important;
+  }
 
-<button type="submit" class="btn btn-danger">
-Yes, Delete Event
-</button>
+  /* Footer */
+  .delete-footer {
+    text-align: center;
+    padding: 1.2rem 2rem;
+    background: var(--bg);
+    border-top: 2px solid rgba(26,16,53,0.08);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: rgba(26,16,53,0.45);
+  }
 
-<a href="{% url 'event_detail' event.id %}" class="btn btn-secondary ms-2">
-Cancel
-</a>
+  @media (max-width: 600px) {
+    .delete-page { padding: 2rem 1rem; }
+    .delete-btns { flex-direction: column; }
+  }
+</style>
 
-</form>
+<div class="delete-page">
+  <div class="delete-card">
 
-</div>
+    <!-- Banner -->
+    <div class="delete-banner">
+      <div class="delete-banner-icon">🗑️</div>
+      <h2>Delete Event</h2>
+      <p>This is a permanent action</p>
+    </div>
 
-</div>
+    <!-- Body -->
+    <div class="delete-body">
 
-</div>
+      <!-- Warning box -->
+      <div class="warning-box">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-text">
+          Are you sure you want to delete this event?
+        </div>
+        <div class="event-title-pill">
+          {{ event.title }}
+        </div>
+        <br>
+        <span class="undo-badge">
+          ❌ This cannot be undone!
+        </span>
+      </div>
 
+      <!-- Buttons -->
+      <form method="post">
+        {% csrf_token %}
+        <div class="delete-btns">
+          <button type="submit" class="btn-confirm-delete">
+            🗑️ Yes, Delete It
+          </button>
+          <a href="{% url 'event_detail' event.id %}" class="btn-keep">
+            💚 Keep Event
+          </a>
+        </div>
+      </form>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="delete-footer">
+      💡 Tip: You can edit the event instead of deleting it
+    </div>
+
+  </div>
 </div>
 
 {% endblock %}

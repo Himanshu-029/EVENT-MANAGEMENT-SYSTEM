@@ -2,73 +2,328 @@
 
 {% block content %}
 
-<div class="row justify-content-center">
+<style>
+  body {
+    background: #fff0fa !important;
+    background-image: none !important;
+  }
+  body::before { display: none !important; }
 
-<div class="col-md-8">
+  .container.mt-5 {
+    margin-top: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
 
-<div class="card shadow-sm">
+  :root {
+    --pink: #ff6eb4;
+    --sky: #74c7f5;
+    --mint: #5ee7bf;
+    --lemon: #ffe566;
+    --lavender: #c084fc;
+    --bg: #fff0fa;
+    --dark: #1a1035;
+  }
 
-<div class="card-body">
+  /* ── PAGE WRAPPER ── */
+  .create-page {
+    min-height: 100vh;
+    background: var(--bg);
+    padding: 3rem 1.5rem 5rem;
+  }
 
-<h3 class="mb-4">Create New Event</h3>
+  /* ── HEADER ── */
+  .create-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .create-header .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--lemon);
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.3rem 1rem;
+    font-weight: 800;
+    font-size: 0.82rem;
+    margin-bottom: 1rem;
+    box-shadow: 2px 2px 0 var(--dark);
+  }
+  .create-header h1 {
+    font-family: 'Boogaloo', cursive;
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    color: var(--dark);
+    margin-bottom: 0.3rem;
+  }
+  .create-header h1 span { color: var(--pink); }
+  .create-header p {
+    color: rgba(26,16,53,0.55);
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
 
-<form method="post" enctype="multipart/form-data">
-{% csrf_token %}
+  /* ── FORM CARD ── */
+  .create-card {
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 24px;
+    box-shadow: 6px 6px 0 var(--dark);
+    padding: 2.5rem;
+    max-width: 680px;
+    margin: 0 auto;
+  }
 
-<div class="mb-3">
-<label class="form-label">Title</label>
-<input type="text" name="title" class="form-control" required>
-</div>
+  /* ── FORM ELEMENTS ── */
+  .form-label {
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 0.95rem !important;
+    color: var(--dark) !important;
+    margin-bottom: 0.4rem !important;
+  }
 
-<div class="mb-3">
-<label class="form-label">Description</label>
-<textarea name="description" class="form-control" rows="4" required></textarea>
-</div>
+  .form-control,
+  .form-select {
+    border: 2.5px solid var(--dark) !important;
+    border-radius: 14px !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    padding: 0.65rem 1rem !important;
+    box-shadow: 3px 3px 0 var(--dark) !important;
+    background: #fff !important;
+    color: var(--dark) !important;
+    transition: all 0.2s !important;
+    outline: none !important;
+  }
+  .form-control:focus,
+  .form-select:focus {
+    border-color: var(--pink) !important;
+    box-shadow: 4px 4px 0 var(--pink) !important;
+    outline: none !important;
+  }
+  textarea.form-control {
+    border-radius: 14px !important;
+    resize: vertical !important;
+  }
 
-<div class="mb-3">
-<label class="form-label">Location</label>
-<input type="text" name="location" class="form-control" required>
-</div>
+  /* File input special styling */
+  input[type="file"].form-control {
+    padding: 0.5rem 1rem !important;
+    cursor: pointer !important;
+  }
 
-<div class="mb-3">
-<label class="form-label">Date & Time</label>
-<input type="datetime-local" name="date" class="form-control" required>
-</div>
+  /* ── FORM DIVIDER ── */
+  .form-divider {
+    border: none;
+    border-top: 2px dashed rgba(26,16,53,0.12);
+    margin: 1.5rem 0;
+  }
 
-<div class="mb-3">
-<label class="form-label">Category</label>
-<select name="category" class="form-select">
-<option value="Tech">Tech</option>
-<option value="Music">Music</option>
-<option value="Sports">Sports</option>
-<option value="Business">Business</option>
-</select>
-</div>
+  /* ── FORM SECTION LABEL ── */
+  .form-section-label {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1rem;
+    color: rgba(26,16,53,0.4);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+  }
 
-<div class="mb-3">
-<label class="form-label">Capacity</label>
-<input type="number" name="capacity" class="form-control" required>
-</div>
+  /* ── MESSAGES ── */
+  .alert {
+    border: 2px solid var(--dark) !important;
+    border-radius: 14px !important;
+    font-weight: 700 !important;
+    box-shadow: 3px 3px 0 var(--dark) !important;
+    margin-bottom: 1.5rem;
+  }
+  .alert-danger  { background: #ffe4e0 !important; color: var(--dark) !important; }
+  .alert-warning { background: #fff3cc !important; color: var(--dark) !important; }
 
-<div class="mb-3">
-<label class="form-label">Event Image</label>
-<input type="file" name="image" class="form-control">
-</div>
+  /* ── BUTTONS ── */
+  .form-btns {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+  .btn-submit {
+    background: var(--mint) !important;
+    color: var(--dark) !important;
+    border: 3px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.7rem 2.5rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+  }
+  .btn-submit:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 6px 6px 0 var(--dark) !important;
+  }
+  .btn-cancel {
+    background: #fff !important;
+    color: var(--dark) !important;
+    border: 3px solid var(--dark) !important;
+    border-radius: 100px !important;
+    padding: 0.7rem 2rem !important;
+    font-family: 'Fredoka One', cursive !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+  }
+  .btn-cancel:hover {
+    transform: translate(-2px,-2px) !important;
+    box-shadow: 6px 6px 0 var(--dark) !important;
+    color: var(--dark) !important;
+    text-decoration: none !important;
+  }
 
-<button type="submit" class="btn btn-success">
-Create Event
-</button>
+  /* ── TWO COLUMN GRID ── */
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 600px) {
+    .form-grid-2 { grid-template-columns: 1fr; }
+    .create-card { padding: 1.5rem; }
+  }
+</style>
 
-<a href="/" class="btn btn-secondary ms-2">
-Cancel
-</a>
+<div class="create-page">
 
-</form>
+  <!-- ══ HEADER ══ -->
+  <div class="create-header">
+    <div class="header-badge">✨ Share Your Event With The World</div>
+    <h1>Create <span>New</span> Event!</h1>
+    <p>Fill in the details below and let people discover your event 🎉</p>
+  </div>
 
-</div>
-</div>
+  <!-- ══ FORM CARD ══ -->
+  <div class="create-card">
 
-</div>
+    <!-- Show error messages if any -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+          ⚠️ {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- Basic Info -->
+      <div class="form-section-label">📋 Basic Info</div>
+
+      <div class="mb-3">
+        <label class="form-label">🎯 Event Title</label>
+        <input
+          type="text"
+          name="title"
+          class="form-control"
+          placeholder="e.g. Tech Fest 2026"
+          required
+        >
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">📝 Description</label>
+        <textarea
+          name="description"
+          class="form-control"
+          rows="4"
+          placeholder="Tell people what your event is about..."
+          required
+        ></textarea>
+      </div>
+
+      <hr class="form-divider">
+
+      <!-- Location & Date -->
+      <div class="form-section-label">📍 Location & Time</div>
+
+      <div class="form-grid-2">
+        <div class="mb-3">
+          <label class="form-label">📍 Location</label>
+          <input
+            type="text"
+            name="location"
+            class="form-control"
+            placeholder="e.g. Mumbai, India"
+            required
+          >
+        </div>
+        <div class="mb-3">
+          <label class="form-label">📅 Date & Time</label>
+          <input
+            type="datetime-local"
+            name="date"
+            class="form-control"
+            required
+          >
+        </div>
+      </div>
+
+      <hr class="form-divider">
+
+      <!-- Category & Capacity -->
+      <div class="form-section-label">🎨 Details</div>
+
+      <div class="form-grid-2">
+        <div class="mb-3">
+          <label class="form-label">🏷️ Category</label>
+          <select name="category" class="form-select">
+            <option value="Tech">💻 Tech</option>
+            <option value="Music">🎵 Music</option>
+            <option value="Sports">⚽ Sports</option>
+            <option value="Business">💼 Business</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">👥 Capacity</label>
+          <input
+            type="number"
+            name="capacity"
+            class="form-control"
+            placeholder="e.g. 500"
+            required
+          >
+        </div>
+      </div>
+
+      <hr class="form-divider">
+
+      <!-- Image -->
+      <div class="form-section-label">🖼️ Event Image</div>
+
+      <div class="mb-3">
+        <label class="form-label">Upload Image <span style="font-family:'Nunito',sans-serif;font-size:0.75rem;color:rgba(26,16,53,0.4);font-weight:700;">(optional)</span></label>
+        <input type="file" name="image" class="form-control" accept="image/*">
+      </div>
+
+      <!-- Buttons -->
+      <div class="form-btns">
+        <button type="submit" class="btn-submit">
+          🚀 Create Event!
+        </button>
+        <a href="{% url 'event_list' %}" class="btn-cancel">
+          ✕ Cancel
+        </a>
+      </div>
+
+    </form>
+  </div>
 </div>
 
 {% endblock %}
