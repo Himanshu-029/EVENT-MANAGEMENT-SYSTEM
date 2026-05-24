@@ -1,424 +1,126 @@
 {% extends 'events/base.html' %}
-
 {% block content %}
-
 <style>
-  body {
-    background: #fff0fa !important;
-    background-image: none !important;
-  }
+  body { background: #fff0fa !important; background-image: none !important; }
   body::before { display: none !important; }
-  .container.mt-5 {
-    margin-top: 0 !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-  }
-
-  :root {
-    --pink: #ff6eb4;
-    --sky: #74c7f5;
-    --mint: #5ee7bf;
-    --lemon: #ffe566;
-    --lavender: #c084fc;
-    --coral: #ff7f6e;
-    --bg: #fff0fa;
-    --dark: #1a1035;
-  }
-
-  /* ── PAGE WRAPPER ── */
-  .edit-page {
-    min-height: 90vh;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 3rem 1.5rem 5rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* Blobs */
-  .edit-page::before {
-    content: '';
-    position: fixed;
-    width: 350px; height: 350px;
-    background: var(--lemon);
-    border-radius: 50%;
-    opacity: 0.1;
-    top: -80px; left: -80px;
-    pointer-events: none;
-  }
-  .edit-page::after {
-    content: '';
-    position: fixed;
-    width: 250px; height: 250px;
-    background: var(--sky);
-    border-radius: 50%;
-    opacity: 0.1;
-    bottom: -60px; right: -60px;
-    pointer-events: none;
-  }
-
-  /* ── CARD ── */
-  .edit-card {
-    background: #fff;
-    border: 3px solid var(--dark);
-    border-radius: 28px;
-    overflow: hidden;
-    box-shadow: 8px 8px 0 var(--dark);
-    width: 100%;
-    max-width: 680px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Banner */
-  .edit-banner {
-    background: var(--lemon);
-    border-bottom: 3px solid var(--dark);
-    padding: 1.8rem 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .edit-banner::before {
-    content: '✏️';
-    position: absolute;
-    font-size: 10rem;
-    opacity: 0.07;
-    top: -2rem; right: -1rem;
-    line-height: 1;
-    pointer-events: none;
-  }
-  .edit-banner-icon { font-size: 2.5rem; }
-  .edit-banner h2 {
-    font-family: 'Boogaloo', cursive;
-    font-size: 2rem;
-    color: var(--dark);
-    margin: 0 0 0.2rem;
-  }
-  .edit-banner p {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: rgba(26,16,53,0.55);
-    margin: 0;
-  }
-
-  /* Body */
-  .edit-body { padding: 2rem; }
-
-  /* Field groups */
-  .field-group { margin-bottom: 1.3rem; }
-
-  .field-label {
-    font-family: 'Fredoka One', cursive;
-    font-size: 0.92rem;
-    color: var(--dark);
-    display: block;
-    margin-bottom: 0.45rem;
-  }
-
-  /* Inputs */
-  .field-input {
-    width: 100%;
-    background: var(--bg) !important;
-    border: 2.5px solid var(--dark) !important;
-    border-radius: 100px !important;
-    padding: 0.75rem 1.3rem !important;
-    font-family: 'Nunito', sans-serif !important;
-    font-size: 0.95rem !important;
-    font-weight: 700 !important;
-    outline: none !important;
-    box-shadow: 3px 3px 0 var(--dark) !important;
-    color: var(--dark) !important;
-    transition: all 0.2s !important;
-    box-sizing: border-box;
-  }
-  .field-input:focus {
-    border-color: var(--lemon) !important;
-    box-shadow: 4px 4px 0 #e6c800 !important;
-  }
-
-  /* Textarea */
-  .field-textarea {
-    width: 100%;
-    background: var(--bg) !important;
-    border: 2.5px solid var(--dark) !important;
-    border-radius: 20px !important;
-    padding: 0.75rem 1.3rem !important;
-    font-family: 'Nunito', sans-serif !important;
-    font-size: 0.95rem !important;
-    font-weight: 700 !important;
-    outline: none !important;
-    box-shadow: 3px 3px 0 var(--dark) !important;
-    color: var(--dark) !important;
-    transition: all 0.2s !important;
-    box-sizing: border-box;
-    resize: vertical;
-    min-height: 120px;
-  }
-  .field-textarea:focus {
-    border-color: var(--lemon) !important;
-    box-shadow: 4px 4px 0 #e6c800 !important;
-  }
-
-  /* File input */
-  .field-file {
-    width: 100%;
-    background: var(--bg) !important;
-    border: 2.5px dashed var(--dark) !important;
-    border-radius: 16px !important;
-    padding: 0.75rem 1.3rem !important;
-    font-family: 'Nunito', sans-serif !important;
-    font-size: 0.9rem !important;
-    font-weight: 700 !important;
-    outline: none !important;
-    color: var(--dark) !important;
-    box-sizing: border-box;
-    cursor: pointer;
-  }
-
-  /* Current image preview */
-  .img-preview-wrap {
-    background: var(--bg);
-    border: 2px solid var(--dark);
-    border-radius: 16px;
-    padding: 1rem;
-    margin-bottom: 0.8rem;
-    box-shadow: 2px 2px 0 var(--dark);
-    display: inline-block;
-  }
-  .img-preview-label {
-    font-size: 0.65rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    font-weight: 800;
-    color: rgba(26,16,53,0.4);
-    margin-bottom: 0.5rem;
-  }
-  .img-preview-wrap img {
-    border: 2px solid var(--dark);
-    border-radius: 12px;
-    display: block;
-    max-width: 200px;
-    max-height: 140px;
-    object-fit: cover;
-  }
-
-  /* 2-col grid */
-  .field-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-
-  /* Select */
-  .field-select {
-    width: 100%;
-    background: var(--bg) !important;
-    border: 2.5px solid var(--dark) !important;
-    border-radius: 100px !important;
-    padding: 0.75rem 1.3rem !important;
-    font-family: 'Nunito', sans-serif !important;
-    font-size: 0.95rem !important;
-    font-weight: 700 !important;
-    outline: none !important;
-    box-shadow: 3px 3px 0 var(--dark) !important;
-    color: var(--dark) !important;
-    cursor: pointer;
-    box-sizing: border-box;
-  }
-
-  /* Divider */
-  .form-divider {
-    height: 2px;
-    background: rgba(26,16,53,0.07);
-    border-radius: 2px;
-    margin: 1.5rem 0;
-  }
-
-  /* Buttons */
-  .form-btns {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-top: 1.5rem;
-  }
-  .btn-submit {
-    flex: 1;
-    background: var(--lemon) !important;
-    color: var(--dark) !important;
-    border: 2.5px solid var(--dark) !important;
-    border-radius: 100px !important;
-    padding: 0.85rem !important;
-    font-family: 'Fredoka One', cursive !important;
-    font-size: 1.05rem !important;
-    cursor: pointer !important;
-    box-shadow: 4px 4px 0 var(--dark) !important;
-    transition: all 0.2s !important;
-    text-align: center;
-  }
-  .btn-submit:hover {
-    transform: translate(-2px,-2px) !important;
-    box-shadow: 6px 6px 0 var(--dark) !important;
-  }
-  .btn-cancel-link {
-    flex: 1;
-    background: #fff !important;
-    color: var(--dark) !important;
-    border: 2.5px solid var(--dark) !important;
-    border-radius: 100px !important;
-    padding: 0.85rem !important;
-    font-family: 'Fredoka One', cursive !important;
-    font-size: 1.05rem !important;
-    cursor: pointer !important;
-    box-shadow: 4px 4px 0 var(--dark) !important;
-    transition: all 0.2s !important;
-    text-decoration: none !important;
-    text-align: center;
-    display: block;
-  }
-  .btn-cancel-link:hover {
-    transform: translate(-2px,-2px) !important;
-    box-shadow: 6px 6px 0 var(--dark) !important;
-    text-decoration: none !important;
-    color: var(--dark) !important;
-  }
-
-  /* Messages */
-  .msg-box {
-    border: 2px solid var(--dark);
-    border-radius: 14px;
-    padding: 0.7rem 1rem;
-    font-weight: 700;
-    font-size: 0.85rem;
-    box-shadow: 2px 2px 0 var(--dark);
-    margin-bottom: 1.2rem;
-    text-align: center;
-  }
-  .msg-error   { background: #ffe4e0; color: var(--dark); }
-  .msg-success { background: #d4fce8; color: var(--dark); }
-
-  @media (max-width: 600px) {
-    .field-row { grid-template-columns: 1fr; }
-    .edit-page { padding: 2rem 1rem 4rem; }
-    .form-btns { flex-direction: column; }
-  }
+  .container.mt-5 { margin-top: 0 !important; max-width: 100% !important; padding: 0 !important; }
+  :root { --pink:#ff6eb4;--sky:#74c7f5;--mint:#5ee7bf;--lemon:#ffe566;--lavender:#c084fc;--coral:#ff7f6e;--bg:#fff0fa;--dark:#1a1035; }
+  .edit-page { min-height:90vh;display:flex;align-items:flex-start;justify-content:center;padding:3rem 1.5rem 5rem;position:relative;overflow:hidden; }
+  .edit-page::before { content:'';position:fixed;width:350px;height:350px;background:var(--lemon);border-radius:50%;opacity:.1;top:-80px;left:-80px;pointer-events:none; }
+  .edit-page::after { content:'';position:fixed;width:250px;height:250px;background:var(--sky);border-radius:50%;opacity:.1;bottom:-60px;right:-60px;pointer-events:none; }
+  .edit-card { background:#fff;border:3px solid var(--dark);border-radius:28px;overflow:hidden;box-shadow:8px 8px 0 var(--dark);width:100%;max-width:720px;position:relative;z-index:1; }
+  .edit-banner { background:var(--lemon);border-bottom:3px solid var(--dark);padding:1.8rem 2rem;display:flex;align-items:center;gap:1rem;position:relative;overflow:hidden; }
+  .edit-banner::before { content:'✏️';position:absolute;font-size:10rem;opacity:.07;top:-2rem;right:-1rem;pointer-events:none; }
+  .edit-banner-icon { font-size:2.5rem; }
+  .edit-banner h2 { font-family:'Boogaloo',cursive;font-size:2rem;color:var(--dark);margin:0 0 .2rem; }
+  .edit-banner p { font-size:.82rem;font-weight:700;color:rgba(26,16,53,.55);margin:0; }
+  .edit-body { padding:2rem; }
+  .field-group { margin-bottom:1.3rem; }
+  .field-label { font-family:'Fredoka One',cursive;font-size:.92rem;color:var(--dark);display:block;margin-bottom:.45rem; }
+  .field-input { width:100%;background:var(--bg) !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.75rem 1.3rem !important;font-family:'Nunito',sans-serif !important;font-size:.95rem !important;font-weight:700 !important;outline:none !important;box-shadow:3px 3px 0 var(--dark) !important;color:var(--dark) !important;transition:all .2s !important;box-sizing:border-box; }
+  .field-input:focus { border-color:var(--lemon) !important;box-shadow:4px 4px 0 #e6c800 !important; }
+  .field-textarea { width:100%;background:var(--bg) !important;border:2.5px solid var(--dark) !important;border-radius:20px !important;padding:.75rem 1.3rem !important;font-family:'Nunito',sans-serif !important;font-size:.95rem !important;font-weight:700 !important;outline:none !important;box-shadow:3px 3px 0 var(--dark) !important;color:var(--dark) !important;transition:all .2s !important;box-sizing:border-box;resize:vertical;min-height:120px; }
+  .field-textarea:focus { border-color:var(--lemon) !important;box-shadow:4px 4px 0 #e6c800 !important; }
+  .field-file { width:100%;background:var(--bg) !important;border:2.5px dashed var(--dark) !important;border-radius:16px !important;padding:.75rem 1.3rem !important;font-family:'Nunito',sans-serif !important;font-size:.9rem !important;font-weight:700 !important;outline:none !important;color:var(--dark) !important;box-sizing:border-box;cursor:pointer; }
+  .field-select { width:100%;background:var(--bg) !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.75rem 1.3rem !important;font-family:'Nunito',sans-serif !important;font-size:.95rem !important;font-weight:700 !important;outline:none !important;box-shadow:3px 3px 0 var(--dark) !important;color:var(--dark) !important;cursor:pointer;box-sizing:border-box; }
+  #custom-category-wrap { display:none;margin-top:.6rem; }
+  #custom-category-wrap .field-input { border-radius:14px !important; }
+  .img-preview-wrap { background:var(--bg);border:2px solid var(--dark);border-radius:16px;padding:1rem;margin-bottom:.8rem;box-shadow:2px 2px 0 var(--dark);display:inline-block; }
+  .img-preview-label { font-size:.65rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:rgba(26,16,53,.4);margin-bottom:.5rem; }
+  .img-preview-wrap img { border:2px solid var(--dark);border-radius:12px;display:block;max-width:200px;max-height:140px;object-fit:cover; }
+  .field-row { display:grid;grid-template-columns:1fr 1fr;gap:1rem; }
+  .form-divider { height:2px;background:rgba(26,16,53,.07);border-radius:2px;margin:1.5rem 0; }
+  /* Tier builder */
+  .tier-section-label { font-family:'Boogaloo',cursive;font-size:1rem;color:rgba(26,16,53,.4);text-transform:uppercase;letter-spacing:2px;margin-bottom:.5rem; }
+  .tier-col-label { font-family:'Fredoka One',cursive;font-size:.72rem;color:rgba(26,16,53,.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:.25rem; }
+  .tier-row { display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.6rem;align-items:center;margin-bottom:.7rem; }
+  .tier-field { width:100%;background:var(--bg) !important;border:2.5px solid var(--dark) !important;border-radius:14px !important;padding:.65rem 1rem !important;font-family:'Nunito',sans-serif !important;font-size:.9rem !important;font-weight:700 !important;outline:none !important;box-shadow:3px 3px 0 var(--dark) !important;color:var(--dark) !important;box-sizing:border-box; }
+  .btn-remove-tier { background:#ffe4e0 !important;border:2px solid var(--dark) !important;border-radius:100px !important;padding:.45rem .9rem !important;font-family:'Fredoka One',cursive !important;font-size:.85rem !important;cursor:pointer !important;box-shadow:2px 2px 0 var(--dark) !important;transition:all .15s !important;color:var(--dark) !important; }
+  .btn-remove-tier:hover { transform:translate(-1px,-1px) !important;box-shadow:3px 3px 0 var(--dark) !important; }
+  .btn-add-tier { background:var(--lemon) !important;border:2px solid var(--dark) !important;border-radius:100px !important;padding:.5rem 1.4rem !important;font-family:'Fredoka One',cursive !important;font-size:.9rem !important;cursor:pointer !important;box-shadow:3px 3px 0 var(--dark) !important;transition:all .2s !important;color:var(--dark) !important;display:inline-flex;align-items:center;gap:.4rem; }
+  .btn-add-tier:hover { transform:translate(-1px,-1px) !important;box-shadow:4px 4px 0 var(--dark) !important; }
+  .btn-add-tier:disabled { opacity:.45 !important;cursor:not-allowed !important;transform:none !important; }
+  .tier-hint { font-size:.75rem;color:rgba(26,16,53,.45);font-weight:700;margin-top:.4rem; }
+  .form-btns { display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem; }
+  .btn-submit { flex:1;background:var(--lemon) !important;color:var(--dark) !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.85rem !important;font-family:'Fredoka One',cursive !important;font-size:1.05rem !important;cursor:pointer !important;box-shadow:4px 4px 0 var(--dark) !important;transition:all .2s !important;text-align:center; }
+  .btn-submit:hover { transform:translate(-2px,-2px) !important;box-shadow:6px 6px 0 var(--dark) !important; }
+  .btn-cancel-link { flex:1;background:#fff !important;color:var(--dark) !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.85rem !important;font-family:'Fredoka One',cursive !important;font-size:1.05rem !important;cursor:pointer !important;box-shadow:4px 4px 0 var(--dark) !important;transition:all .2s !important;text-decoration:none !important;text-align:center;display:block; }
+  .btn-cancel-link:hover { transform:translate(-2px,-2px) !important;box-shadow:6px 6px 0 var(--dark) !important;text-decoration:none !important;color:var(--dark) !important; }
+  .msg-box { border:2px solid var(--dark);border-radius:14px;padding:.7rem 1rem;font-weight:700;font-size:.85rem;box-shadow:2px 2px 0 var(--dark);margin-bottom:1.2rem;text-align:center; }
+  .msg-error { background:#ffe4e0;color:var(--dark); }
+  .msg-success { background:#d4fce8;color:var(--dark); }
+  @media(max-width:600px){ .field-row{grid-template-columns:1fr}.edit-page{padding:2rem 1rem 4rem}.form-btns{flex-direction:column}.tier-row{grid-template-columns:1fr 1fr auto} }
 </style>
 
 <div class="edit-page">
   <div class="edit-card">
-
-    <!-- Banner -->
     <div class="edit-banner">
       <div class="edit-banner-icon">✏️</div>
-      <div>
-        <h2>Edit Event</h2>
-        <p>Update your event details below</p>
-      </div>
+      <div><h2>Edit Event</h2><p>Update your event details below</p></div>
     </div>
-
-    <!-- Body -->
     <div class="edit-body">
-
-      <!-- Messages -->
-      {% if messages %}
-        {% for message in messages %}
-          <div class="msg-box {% if message.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
+      {% if messages %}{% for message in messages %}<div class="msg-box {% if message.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ message }}</div>{% endfor %}{% endif %}
 
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <!-- Title -->
         <div class="field-group">
           <label class="field-label">📝 Event Title</label>
-          <input
-            type="text"
-            name="title"
-            class="field-input"
-            value="{{ event.title }}"
-            placeholder="Give your event a name!"
-            required
-          >
+          <input type="text" name="title" class="field-input" value="{{ event.title }}" required>
         </div>
-
-        <!-- Description -->
         <div class="field-group">
           <label class="field-label">📄 Description</label>
-          <textarea
-            name="description"
-            class="field-textarea"
-            rows="4"
-            placeholder="Tell people what's happening..."
-          >{{ event.description }}</textarea>
+          <textarea name="description" class="field-textarea" rows="4">{{ event.description }}</textarea>
         </div>
 
-        <!-- Location + Date row -->
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">📍 Location</label>
-            <input
-              type="text"
-              name="location"
-              class="field-input"
-              value="{{ event.location }}"
-              placeholder="City or venue"
-            >
+            <input type="text" name="location" class="field-input" value="{{ event.location }}">
           </div>
           <div class="field-group">
             <label class="field-label">📅 Date & Time</label>
-            <input
-              type="datetime-local"
-              name="date"
-              class="field-input"
-              value="{{ event.date|date:'Y-m-d\TH:i' }}"
-            >
+            <input type="datetime-local" name="date" class="field-input" value="{{ event.date|date:'Y-m-d\TH:i' }}">
           </div>
         </div>
 
-        <!-- Capacity + Category row -->
         <div class="field-row">
           <div class="field-group">
-            <label class="field-label">👥 Capacity</label>
-            <input
-              type="number"
-              name="capacity"
-              class="field-input"
-              value="{{ event.capacity }}"
-              placeholder="Max attendees"
-            >
+            <label class="field-label">👥 Total Capacity</label>
+            <input type="number" name="capacity" class="field-input" value="{{ event.capacity }}">
           </div>
           <div class="field-group">
             <label class="field-label">🏷️ Category</label>
-            <select name="category" class="field-select">
-              <option value="Tech"
-                {% if event.category == 'Tech' %}selected{% endif %}>
-                💻 Tech
-              </option>
-              <option value="Music"
-                {% if event.category == 'Music' %}selected{% endif %}>
-                🎵 Music
-              </option>
-              <option value="Sports"
-                {% if event.category == 'Sports' %}selected{% endif %}>
-                ⚽ Sports
-              </option>
-              <option value="Business"
-                {% if event.category == 'Business' %}selected{% endif %}>
-                💼 Business
-              </option>
+            <select name="category_select" id="category-select" class="field-select">
+              <option value="Tech" {% if event.category == 'Tech' %}selected{% endif %}>💻 Tech</option>
+              <option value="Music" {% if event.category == 'Music' %}selected{% endif %}>🎵 Music</option>
+              <option value="Sports" {% if event.category == 'Sports' %}selected{% endif %}>⚽ Sports</option>
+              <option value="Business" {% if event.category == 'Business' %}selected{% endif %}>💼 Business</option>
+              <option value="Other" {% if event.category != 'Tech' and event.category != 'Music' and event.category != 'Sports' and event.category != 'Business' %}selected{% endif %}>✏️ Other</option>
             </select>
+            <div id="custom-category-wrap">
+              <input type="text" name="category_custom" id="category-custom" class="field-input"
+                value="{% if event.category != 'Tech' and event.category != 'Music' and event.category != 'Sports' and event.category != 'Business' %}{{ event.category }}{% endif %}"
+                placeholder="e.g. Fashion, Gaming...">
+            </div>
           </div>
         </div>
 
         <div class="form-divider"></div>
+        <div class="tier-section-label">🎟️ Ticket Tiers</div>
 
-        <!-- Image -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.6rem;margin-bottom:.3rem;">
+          <div class="tier-col-label">Tier Name</div>
+          <div class="tier-col-label">Price (₹)</div>
+          <div class="tier-col-label">Seats (0=unlimited)</div>
+          <div></div>
+        </div>
+
+        <div id="tier-container"></div>
+        <button type="button" class="btn-add-tier" id="add-tier-btn" onclick="addTier()">➕ Add Tier</button>
+        <div class="tier-hint">Max 4 tiers · Price 0 = Free/RSVP · Seats 0 = no tier limit</div>
+
+        <div class="form-divider"></div>
         <div class="field-group">
           <label class="field-label">🖼️ Update Image</label>
           {% if event.image %}
@@ -430,20 +132,53 @@
           <input type="file" name="image" class="field-file" accept="image/*">
         </div>
 
-        <!-- Buttons -->
         <div class="form-btns">
-          <button type="submit" class="btn-submit">
-            💾 Save Changes
-          </button>
-          <a href="{% url 'event_detail' event.id %}" class="btn-cancel-link">
-            ✕ Cancel
-          </a>
+          <button type="submit" class="btn-submit">💾 Save Changes</button>
+          <a href="{% url 'event_detail' event.id %}" class="btn-cancel-link">✕ Cancel</a>
         </div>
-
       </form>
     </div>
-
   </div>
 </div>
 
+{{ ticket_tiers|json_script:"existing-tiers" }}
+
+<script>
+  const MAX_TIERS = 4;
+  const catSelect = document.getElementById('category-select');
+  const customWrap = document.getElementById('custom-category-wrap');
+  const customInput = document.getElementById('category-custom');
+  function toggleCustomCategory(){
+    if(catSelect.value === 'Other'){ customWrap.style.display='block'; customInput.required=true; }
+    else { customWrap.style.display='none'; customInput.required=false; }
+  }
+  catSelect.addEventListener('change', toggleCustomCategory);
+  toggleCustomCategory();
+
+  function getTierCount(){ return document.querySelectorAll('.tier-row').length; }
+  function updateAddBtn(){ document.getElementById('add-tier-btn').disabled = getTierCount() >= MAX_TIERS; }
+  function addTier(name='', price='', capacity=''){
+    if(getTierCount() >= MAX_TIERS) return;
+    const container = document.getElementById('tier-container');
+    const row = document.createElement('div');
+    row.className = 'tier-row';
+    row.innerHTML = `
+      <input type="text" name="tier_name" class="tier-field" placeholder="e.g. VIP" value="${name}" required>
+      <input type="number" name="tier_price" class="tier-field" placeholder="0" value="${price}" min="0" step="0.01" required>
+      <input type="number" name="tier_capacity" class="tier-field" placeholder="0" value="${capacity}" min="0" required>
+      <button type="button" class="btn-remove-tier" onclick="removeTier(this)">✕</button>
+    `;
+    container.appendChild(row);
+    updateAddBtn();
+  }
+  function removeTier(btn){ btn.closest('.tier-row').remove(); updateAddBtn(); }
+
+  // Pre-populate existing tiers
+  const existingTiers = JSON.parse(document.getElementById('existing-tiers').textContent);
+  if(existingTiers.length > 0){
+    existingTiers.forEach(t => addTier(t.name, t.price, t.capacity));
+  } else {
+    addTier('General','','');
+  }
+</script>
 {% endblock %}

@@ -1,22 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Event, Booking
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import User
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.core.paginator import Paginator
 from django.db.models import Count, Sum
+from django.http import JsonResponse
+from django.utils import timezone
+from django.conf import settings
+from datetime import datetime
 import qrcode
 from io import BytesIO
 from django.core.files import File
-from django.core.paginator import Paginator
-from django.utils import timezone
-from datetime import datetime
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
-from .models import Event, Booking, UserProfile
-from django.core.mail import send_mail
-from django.conf import settings
-from .models import Event, Booking, UserProfile, OTPVerification
+
+from .models import Event, Booking, TicketTier, UserProfile, OTPVerification
 
 
 # ══════════════════════════════════════
@@ -24,9 +23,7 @@ from .models import Event, Booking, UserProfile, OTPVerification
 # ══════════════════════════════════════
 def home(request):
     events = Event.objects.all().order_by('-id')[:6]
-    return render(request, 'events/home.html', {
-        'events': events,
-    })
+    return render(request, 'events/home.html', {'events': events})
 
 
 # ══════════════════════════════════════
@@ -34,24 +31,21 @@ def home(request):
 # ══════════════════════════════════════
 def event_list(request):
     category = request.GET.get('category', '').strip()
-    query = request.GET.get('q', '').strip()
-
-    events = Event.objects.all().order_by('-id')
+    query    = request.GET.get('q', '').strip()
+    events   = Event.objects.all().order_by('-id')
 
     if category:
-        events = events.filter(category=category)
-
+        events = events.filter(category__iexact=category)
     if query:
         events = events.filter(title__icontains=query)
 
     paginator = Paginator(events, 6)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj  = paginator.get_page(request.GET.get('page'))
 
     return render(request, 'events/event_list.html', {
-        'page_obj': page_obj,
+        'page_obj':          page_obj,
         'selected_category': category,
-        'query': query,
+        'query':             query,
     })
 
 
@@ -59,23 +53,45 @@ def event_list(request):
 # EVENT DETAIL
 # ══════════════════════════════════════
 def event_detail(request, id):
-    event = get_object_or_404(Event, id=id)
-    total_bookings = Booking.objects.filter(event=event).count()
-    seats_left = event.capacity - total_bookings
+    event        = get_object_or_404(Event, id=id)
+    total_booked = Booking.objects.filter(event=event).count()
+    seats_left   = event.capacity - total_booked
+    ticket_tiers = event.ticket_tiers.all()
 
     user_booked = False
     if request.user.is_authenticated:
-        user_booked = Booking.objects.filter(
-            event=event,
-            user=request.user
-        ).exists()
+        user_booked = Booking.objects.filter(event=event, user=request.user).exists()
 
-    context = {
-        'event': event,
-        'seats_left': seats_left,
-        'user_booked': user_booked,
+    return render(request, 'events/event_detail.html', {
+        'event':        event,
+        'seats_left':   seats_left,
+        'user_booked':  user_booked,
+        'ticket_tiers': ticket_tiers,
+    })
+
+
+# ══════════════════════════════════════
+# TIER AVAILABILITY API (real-time JSON)
+# ══════════════════════════════════════
+def tier_availability(request, id):
+    event = get_object_or_404(Event, id=id)
+    data  = {
+        'event_seats_left': event.seats_left,
+        'tiers': [
+            {
+                'id':          tier.id,
+                'name':        tier.name,
+                'price':       str(tier.price),
+                'capacity':    tier.capacity,
+                'booked':      tier.booked_count,
+                'seats_left':  tier.seats_left,
+                'is_sold_out': tier.is_sold_out,
+                'is_free':     tier.is_free,
+            }
+            for tier in event.ticket_tiers.all()
+        ]
     }
-    return render(request, 'events/event_detail.html', context)
+    return JsonResponse(data)
 
 
 # ══════════════════════════════════════
@@ -88,9 +104,16 @@ def create_event(request):
         description = request.POST.get('description')
         location    = request.POST.get('location')
         capacity    = request.POST.get('capacity')
-        category    = request.POST.get('category')
         image       = request.FILES.get('image')
         event_date  = request.POST.get('date')
+
+        category_select = request.POST.get('category_select', '').strip()
+        category_custom = request.POST.get('category_custom', '').strip()
+        category = category_custom if category_select == 'Other' else category_select
+
+        if not category:
+            messages.error(request, "Please select or enter a category.")
+            return render(request, 'events/create_event.html')
 
         event_datetime = datetime.strptime(event_date, "%Y-%m-%dT%H:%M")
         event_datetime = timezone.make_aware(event_datetime)
@@ -99,17 +122,27 @@ def create_event(request):
             messages.error(request, "Event date cannot be in the past.")
             return render(request, 'events/create_event.html')
 
-        Event.objects.create(
-            title=title,
-            description=description,
-            location=location,
-            date=event_datetime,
-            capacity=capacity,
-            category=category,
-            image=image,
-            created_by=request.user
+        event = Event.objects.create(
+            title=title, description=description, location=location,
+            date=event_datetime, capacity=capacity, category=category,
+            image=image, created_by=request.user
         )
-        messages.success(request, "Event created successfully!")
+
+        tier_names     = request.POST.getlist('tier_name')
+        tier_prices    = request.POST.getlist('tier_price')
+        tier_capacities = request.POST.getlist('tier_capacity')
+
+        for name, price, cap in zip(tier_names, tier_prices, tier_capacities):
+            name = name.strip()
+            if name:
+                TicketTier.objects.create(
+                    event=event,
+                    name=name,
+                    price=float(price) if price else 0,
+                    capacity=int(cap) if cap else 0,
+                )
+
+        messages.success(request, "Event created successfully! 🎉")
         return redirect('event_list')
 
     return render(request, 'events/create_event.html')
@@ -127,29 +160,58 @@ def edit_event(request, id):
 
     if request.method == 'POST':
         event_date = request.POST.get('date')
-
         event_datetime = datetime.strptime(event_date, "%Y-%m-%dT%H:%M")
         event_datetime = timezone.make_aware(event_datetime)
 
         if event_datetime < timezone.now():
             messages.error(request, "Event date cannot be in the past.")
-            return render(request, 'events/edit_event.html', {'event': event})
+            return render(request, 'events/edit_event.html', {
+                'event': event, 'ticket_tiers': event.ticket_tiers.all()
+            })
+
+        category_select = request.POST.get('category_select', '').strip()
+        category_custom = request.POST.get('category_custom', '').strip()
+        category = category_custom if category_select == 'Other' else category_select
+
+        if not category:
+            messages.error(request, "Please select or enter a category.")
+            return render(request, 'events/edit_event.html', {
+                'event': event, 'ticket_tiers': event.ticket_tiers.all()
+            })
 
         event.title       = request.POST.get('title')
         event.description = request.POST.get('description')
         event.location    = request.POST.get('location')
         event.date        = event_datetime
         event.capacity    = request.POST.get('capacity')
-        event.category    = request.POST.get('category')
-
+        event.category    = category
         if request.FILES.get('image'):
             event.image = request.FILES.get('image')
-
         event.save()
-        messages.success(request, "Event updated successfully!")
+
+        # Replace all tiers
+        event.ticket_tiers.all().delete()
+        tier_names      = request.POST.getlist('tier_name')
+        tier_prices     = request.POST.getlist('tier_price')
+        tier_capacities = request.POST.getlist('tier_capacity')
+
+        for name, price, cap in zip(tier_names, tier_prices, tier_capacities):
+            name = name.strip()
+            if name:
+                TicketTier.objects.create(
+                    event=event,
+                    name=name,
+                    price=float(price) if price else 0,
+                    capacity=int(cap) if cap else 0,
+                )
+
+        messages.success(request, "Event updated successfully! ✅")
         return redirect('event_detail', id=event.id)
 
-    return render(request, 'events/edit_event.html', {'event': event})
+    return render(request, 'events/edit_event.html', {
+        'event':        event,
+        'ticket_tiers': event.ticket_tiers.all(),
+    })
 
 
 # ══════════════════════════════════════
@@ -181,37 +243,38 @@ def book_event(request, id):
         messages.warning(request, "You have already booked this event.")
         return redirect('event_detail', id=id)
 
-    total_bookings = Booking.objects.filter(event=event).count()
-    if total_bookings >= event.capacity:
+    # Check overall event capacity
+    if event.seats_left <= 0:
         messages.error(request, "Unable to book. Maximum audience reached.")
         return redirect('event_detail', id=id)
 
-    ticket_type = request.POST.get('ticket_type')
-    price = 1000 if ticket_type == 'VIP' else 500
+    tier_id = request.POST.get('tier_id')
+    tier    = get_object_or_404(TicketTier, id=tier_id, event=event)
+
+    # Check tier-specific capacity
+    if tier.is_sold_out:
+        messages.error(request, f"Sorry! {tier.name} tickets are sold out.")
+        return redirect('event_detail', id=id)
 
     booking = Booking.objects.create(
-        event=event,
-        user=request.user,
-        ticket_type=ticket_type,
-        price=price
+        event=event, user=request.user,
+        ticket_tier=tier, ticket_type=tier.name, price=tier.price
     )
 
+    # Generate QR code
     qr_data = (
         f"Event: {event.title}\n"
         f"User: {request.user.username}\n"
-        f"Ticket: {ticket_type}\n"
+        f"Ticket: {tier.name}\n"
         f"Booking ID: {booking.id}"
     )
-    qr = qrcode.make(qr_data)
+    qr     = qrcode.make(qr_data)
     buffer = BytesIO()
     qr.save(buffer, format='PNG')
-    file_name = f"booking_{booking.id}.png"
-    booking.qr_code.save(file_name, File(buffer), save=True)
+    booking.qr_code.save(f"booking_{booking.id}.png", File(buffer), save=True)
 
-    messages.success(
-        request,
-        f"Booking successful! Ticket: {ticket_type} | Rs.{price}"
-    )
+    price_display = "Free 🎁" if tier.is_free else f"Rs.{tier.price}"
+    messages.success(request, f"Booking confirmed! 🎉 {tier.name} | {price_display}")
     return redirect('event_detail', id=id)
 
 
@@ -220,12 +283,8 @@ def book_event(request, id):
 # ══════════════════════════════════════
 @login_required
 def my_bookings(request):
-    bookings = Booking.objects.filter(
-        user=request.user
-    ).order_by('-booked_at')
-    return render(request, 'events/my_bookings.html', {
-        'bookings': bookings
-    })
+    bookings = Booking.objects.filter(user=request.user).order_by('-booked_at')
+    return render(request, 'events/my_bookings.html', {'bookings': bookings})
 
 
 # ══════════════════════════════════════
@@ -240,24 +299,18 @@ def dashboard(request):
     total_events   = Event.objects.count()
     total_bookings = Booking.objects.count()
     total_users    = User.objects.count()
-    total_revenue  = Booking.objects.aggregate(
-        total=Sum('price')
-    )['total'] or 0
-
-    events_with_counts = Event.objects.annotate(
+    total_revenue  = Booking.objects.aggregate(total=Sum('price'))['total'] or 0
+    top_event      = Event.objects.annotate(
         booking_count=Count('booking')
-    ).order_by('-booking_count')
+    ).order_by('-booking_count').first()
 
-    top_event = events_with_counts.first()
-
-    context = {
+    return render(request, 'events/dashboard.html', {
         'total_events':   total_events,
         'total_bookings': total_bookings,
         'total_users':    total_users,
         'top_event':      top_event,
         'total_revenue':  total_revenue,
-    }
-    return render(request, 'events/dashboard.html', context)
+    })
 
 
 # ══════════════════════════════════════
@@ -270,7 +323,6 @@ def verify_ticket(request):
         return redirect('event_list')
 
     result = None
-
     if request.method == 'POST':
         booking_id = request.POST.get('booking_id')
         try:
@@ -284,9 +336,7 @@ def verify_ticket(request):
         except Booking.DoesNotExist:
             result = "Invalid ticket."
 
-    return render(request, 'events/verify_ticket.html', {
-        'result': result
-    })
+    return render(request, 'events/verify_ticket.html', {'result': result})
 
 
 # ══════════════════════════════════════
@@ -299,17 +349,12 @@ def event_attendees(request, id):
     if request.user != event.created_by and not request.user.is_superuser:
         return redirect('event_detail', id=id)
 
-    bookings = Booking.objects.filter(event=event).order_by('-booked_at')
-    total_revenue = bookings.aggregate(
-        total=Sum('price')
-    )['total'] or 0
+    bookings      = Booking.objects.filter(event=event).order_by('-booked_at')
+    total_revenue = bookings.aggregate(total=Sum('price'))['total'] or 0
 
-    context = {
-        'event':         event,
-        'bookings':      bookings,
-        'total_revenue': total_revenue,
-    }
-    return render(request, 'events/event_attendees.html', context)
+    return render(request, 'events/event_attendees.html', {
+        'event': event, 'bookings': bookings, 'total_revenue': total_revenue,
+    })
 
 
 # ══════════════════════════════════════
@@ -328,89 +373,57 @@ def cancel_booking(request, id):
         messages.success(request, "Booking cancelled successfully.")
         return redirect('event_detail', id=event_id)
 
-    return render(request, 'events/cancel_booking.html', {
-        'booking': booking
-    })
+    return render(request, 'events/cancel_booking.html', {'booking': booking})
 
 
 # ══════════════════════════════════════
-# REGISTER — sends email OTP
+# REGISTER
 # ══════════════════════════════════════
 def register(request):
     if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
-        email    = request.POST.get('email', '').strip()
-        mobile   = request.POST.get('mobile', '').strip()
+        username  = request.POST.get('username', '').strip()
+        email     = request.POST.get('email', '').strip()
+        mobile    = request.POST.get('mobile', '').strip()
         password1 = request.POST.get('password1', '')
         password2 = request.POST.get('password2', '')
 
-        # Validations
         if not username or not email or not password1:
             messages.error(request, "All fields are required.")
             return render(request, 'registration/register.html')
-
         if password1 != password2:
             messages.error(request, "Passwords do not match.")
             return render(request, 'registration/register.html')
-
         if len(password1) < 8:
             messages.error(request, "Password must be at least 8 characters.")
             return render(request, 'registration/register.html')
-
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already taken.")
             return render(request, 'registration/register.html')
-
         if User.objects.filter(email=email).exists():
             messages.error(request, "Email already registered.")
             return render(request, 'registration/register.html')
 
-        # Create inactive user
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password1,
-        )
-        user.is_active = False  # inactive until email verified
+        user           = User.objects.create_user(username=username, email=email, password=password1)
+        user.is_active = False
         user.save()
 
-        # Save mobile to profile
-        profile = user.userprofile
+        profile        = user.userprofile
         profile.mobile = mobile
         profile.save()
 
-        # Generate & send OTP
         otp_code = OTPVerification.generate_otp()
-        OTPVerification.objects.create(
-            user=user,
-            otp=otp_code,
-            otp_type='email_verify'
-        )
+        OTPVerification.objects.create(user=user, otp=otp_code, otp_type='email_verify')
 
         send_mail(
             subject='EventHub — Verify Your Email',
-            message=f'''Hi {username}!
-
-Welcome to EventHub! 🎉
-
-Your email verification OTP is:
-
-    {otp_code}
-
-This OTP is valid for 10 minutes.
-
-If you did not register on EventHub, please ignore this email.
-
-— The EventHub Team''',
+            message=f"Hi {username}!\n\nWelcome to EventHub! 🎉\n\nYour OTP is: {otp_code}\n\nValid for 10 minutes.\n\n— The EventHub Team",
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             fail_silently=False,
         )
 
-        # Store user id in session for OTP page
         request.session['otp_user_id'] = user.id
-        request.session['otp_type'] = 'email_verify'
-
+        request.session['otp_type']    = 'email_verify'
         messages.success(request, f"OTP sent to {email}!")
         return redirect('verify_otp')
 
@@ -418,10 +431,10 @@ If you did not register on EventHub, please ignore this email.
 
 
 # ══════════════════════════════════════
-# VERIFY OTP — email verification
+# VERIFY OTP
 # ══════════════════════════════════════
 def verify_otp(request):
-    user_id = request.session.get('otp_user_id')
+    user_id  = request.session.get('otp_user_id')
     otp_type = request.session.get('otp_type', 'email_verify')
 
     if not user_id:
@@ -432,60 +445,45 @@ def verify_otp(request):
 
     if request.method == 'POST':
         entered_otp = request.POST.get('otp', '').strip()
-
-        # Get latest unused OTP
         otp_obj = OTPVerification.objects.filter(
-            user=user,
-            otp_type=otp_type,
-            is_used=False
+            user=user, otp_type=otp_type, is_used=False
         ).order_by('-created_at').first()
 
         if not otp_obj:
             messages.error(request, "No OTP found. Please request a new one.")
             return render(request, 'registration/verify_otp.html', {'otp_type': otp_type, 'email': user.email})
-
         if not otp_obj.is_valid():
             messages.error(request, "OTP has expired. Please request a new one.")
             return render(request, 'registration/verify_otp.html', {'otp_type': otp_type, 'email': user.email})
-
         if otp_obj.otp != entered_otp:
             messages.error(request, "Invalid OTP. Please try again.")
             return render(request, 'registration/verify_otp.html', {'otp_type': otp_type, 'email': user.email})
 
-        # Mark OTP as used
         otp_obj.is_used = True
         otp_obj.save()
 
         if otp_type == 'email_verify':
-            # Activate user
             user.is_active = True
             user.save()
-            profile = user.userprofile
-            profile.is_email_verified = True
-            profile.save()
-            # Clear session
+            user.userprofile.is_email_verified = True
+            user.userprofile.save()
             del request.session['otp_user_id']
             del request.session['otp_type']
             messages.success(request, "Email verified! You can now login. 🎉")
             return redirect('login')
-
         elif otp_type == 'password_reset':
-            # Allow password reset
             request.session['otp_verified'] = True
             messages.success(request, "OTP verified! Set your new password.")
             return redirect('otp_set_password')
 
-    return render(request, 'registration/verify_otp.html', {
-        'otp_type': otp_type,
-        'email': user.email
-    })
+    return render(request, 'registration/verify_otp.html', {'otp_type': otp_type, 'email': user.email})
 
 
 # ══════════════════════════════════════
 # RESEND OTP
 # ══════════════════════════════════════
 def resend_otp(request):
-    user_id = request.session.get('otp_user_id')
+    user_id  = request.session.get('otp_user_id')
     otp_type = request.session.get('otp_type', 'email_verify')
 
     if not user_id:
@@ -493,36 +491,14 @@ def resend_otp(request):
         return redirect('register')
 
     user = get_object_or_404(User, id=user_id)
+    OTPVerification.objects.filter(user=user, otp_type=otp_type, is_used=False).update(is_used=True)
 
-    # Invalidate old OTPs
-    OTPVerification.objects.filter(
-        user=user,
-        otp_type=otp_type,
-        is_used=False
-    ).update(is_used=True)
-
-    # Generate new OTP
     otp_code = OTPVerification.generate_otp()
-    OTPVerification.objects.create(
-        user=user,
-        otp=otp_code,
-        otp_type=otp_type
-    )
-
-    subject = 'EventHub — Your New OTP'
-    message = f'''Hi {user.username}!
-
-Your new OTP is:
-
-    {otp_code}
-
-This OTP is valid for 10 minutes.
-
-— The EventHub Team'''
+    OTPVerification.objects.create(user=user, otp=otp_code, otp_type=otp_type)
 
     send_mail(
-        subject=subject,
-        message=message,
+        subject='EventHub — Your New OTP',
+        message=f"Hi {user.username}!\n\nYour new OTP is: {otp_code}\n\nValid for 10 minutes.\n\n— The EventHub Team",
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
         fail_silently=False,
@@ -533,53 +509,31 @@ This OTP is valid for 10 minutes.
 
 
 # ══════════════════════════════════════
-# FORGOT PASSWORD — send OTP
+# FORGOT PASSWORD
 # ══════════════════════════════════════
 def forgot_password(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
-
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             messages.error(request, "No account found with this email.")
             return render(request, 'registration/forgot_password.html')
 
-        # Invalidate old reset OTPs
-        OTPVerification.objects.filter(
-            user=user,
-            otp_type='password_reset',
-            is_used=False
-        ).update(is_used=True)
-
-        # Generate OTP
+        OTPVerification.objects.filter(user=user, otp_type='password_reset', is_used=False).update(is_used=True)
         otp_code = OTPVerification.generate_otp()
-        OTPVerification.objects.create(
-            user=user,
-            otp=otp_code,
-            otp_type='password_reset'
-        )
+        OTPVerification.objects.create(user=user, otp=otp_code, otp_type='password_reset')
 
         send_mail(
             subject='EventHub — Password Reset OTP',
-            message=f'''Hi {user.username}!
-
-Your password reset OTP is:
-
-    {otp_code}
-
-This OTP is valid for 10 minutes.
-If you did not request a password reset, please ignore this email.
-
-— The EventHub Team''',
+            message=f"Hi {user.username}!\n\nYour password reset OTP is: {otp_code}\n\nValid for 10 minutes.\n\n— The EventHub Team",
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             fail_silently=False,
         )
 
         request.session['otp_user_id'] = user.id
-        request.session['otp_type'] = 'password_reset'
-
+        request.session['otp_type']    = 'password_reset'
         messages.success(request, f"OTP sent to {email}!")
         return redirect('verify_otp')
 
@@ -587,10 +541,10 @@ If you did not request a password reset, please ignore this email.
 
 
 # ══════════════════════════════════════
-# SET NEW PASSWORD after OTP verified
+# SET NEW PASSWORD
 # ══════════════════════════════════════
 def otp_set_password(request):
-    user_id = request.session.get('otp_user_id')
+    user_id      = request.session.get('otp_user_id')
     otp_verified = request.session.get('otp_verified', False)
 
     if not user_id or not otp_verified:
@@ -606,15 +560,12 @@ def otp_set_password(request):
         if password1 != password2:
             messages.error(request, "Passwords do not match.")
             return render(request, 'registration/otp_set_password.html')
-
         if len(password1) < 8:
             messages.error(request, "Password must be at least 8 characters.")
             return render(request, 'registration/otp_set_password.html')
 
         user.set_password(password1)
         user.save()
-
-        # Clear session
         del request.session['otp_user_id']
         del request.session['otp_type']
         del request.session['otp_verified']
@@ -624,118 +575,87 @@ def otp_set_password(request):
 
     return render(request, 'registration/otp_set_password.html')
 
+
 # ══════════════════════════════════════
 # PROFILE
 # ══════════════════════════════════════
 @login_required
 def profile(request):
-    bookings = Booking.objects.filter(user=request.user).order_by('-booked_at')
-    total_spent = bookings.aggregate(total=Sum('price'))['total'] or 0
+    bookings       = Booking.objects.filter(user=request.user).order_by('-booked_at')
+    total_spent    = bookings.aggregate(total=Sum('price'))['total'] or 0
     events_created = Event.objects.filter(created_by=request.user).count()
+    profile, _     = UserProfile.objects.get_or_create(user=request.user)
 
-    # Get or create profile
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
-
-    context = {
-        'bookings': bookings,
-        'total_spent': total_spent,
+    return render(request, 'events/profile.html', {
+        'bookings':       bookings,
+        'total_spent':    total_spent,
         'events_created': events_created,
         'total_bookings': bookings.count(),
-        'profile': profile,
-    }
-    return render(request, 'events/profile.html', context)
+        'profile':        profile,
+    })
 
 
+# ══════════════════════════════════════
+# EDIT PROFILE
+# ══════════════════════════════════════
 @login_required
 def edit_profile(request):
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
-        first_name  = request.POST.get('first_name', '')
-        last_name   = request.POST.get('last_name', '')
-        new_email   = request.POST.get('email', '').strip()
-        bio         = request.POST.get('bio', '')
-        mobile      = request.POST.get('mobile', '')
-        location    = request.POST.get('location', '')
+        first_name = request.POST.get('first_name', '')
+        last_name  = request.POST.get('last_name', '')
+        new_email  = request.POST.get('email', '').strip()
+        bio        = request.POST.get('bio', '')
+        mobile     = request.POST.get('mobile', '')
+        location   = request.POST.get('location', '')
 
-        current_email = request.user.email
-        email_changed = new_email and new_email != current_email
+        email_changed = new_email and new_email != request.user.email
 
         if email_changed:
-            # Check email not taken by another user
             if User.objects.filter(email=new_email).exclude(id=request.user.id).exists():
                 messages.error(request, "This email is already used by another account.")
                 return render(request, 'events/edit_profile.html', {'profile': profile})
 
-            # Invalidate old email_change OTPs
             OTPVerification.objects.filter(
-                user=request.user,
-                otp_type='email_change',
-                is_used=False
+                user=request.user, otp_type='email_change', is_used=False
             ).update(is_used=True)
 
-            # Generate OTP
             otp_code = OTPVerification.generate_otp()
-            OTPVerification.objects.create(
-                user=request.user,
-                otp=otp_code,
-                otp_type='email_change'
-            )
+            OTPVerification.objects.create(user=request.user, otp=otp_code, otp_type='email_change')
 
-            # Save other fields first (not email)
             request.user.first_name = first_name
             request.user.last_name  = last_name
             request.user.save()
-            profile.bio      = bio
-            profile.mobile   = mobile
-            profile.location = location
+            profile.bio = bio; profile.mobile = mobile; profile.location = location
             if request.FILES.get('profile_picture'):
-                profile.profile_picture = request.FILES.get('profile_picture')
+                profile.profile_picture = request.FILES['profile_picture']
             profile.save()
 
-            # Send OTP to NEW email
             send_mail(
                 subject='EventHub — Verify Your New Email',
-                message=f'''Hi {request.user.username}!
-
-You requested to change your email address on EventHub.
-
-Your verification OTP is:
-
-    {otp_code}
-
-This OTP is valid for 10 minutes.
-If you did not request this change, please ignore this email.
-
-— The EventHub Team''',
+                message=f"Hi {request.user.username}!\n\nYour email change OTP is: {otp_code}\n\nValid for 10 minutes.\n\n— The EventHub Team",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[new_email],
                 fail_silently=False,
             )
 
-            # Store in session
             request.session['otp_user_id']   = request.user.id
             request.session['otp_type']      = 'email_change'
             request.session['pending_email'] = new_email
-
-            messages.success(request, f"OTP sent to {new_email} — please verify to update your email!")
+            messages.success(request, f"OTP sent to {new_email} — verify to update email!")
             return redirect('verify_email_change')
 
         else:
-            # No email change — update everything directly
             request.user.first_name = first_name
             request.user.last_name  = last_name
             if new_email:
-                request.user.email  = new_email
+                request.user.email = new_email
             request.user.save()
-
-            profile.bio      = bio
-            profile.mobile   = mobile
-            profile.location = location
+            profile.bio = bio; profile.mobile = mobile; profile.location = location
             if request.FILES.get('profile_picture'):
-                profile.profile_picture = request.FILES.get('profile_picture')
+                profile.profile_picture = request.FILES['profile_picture']
             profile.save()
-
             messages.success(request, "Profile updated successfully! ✅")
             return redirect('profile')
 
@@ -743,7 +663,7 @@ If you did not request this change, please ignore this email.
 
 
 # ══════════════════════════════════════
-# VERIFY EMAIL CHANGE OTP
+# VERIFY EMAIL CHANGE
 # ══════════════════════════════════════
 @login_required
 def verify_email_change(request):
@@ -756,37 +676,28 @@ def verify_email_change(request):
 
     if request.method == 'POST':
         entered_otp = request.POST.get('otp', '').strip()
-
         otp_obj = OTPVerification.objects.filter(
-            user=request.user,
-            otp_type='email_change',
-            is_used=False
+            user=request.user, otp_type='email_change', is_used=False
         ).order_by('-created_at').first()
 
         if not otp_obj:
             messages.error(request, "No OTP found. Please try again.")
             return render(request, 'events/verify_email_change.html', {'email': pending_email})
-
         if not otp_obj.is_valid():
-            messages.error(request, "OTP has expired. Please update profile again.")
+            messages.error(request, "OTP expired. Please update profile again.")
             return render(request, 'events/verify_email_change.html', {'email': pending_email})
-
         if otp_obj.otp != entered_otp:
             messages.error(request, "Invalid OTP. Please try again.")
             return render(request, 'events/verify_email_change.html', {'email': pending_email})
 
-        # Mark OTP used and update email
-        otp_obj.is_used = True
+        otp_obj.is_used    = True
         otp_obj.save()
-
         request.user.email = pending_email
         request.user.save()
 
-        # Clear session
         del request.session['pending_email']
         del request.session['otp_type']
-        if 'otp_user_id' in request.session:
-            del request.session['otp_user_id']
+        request.session.pop('otp_user_id', None)
 
         messages.success(request, f"Email updated to {pending_email} successfully! ✅")
         return redirect('profile')

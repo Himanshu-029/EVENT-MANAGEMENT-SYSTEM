@@ -1,144 +1,135 @@
 from django.db import models
 from django.contrib.auth.models import User
-import qrcode
-from io import BytesIO
-from django.core.files import File
-from django.db import models
-from django.contrib.auth.models import User
-import qrcode
-from io import BytesIO
-from django.core.files import File
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
+from datetime import timedelta
+import random
 
 
-
+# ══════════════════════════════════════
+# EVENT
+# ══════════════════════════════════════
 class Event(models.Model):
-    title = models.CharField(max_length=200)
+    PRESET_CATEGORIES = ['Tech', 'Music', 'Sports', 'Business']
+
+    title       = models.CharField(max_length=200)
     description = models.TextField()
-    location = models.CharField(max_length=200)
-    date = models.DateTimeField()
-    capacity = models.IntegerField()
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='event_images/', blank=True, null=True)
-
-    CATEGORY_CHOICES = [
-        ('Tech', 'Tech'),
-        ('Music', 'Music'),
-        ('Sports', 'Sports'),
-        ('Business', 'Business'),
-    ]
-
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='Tech')
+    location    = models.CharField(max_length=200)
+    date        = models.DateTimeField()
+    capacity    = models.IntegerField()
+    created_by  = models.ForeignKey(User, on_delete=models.CASCADE)
+    image       = models.ImageField(upload_to='event_images/', blank=True, null=True)
+    category    = models.CharField(max_length=100)
 
     def __str__(self):
         return self.title
-    
-class Booking(models.Model):
-    TICKET_CHOICES = [
-        ('Regular', 'Regular'),
-        ('VIP', 'VIP'),
-    ]
 
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    ticket_type = models.CharField(max_length=20, choices=TICKET_CHOICES, default='Regular')
-    price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-    booked_at = models.DateTimeField(auto_now_add=True)
-    qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
-    is_used = models.BooleanField(default=False)
+    @property
+    def total_booked(self):
+        return self.booking_set.count()
+
+    @property
+    def seats_left(self):
+        return self.capacity - self.total_booked
+
+
+# ══════════════════════════════════════
+# TICKET TIER
+# ══════════════════════════════════════
+class TicketTier(models.Model):
+    event    = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='ticket_tiers')
+    name     = models.CharField(max_length=100)
+    price    = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    capacity = models.IntegerField(default=0)  # 0 = unlimited within event capacity
 
     def __str__(self):
-        return f"{self.user.username} - {self.event.title} ({self.ticket_type})"
+        return f"{self.event.title} — {self.name} (Rs.{self.price})"
+
+    @property
+    def is_free(self):
+        return self.price == 0
+
+    @property
+    def booked_count(self):
+        return self.booking_set.count()
+
+    @property
+    def seats_left(self):
+        if self.capacity == 0:
+            # No tier limit — bounded only by event capacity
+            return self.event.seats_left
+        return max(0, self.capacity - self.booked_count)
+
+    @property
+    def is_sold_out(self):
+        return self.seats_left == 0
 
 
+# ══════════════════════════════════════
+# BOOKING
+# ══════════════════════════════════════
+class Booking(models.Model):
+    event       = models.ForeignKey(Event, on_delete=models.CASCADE)
+    user        = models.ForeignKey(User, on_delete=models.CASCADE)
+    ticket_tier = models.ForeignKey(TicketTier, on_delete=models.SET_NULL, null=True, blank=True)
+    # Snapshot name+price at booking time so history stays intact if tier is edited
+    ticket_type = models.CharField(max_length=100, default='General')
+    price       = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    booked_at   = models.DateTimeField(auto_now_add=True)
+    qr_code     = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    is_used     = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username} — {self.event.title} ({self.ticket_type})"
+
+
+# ══════════════════════════════════════
+# USER PROFILE
+# ══════════════════════════════════════
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    bio = models.TextField(blank=True, null=True, max_length=300)
-    mobile = models.CharField(max_length=15, blank=True, null=True)
-    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-    location = models.CharField(max_length=100, blank=True, null=True)
+    user              = models.OneToOneField(User, on_delete=models.CASCADE)
+    bio               = models.TextField(blank=True, null=True, max_length=300)
+    mobile            = models.CharField(max_length=15, blank=True, null=True)
+    profile_picture   = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    location          = models.CharField(max_length=100, blank=True, null=True)
     is_email_verified = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
 
 
-# Auto create profile when user is created
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.userprofile.save()
 
 
-class Event(models.Model):
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    location = models.CharField(max_length=200)
-    date = models.DateTimeField()
-    capacity = models.IntegerField()
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='event_images/', blank=True, null=True)
-
-    CATEGORY_CHOICES = [
-        ('Tech', 'Tech'),
-        ('Music', 'Music'),
-        ('Sports', 'Sports'),
-        ('Business', 'Business'),
-    ]
-
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='Tech')
-
-    def __str__(self):
-        return self.title
-
-
-class Booking(models.Model):
-    TICKET_CHOICES = [
-        ('Regular', 'Regular'),
-        ('VIP', 'VIP'),
-    ]
-
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    ticket_type = models.CharField(max_length=20, choices=TICKET_CHOICES, default='Regular')
-    price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-    booked_at = models.DateTimeField(auto_now_add=True)
-    qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
-    is_used = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"{self.user.username} - {self.event.title} ({self.ticket_type})"
-    
-
-
-# ---------OTP VERIFICATION-----------
-    
-
-import random
-from django.utils import timezone
-from datetime import timedelta
-
+# ══════════════════════════════════════
+# OTP VERIFICATION
+# ══════════════════════════════════════
 class OTPVerification(models.Model):
     OTP_TYPES = [
-        ('email_verify', 'Email Verification'),
+        ('email_verify',   'Email Verification'),
         ('password_reset', 'Password Reset'),
-        ('email_change', 'Email Change'),
+        ('email_change',   'Email Change'),
     ]
-    
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    otp = models.CharField(max_length=6)
-    otp_type = models.CharField(max_length=20, choices=OTP_TYPES)
+
+    user       = models.ForeignKey(User, on_delete=models.CASCADE)
+    otp        = models.CharField(max_length=6)
+    otp_type   = models.CharField(max_length=20, choices=OTP_TYPES)
     created_at = models.DateTimeField(auto_now_add=True)
-    is_used = models.BooleanField(default=False)
+    is_used    = models.BooleanField(default=False)
 
     def is_valid(self):
-        # OTP valid for 10 minutes
-        return not self.is_used and (timezone.now() < self.created_at + timedelta(minutes=10))
+        return not self.is_used and (
+            timezone.now() < self.created_at + timedelta(minutes=10)
+        )
 
     def __str__(self):
         return f"{self.user.username} - {self.otp_type} - {self.otp}"
