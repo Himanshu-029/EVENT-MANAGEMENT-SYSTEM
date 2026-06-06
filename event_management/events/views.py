@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.conf import settings
 from datetime import datetime
+from django.core.mail import send_mail, EmailMessage
 import qrcode
 import requests as req
 from io import BytesIO
@@ -328,11 +329,44 @@ def book_event(request, id):
     qr     = qrcode.make(qr_data)
     buffer = BytesIO()
     qr.save(buffer, format='PNG')
+    qr_bytes = buffer.getvalue()  # Save bytes before seeking
+    buffer.seek(0)
     booking.qr_code.save(f"booking_{booking.id}.png", File(buffer), save=True)
+
+    # Send confirmation email with QR attached
+    try:
+        price_display = "Free" if tier.is_free else f"Rs.{tier.price}"
+        email_msg = EmailMessage(
+            subject=f"🎉 Booking Confirmed — {event.title}",
+            body=f"""Hi {request.user.username}!
+
+Your booking is confirmed! 🎊
+
+─────────────────────────────
+Event:     {event.title}
+Date:      {event.date.strftime('%B %d, %Y · %I:%M %p')}
+Location:  {event.location}
+Ticket:    {tier.name}
+Price:     {price_display}
+Booking #: {booking.id}
+─────────────────────────────
+
+Your QR code is attached — show it at the entrance for entry.
+
+See you there! 🚀
+
+— The EventHub Team""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[request.user.email],
+        )
+        email_msg.attach(f"ticket_{booking.id}.png", qr_bytes, 'image/png')
+        email_msg.send(fail_silently=True)
+    except Exception:
+        pass
 
     price_display = "Free 🎁" if tier.is_free else f"Rs.{tier.price}"
     messages.success(request, f"Booking confirmed! 🎉 {tier.name} | {price_display}")
-    return redirect('event_detail', id=id)
+    return redirect(f'/event/{id}/?booked=1')
 
 
 # ══════════════════════════════════════

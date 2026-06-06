@@ -5,6 +5,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <!-- Marked.js for markdown rendering -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- canvas-confetti CDN -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
 <style>
   body{background:#fff0fa !important;background-image:none !important;}
@@ -119,9 +121,47 @@
   .live-status-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-family:'Fredoka One',cursive;font-size:.8rem;color:rgba(26,16,53,.5);}
   .live-indicator{display:flex;align-items:center;gap:.3rem;background:#e8fff5;border:1.5px solid var(--mint);border-radius:100px;padding:.2rem .7rem;color:#1a8c5c;font-size:.75rem;}
   @media(max-width:900px){.detail-grid{grid-template-columns:1fr}.booking-panel{position:static}.detail-page{padding:2rem 1.5rem 4rem}.info-grid{grid-template-columns:1fr}}
+
+  /* ── CONFETTI CELEBRATION ── */
+  .celebration-overlay{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(26,16,53,.6);z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transition:opacity .3s;pointer-events:none;
+  }
+  .celebration-overlay.show{opacity:1;pointer-events:all;}
+  .celebration-card{
+    background:#fff;border:3px solid var(--dark);
+    border-radius:28px;padding:2.5rem;
+    box-shadow:8px 8px 0 var(--dark);
+    text-align:center;max-width:360px;width:90%;
+    transform:scale(.8);transition:transform .3s;
+  }
+  .celebration-overlay.show .celebration-card{transform:scale(1);}
+  .celebration-emoji{font-size:4rem;margin-bottom:.5rem;}
+  .celebration-title{font-family:'Boogaloo',cursive;font-size:2rem;color:var(--dark);margin-bottom:.3rem;}
+  .celebration-sub{font-family:'Fredoka One',cursive;font-size:.95rem;color:rgba(26,16,53,.55);margin-bottom:1.5rem;}
+  .celebration-close{
+    background:var(--mint);border:2.5px solid var(--dark);
+    border-radius:100px;padding:.6rem 2rem;
+    font-family:'Fredoka One',cursive;font-size:1rem;
+    cursor:pointer;box-shadow:3px 3px 0 var(--dark);
+    transition:all .2s;
+  }
+  .celebration-close:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--dark);}
 </style>
 
 <div class="detail-page">
+  <!-- ── CONFETTI CELEBRATION OVERLAY ── -->
+  <div class="celebration-overlay" id="celebration-overlay">
+    <div class="celebration-card">
+      <div class="celebration-emoji">🎊</div>
+      <div class="celebration-title">You're In!</div>
+      <div class="celebration-sub">Booking confirmed! Check your email for your ticket + QR code 🎟️</div>
+      <button class="celebration-close" onclick="closeCelebration()">Let's gooo! 🚀</button>
+    </div>
+  </div>
+
   <a href="{% url 'event_list' %}" class="btn-back">← Back to Events</a>
 
   <div class="detail-grid">
@@ -436,6 +476,47 @@
       setTimeout(() => { btn.textContent='🔗 Copy Link'; btn.classList.remove('copied'); }, 2000);
     });
   }
+
+  // ── Confetti Celebration ──
+  {% if request.GET.booked %}
+  function launchConfetti(){
+    const colors = ['#ff6eb4','#74c7f5','#5ee7bf','#ffe566','#c084fc'];
+    confetti({
+      particleCount: 120,
+      spread: 80,
+      origin: { y: 0.5 },
+      colors: colors,
+    });
+    setTimeout(() => confetti({
+      particleCount: 80,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 },
+      colors: colors,
+    }), 300);
+    setTimeout(() => confetti({
+      particleCount: 80,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1 },
+      colors: colors,
+    }), 600);
+  }
+
+  function closeCelebration(){
+    document.getElementById('celebration-overlay').classList.remove('show');
+  }
+
+  // Trigger on page load
+  window.addEventListener('load', function(){
+    setTimeout(() => {
+      document.getElementById('celebration-overlay').classList.add('show');
+      launchConfetti();
+      // Auto close after 6 seconds
+      setTimeout(closeCelebration, 6000);
+    }, 500);
+  });
+  {% endif %}
 </script>
 
 {% endblock %}
