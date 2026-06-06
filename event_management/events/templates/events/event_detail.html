@@ -1,112 +1,124 @@
 {% extends 'events/base.html' %}
 {% block content %}
 
-<style>
-  body { background:#fff0fa !important;background-image:none !important; }
-  body::before { display:none !important; }
-  .container.mt-5 { margin-top:0 !important;max-width:100% !important;padding:0 !important; }
-  :root { --pink:#ff6eb4;--sky:#74c7f5;--mint:#5ee7bf;--lemon:#ffe566;--lavender:#c084fc;--coral:#ff7f6e;--bg:#fff0fa;--dark:#1a1035; }
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- Marked.js for markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  .detail-page { max-width:1200px;margin:0 auto;padding:3rem 3rem 5rem; }
-  .btn-back { display:inline-flex;align-items:center;gap:.4rem;background:#fff;border:2.5px solid var(--dark);border-radius:100px;padding:.45rem 1.2rem;font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--dark) !important;text-decoration:none !important;box-shadow:3px 3px 0 var(--dark);transition:all .2s;margin-bottom:2rem; }
-  .btn-back:hover { transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--dark); }
-  .detail-grid { display:grid;grid-template-columns:1fr 380px;gap:2rem;align-items:start; }
-  .main-card { background:#fff;border:2.5px solid var(--dark);border-radius:24px;overflow:hidden;box-shadow:6px 6px 0 var(--dark); }
-  .main-card-img { width:100%;max-height:380px;object-fit:cover;border-bottom:2.5px solid var(--dark);display:block; }
-  .main-card-top { height:220px;display:flex;align-items:center;justify-content:center;font-size:7rem;border-bottom:2.5px solid var(--dark); }
-  .top-tech { background:linear-gradient(135deg,#d4f0ff,#e0f7ff); }
-  .top-music { background:linear-gradient(135deg,#ffd6ec,#ffe4f8); }
-  .top-sports { background:linear-gradient(135deg,#d4fce8,#e0fff0); }
-  .top-business { background:linear-gradient(135deg,#fff3cc,#fffae0); }
-  .top-default { background:linear-gradient(135deg,#f0e0ff,#fce0ff); }
-  .main-card-body { padding:2rem; }
-  .mini-tag { display:inline-block;padding:.15rem .8rem;border-radius:100px;font-size:.72rem;font-weight:800;border:2px solid var(--dark);margin-bottom:1rem; }
-  .t-sky { background:var(--sky);color:var(--dark); } .t-pink { background:var(--pink);color:#fff; }
-  .t-mint { background:var(--mint);color:var(--dark); } .t-lemon { background:var(--lemon);color:var(--dark); }
-  .t-lav { background:var(--lavender);color:#fff; }
-  .event-title-big { font-family:'Boogaloo',cursive;font-size:clamp(2rem,4vw,3rem);color:var(--dark);line-height:1.1;margin-bottom:1rem; }
-  .event-desc { font-size:.95rem;color:rgba(26,16,53,.65);font-weight:600;line-height:1.8;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:2px dashed rgba(26,16,53,.1); }
-  .info-grid { display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem; }
-  .info-item { background:var(--bg);border:2px solid var(--dark);border-radius:14px;padding:.8rem 1rem;box-shadow:2px 2px 0 var(--dark); }
-  .info-label { font-size:.65rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:rgba(26,16,53,.45);margin-bottom:.2rem; }
-  .info-value { font-family:'Fredoka One',cursive;font-size:.95rem;color:var(--dark); }
-  .countdown-box { background:var(--dark);border:2.5px solid var(--dark);border-radius:16px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;box-shadow:4px 4px 0 rgba(26,16,53,.3); }
-  .countdown-label { font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:700; }
-  #countdown { font-family:'Boogaloo',cursive;font-size:1.6rem;color:var(--lemon);letter-spacing:2px; }
-  .seats-section { margin-bottom:1.5rem; }
-  .seats-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem; }
-  .seats-label { font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--dark); }
-  .seats-count { font-family:'Boogaloo',cursive;font-size:1.1rem;color:var(--pink); }
-  .progress-y2k { height:16px;background:rgba(26,16,53,.08);border:2px solid var(--dark);border-radius:100px;overflow:hidden; }
-  .progress-fill { height:100%;background:linear-gradient(90deg,var(--mint),#3dd6a0);border-radius:100px;transition:width .5s ease; }
-  .organizer-bar { display:flex;gap:.8rem;flex-wrap:wrap;padding:1.2rem 2rem;background:var(--lemon);border-top:2px solid var(--dark); }
-  .btn-org { border:2.5px solid var(--dark) !important;border-radius:100px !important;font-family:'Fredoka One',cursive !important;font-size:.85rem !important;padding:.4rem 1.2rem !important;cursor:pointer !important;box-shadow:3px 3px 0 var(--dark) !important;transition:all .2s !important;text-decoration:none !important;display:inline-block !important; }
-  .btn-org:hover { transform:translate(-2px,-2px) !important;box-shadow:5px 5px 0 var(--dark) !important;text-decoration:none !important; }
-  .btn-edit { background:var(--lemon) !important;color:var(--dark) !important; }
-  .btn-delete { background:var(--coral) !important;color:#fff !important; }
-  .btn-attend { background:var(--sky) !important;color:var(--dark) !important; }
+<style>
+  body{background:#fff0fa !important;background-image:none !important;}
+  body::before{display:none !important;}
+  .container.mt-5{margin-top:0 !important;max-width:100% !important;padding:0 !important;}
+  :root{--pink:#ff6eb4;--sky:#74c7f5;--mint:#5ee7bf;--lemon:#ffe566;--lavender:#c084fc;--coral:#ff7f6e;--bg:#fff0fa;--dark:#1a1035;}
+  .detail-page{max-width:1200px;margin:0 auto;padding:3rem 3rem 5rem;}
+  .btn-back{display:inline-flex;align-items:center;gap:.4rem;background:#fff;border:2.5px solid var(--dark);border-radius:100px;padding:.45rem 1.2rem;font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--dark) !important;text-decoration:none !important;box-shadow:3px 3px 0 var(--dark);transition:all .2s;margin-bottom:2rem;}
+  .btn-back:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--dark);}
+  .detail-grid{display:grid;grid-template-columns:1fr 380px;gap:2rem;align-items:start;}
+  .main-card{background:#fff;border:2.5px solid var(--dark);border-radius:24px;overflow:hidden;box-shadow:6px 6px 0 var(--dark);}
+  .main-card-img{width:100%;max-height:380px;object-fit:cover;border-bottom:2.5px solid var(--dark);display:block;}
+  .main-card-top{height:220px;display:flex;align-items:center;justify-content:center;font-size:7rem;border-bottom:2.5px solid var(--dark);}
+  .top-tech{background:linear-gradient(135deg,#d4f0ff,#e0f7ff);}
+  .top-music{background:linear-gradient(135deg,#ffd6ec,#ffe4f8);}
+  .top-sports{background:linear-gradient(135deg,#d4fce8,#e0fff0);}
+  .top-business{background:linear-gradient(135deg,#fff3cc,#fffae0);}
+  .top-default{background:linear-gradient(135deg,#f0e0ff,#fce0ff);}
+  .main-card-body{padding:2rem;}
+  .mini-tag{display:inline-block;padding:.15rem .8rem;border-radius:100px;font-size:.72rem;font-weight:800;border:2px solid var(--dark);margin-bottom:1rem;}
+  .t-sky{background:var(--sky);color:var(--dark);} .t-pink{background:var(--pink);color:#fff;}
+  .t-mint{background:var(--mint);color:var(--dark);} .t-lemon{background:var(--lemon);color:var(--dark);}
+  .t-lav{background:var(--lavender);color:#fff;}
+  .event-title-big{font-family:'Boogaloo',cursive;font-size:clamp(2rem,4vw,3rem);color:var(--dark);line-height:1.1;margin-bottom:1rem;}
+
+  /* ── DESCRIPTION MARKDOWN STYLES ── */
+  .event-desc{font-size:.95rem;color:rgba(26,16,53,.65);font-weight:600;line-height:1.8;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:2px dashed rgba(26,16,53,.1);}
+  .event-desc h1,.event-desc h2,.event-desc h3{font-family:'Boogaloo',cursive;color:var(--dark);margin:.8rem 0 .4rem;}
+  .event-desc h1{font-size:1.5rem;} .event-desc h2{font-size:1.25rem;} .event-desc h3{font-size:1.1rem;}
+  .event-desc ul,.event-desc ol{padding-left:1.5rem;margin:.4rem 0;}
+  .event-desc li{margin-bottom:.2rem;}
+  .event-desc strong{color:var(--dark);font-weight:800;}
+  .event-desc p{margin-bottom:.6rem;}
+  .event-desc a{color:var(--pink);font-weight:700;}
+
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+  .info-item{background:var(--bg);border:2px solid var(--dark);border-radius:14px;padding:.8rem 1rem;box-shadow:2px 2px 0 var(--dark);}
+  .info-label{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:rgba(26,16,53,.45);margin-bottom:.2rem;}
+  .info-value{font-family:'Fredoka One',cursive;font-size:.95rem;color:var(--dark);}
+  .countdown-box{background:var(--dark);border:2.5px solid var(--dark);border-radius:16px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;box-shadow:4px 4px 0 rgba(26,16,53,.3);}
+  .countdown-label{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:700;}
+  #countdown{font-family:'Boogaloo',cursive;font-size:1.6rem;color:var(--lemon);letter-spacing:2px;}
+  .seats-section{margin-bottom:1.5rem;}
+  .seats-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;}
+  .seats-label{font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--dark);}
+  .seats-count{font-family:'Boogaloo',cursive;font-size:1.1rem;color:var(--pink);}
+  .progress-y2k{height:16px;background:rgba(26,16,53,.08);border:2px solid var(--dark);border-radius:100px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--mint),#3dd6a0);border-radius:100px;transition:width .5s ease;}
+
+  /* ── MAP ── */
+  .map-section{margin-bottom:1.5rem;}
+  .map-section-label{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:rgba(26,16,53,.45);margin-bottom:.6rem;}
+  #event-map{width:100%;height:240px;border:2.5px solid var(--dark);border-radius:16px;box-shadow:3px 3px 0 var(--dark);z-index:0;position:relative;}
+  .leaflet-container{border-radius:14px;}
+  .btn-directions{display:inline-flex;align-items:center;gap:.5rem;background:var(--sky);border:2px solid var(--dark);border-radius:100px;padding:.5rem 1.3rem;font-family:'Fredoka One',cursive;font-size:.88rem;color:var(--dark) !important;text-decoration:none !important;box-shadow:3px 3px 0 var(--dark);transition:all .2s;margin-top:.7rem;}
+  .btn-directions:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--dark);}
+
+  /* ── SHARE ── */
+  .share-section{margin-bottom:1.5rem;}
+  .share-label{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:rgba(26,16,53,.45);margin-bottom:.6rem;}
+  .share-btns{display:flex;gap:.6rem;flex-wrap:wrap;}
+  .btn-share{display:inline-flex;align-items:center;gap:.4rem;border:2px solid var(--dark);border-radius:100px;padding:.4rem 1rem;font-family:'Fredoka One',cursive;font-size:.82rem;cursor:pointer;box-shadow:2px 2px 0 var(--dark);transition:all .2s;text-decoration:none !important;}
+  .btn-share:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--dark);}
+  .share-wa{background:#25D366;color:#fff !important;}
+  .share-x{background:#000;color:#fff !important;}
+  .share-copy{background:var(--lemon);color:var(--dark) !important;}
+  .share-copy.copied{background:var(--mint) !important;}
+
+  .organizer-bar{display:flex;gap:.8rem;flex-wrap:wrap;padding:1.2rem 2rem;background:var(--lemon);border-top:2px solid var(--dark);}
+  .btn-org{border:2.5px solid var(--dark) !important;border-radius:100px !important;font-family:'Fredoka One',cursive !important;font-size:.85rem !important;padding:.4rem 1.2rem !important;cursor:pointer !important;box-shadow:3px 3px 0 var(--dark) !important;transition:all .2s !important;text-decoration:none !important;display:inline-block !important;}
+  .btn-org:hover{transform:translate(-2px,-2px) !important;box-shadow:5px 5px 0 var(--dark) !important;text-decoration:none !important;}
+  .btn-edit{background:var(--lemon) !important;color:var(--dark) !important;}
+  .btn-delete{background:var(--coral) !important;color:#fff !important;}
+  .btn-attend{background:var(--sky) !important;color:var(--dark) !important;}
 
   /* ── BOOKING PANEL ── */
-  .booking-panel { background:#fff;border:2.5px solid var(--dark);border-radius:24px;overflow:hidden;box-shadow:6px 6px 0 var(--dark);position:sticky;top:2rem; }
-  .booking-header { background:var(--dark);padding:1.2rem 1.5rem;display:flex;align-items:center;gap:.5rem; }
-  .booking-header h4 { font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--lemon);margin:0; }
-  .booking-body { padding:1.5rem; }
-  .booked-badge { background:var(--mint);border:2px solid var(--dark);border-radius:16px;padding:.8rem 1rem;text-align:center;font-family:'Fredoka One',cursive;font-size:1rem;color:var(--dark);margin-bottom:1.2rem;box-shadow:2px 2px 0 var(--dark); }
-  .qr-section { text-align:center;padding:1rem;background:var(--bg);border:2px solid var(--dark);border-radius:16px;margin-bottom:1rem;box-shadow:2px 2px 0 var(--dark); }
-  .qr-label { font-size:.7rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:rgba(26,16,53,.45);margin-bottom:.5rem; }
-  .qr-section img { border:2px solid var(--dark);border-radius:12px;max-width:180px; }
-  .booking-id { font-family:'Fredoka One',cursive;font-size:.85rem;color:rgba(26,16,53,.5);margin-top:.5rem; }
-  .ticket-select-label { font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--dark);margin-bottom:.5rem;display:block; }
-
-  /* Ticket options */
-  .ticket-options { display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.2rem; }
-  .ticket-option { display:flex;align-items:center;gap:.8rem;background:var(--bg);border:2.5px solid var(--dark);border-radius:14px;padding:.8rem 1rem;cursor:pointer;box-shadow:2px 2px 0 var(--dark);transition:all .2s;position:relative; }
-  .ticket-option:hover:not(.sold-out) { transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--dark); }
-  .ticket-option.sold-out { opacity:.55;cursor:not-allowed;background:#f5f5f5; }
-  .ticket-option input[type="radio"] { accent-color:var(--pink);width:16px;height:16px; }
-  .ticket-option-info { flex:1; }
-  .ticket-type-name { font-family:'Fredoka One',cursive;font-size:.95rem;color:var(--dark); }
-  .ticket-type-price { font-size:.75rem;font-weight:700;color:rgba(26,16,53,.5); }
-  .ticket-emoji { font-size:1.5rem; }
-
-  /* ── LIVE TICKER ── */
-  .live-ticker {
-    display:inline-flex;align-items:center;gap:.35rem;
-    background:var(--dark);color:#fff;
-    border-radius:100px;padding:.18rem .65rem;
-    font-family:'Fredoka One',cursive;font-size:.72rem;
-    margin-left:.4rem;vertical-align:middle;
-  }
-  .live-dot {
-    width:7px;height:7px;border-radius:50%;
-    background:var(--mint);
-    animation:pulse-dot 1.5s infinite;
-  }
-  @keyframes pulse-dot {
-    0%,100%{ opacity:1;transform:scale(1); }
-    50%{ opacity:.5;transform:scale(.7); }
-  }
-  .sold-out-badge {
-    display:inline-flex;align-items:center;gap:.3rem;
-    background:#ffe4e0;color:var(--dark);
-    border:1.5px solid var(--dark);border-radius:100px;
-    padding:.18rem .65rem;font-family:'Fredoka One',cursive;font-size:.72rem;margin-left:.4rem;
-  }
-
-  .btn-book-now { width:100%;background:var(--pink) !important;color:#fff !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.8rem !important;font-family:'Fredoka One',cursive !important;font-size:1.1rem !important;cursor:pointer !important;box-shadow:4px 4px 0 var(--dark) !important;transition:all .2s !important; }
-  .btn-book-now:hover { transform:translate(-2px,-2px) !important;box-shadow:6px 6px 0 var(--dark) !important; }
-  .btn-cancel-booking { width:100%;background:var(--coral) !important;color:#fff !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.6rem !important;font-family:'Fredoka One',cursive !important;font-size:.95rem !important;cursor:pointer !important;box-shadow:3px 3px 0 var(--dark) !important;transition:all .2s !important;text-decoration:none !important;display:block !important;text-align:center !important;margin-top:.8rem !important; }
-  .btn-cancel-booking:hover { transform:translate(-2px,-2px) !important;box-shadow:5px 5px 0 var(--dark) !important; }
-  .alert-y2k { border:2px solid var(--dark);border-radius:14px;padding:.8rem 1rem;font-family:'Fredoka One',cursive;font-size:.9rem;box-shadow:2px 2px 0 var(--dark);text-align:center; }
-  .alert-full { background:#ffe4e0;color:var(--dark); }
-  .alert-login { background:var(--lemon);color:var(--dark); }
-  .alert-login a { color:var(--pink) !important;font-weight:800; }
-
-  /* Live status bar */
-  .live-status-bar { display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-family:'Fredoka One',cursive;font-size:.8rem;color:rgba(26,16,53,.5); }
-  .live-indicator { display:flex;align-items:center;gap:.3rem;background:#e8fff5;border:1.5px solid var(--mint);border-radius:100px;padding:.2rem .7rem;color:#1a8c5c;font-size:.75rem; }
-
-  @media(max-width:900px){ .detail-grid{grid-template-columns:1fr}.booking-panel{position:static}.detail-page{padding:2rem 1.5rem 4rem}.info-grid{grid-template-columns:1fr} }
+  .booking-panel{background:#fff;border:2.5px solid var(--dark);border-radius:24px;overflow:hidden;box-shadow:6px 6px 0 var(--dark);position:sticky;top:2rem;}
+  .booking-header{background:var(--dark);padding:1.2rem 1.5rem;display:flex;align-items:center;gap:.5rem;}
+  .booking-header h4{font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--lemon);margin:0;}
+  .booking-body{padding:1.5rem;}
+  .booked-badge{background:var(--mint);border:2px solid var(--dark);border-radius:16px;padding:.8rem 1rem;text-align:center;font-family:'Fredoka One',cursive;font-size:1rem;color:var(--dark);margin-bottom:1.2rem;box-shadow:2px 2px 0 var(--dark);}
+  .qr-section{text-align:center;padding:1rem;background:var(--bg);border:2px solid var(--dark);border-radius:16px;margin-bottom:1rem;box-shadow:2px 2px 0 var(--dark);}
+  .qr-label{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:rgba(26,16,53,.45);margin-bottom:.5rem;}
+  .qr-section img{border:2px solid var(--dark);border-radius:12px;max-width:180px;}
+  .booking-id{font-family:'Fredoka One',cursive;font-size:.85rem;color:rgba(26,16,53,.5);margin-top:.5rem;}
+  .ticket-select-label{font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--dark);margin-bottom:.5rem;display:block;}
+  .ticket-options{display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.2rem;}
+  .ticket-option{display:flex;align-items:center;gap:.8rem;background:var(--bg);border:2.5px solid var(--dark);border-radius:14px;padding:.8rem 1rem;cursor:pointer;box-shadow:2px 2px 0 var(--dark);transition:all .2s;position:relative;}
+  .ticket-option:hover:not(.sold-out){transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--dark);}
+  .ticket-option.sold-out{opacity:.55;cursor:not-allowed;background:#f5f5f5;}
+  .ticket-option input[type="radio"]{accent-color:var(--pink);width:16px;height:16px;}
+  .ticket-option-info{flex:1;}
+  .ticket-type-name{font-family:'Fredoka One',cursive;font-size:.95rem;color:var(--dark);}
+  .ticket-type-price{font-size:.75rem;font-weight:700;color:rgba(26,16,53,.5);}
+  .ticket-emoji{font-size:1.5rem;}
+  .live-ticker{display:inline-flex;align-items:center;gap:.35rem;background:var(--dark);color:#fff;border-radius:100px;padding:.18rem .65rem;font-family:'Fredoka One',cursive;font-size:.72rem;margin-left:.4rem;vertical-align:middle;}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);animation:pulse-dot 1.5s infinite;}
+  @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.7);}}
+  .sold-out-badge{display:inline-flex;align-items:center;gap:.3rem;background:#ffe4e0;color:var(--dark);border:1.5px solid var(--dark);border-radius:100px;padding:.18rem .65rem;font-family:'Fredoka One',cursive;font-size:.72rem;margin-left:.4rem;}
+  .btn-book-now{width:100%;background:var(--pink) !important;color:#fff !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.8rem !important;font-family:'Fredoka One',cursive !important;font-size:1.1rem !important;cursor:pointer !important;box-shadow:4px 4px 0 var(--dark) !important;transition:all .2s !important;}
+  .btn-book-now:hover{transform:translate(-2px,-2px) !important;box-shadow:6px 6px 0 var(--dark) !important;}
+  .btn-cancel-booking{width:100%;background:var(--coral) !important;color:#fff !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.6rem !important;font-family:'Fredoka One',cursive !important;font-size:.95rem !important;cursor:pointer !important;box-shadow:3px 3px 0 var(--dark) !important;transition:all .2s !important;text-decoration:none !important;display:block !important;text-align:center !important;margin-top:.8rem !important;}
+  .btn-cancel-booking:hover{transform:translate(-2px,-2px) !important;box-shadow:5px 5px 0 var(--dark) !important;}
+  .btn-save{width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;background:#fff;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.65rem !important;font-family:'Fredoka One',cursive !important;font-size:.95rem !important;cursor:pointer !important;box-shadow:3px 3px 0 var(--dark) !important;transition:all .2s !important;color:var(--dark) !important;margin-top:.8rem;}
+  .btn-save:hover{transform:translate(-2px,-2px) !important;box-shadow:5px 5px 0 var(--dark) !important;}
+  .btn-save.saved{background:var(--lavender) !important;color:#fff !important;}
+  .save-count{font-size:.8rem;opacity:.7;}
+  .alert-y2k{border:2px solid var(--dark);border-radius:14px;padding:.8rem 1rem;font-family:'Fredoka One',cursive;font-size:.9rem;box-shadow:2px 2px 0 var(--dark);text-align:center;}
+  .alert-full{background:#ffe4e0;color:var(--dark);}
+  .alert-login{background:var(--lemon);color:var(--dark);}
+  .alert-login a{color:var(--pink) !important;font-weight:800;}
+  .live-status-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-family:'Fredoka One',cursive;font-size:.8rem;color:rgba(26,16,53,.5);}
+  .live-indicator{display:flex;align-items:center;gap:.3rem;background:#e8fff5;border:1.5px solid var(--mint);border-radius:100px;padding:.2rem .7rem;color:#1a8c5c;font-size:.75rem;}
+  @media(max-width:900px){.detail-grid{grid-template-columns:1fr}.booking-panel{position:static}.detail-page{padding:2rem 1.5rem 4rem}.info-grid{grid-template-columns:1fr}}
 </style>
 
 <div class="detail-page">
@@ -117,6 +129,7 @@
     <!-- ══ LEFT ══ -->
     <div>
       <div class="main-card">
+
         {% if event.image %}
           <img src="{{ event.image.url }}" class="main-card-img" alt="{{ event.title }}">
         {% else %}
@@ -129,6 +142,7 @@
         {% endif %}
 
         <div class="main-card-body">
+
           {% if event.category == 'Tech' %}<span class="mini-tag t-sky">💻 {{ event.category }}</span>
           {% elif event.category == 'Music' %}<span class="mini-tag t-pink">🎵 {{ event.category }}</span>
           {% elif event.category == 'Sports' %}<span class="mini-tag t-mint">⚽ {{ event.category }}</span>
@@ -137,7 +151,9 @@
           {% endif %}
 
           <div class="event-title-big">{{ event.title }}</div>
-          <div class="event-desc">{{ event.description }}</div>
+
+          <!-- Description rendered as markdown -->
+          <div class="event-desc" id="event-description"></div>
 
           <div class="info-grid">
             <div class="info-item">
@@ -162,6 +178,7 @@
             </div>
           </div>
 
+          <!-- Countdown -->
           <div class="countdown-box">
             <div>
               <div class="countdown-label">⏳ Event Countdown</div>
@@ -170,6 +187,7 @@
             <div style="font-size:2.5rem">🚀</div>
           </div>
 
+          <!-- Seats progress -->
           <div class="seats-section">
             <div class="seats-header">
               <span class="seats-label">Seats Available</span>
@@ -177,8 +195,29 @@
             </div>
             <div class="progress-y2k">
               <div class="progress-fill" id="seats-progress-bar"
-                style="width:{% widthratio seats_left event.capacity 100 %}%">
-              </div>
+                style="width:{% widthratio seats_left event.capacity 100 %}%"></div>
+            </div>
+          </div>
+
+          <!-- ── LEAFLET MAP ── -->
+          <div class="map-section">
+            <div class="map-section-label">📍 Event Location</div>
+            <div id="event-map"></div>
+            <a href="https://www.google.com/maps/dir/?api=1&destination={{ event.location|urlencode }}"
+               target="_blank" class="btn-directions">
+              🗺️ Get Directions on Google Maps
+            </a>
+          </div>
+
+          <!-- ── SHARE ── -->
+          <div class="share-section">
+            <div class="share-label">📣 Share This Event</div>
+            <div class="share-btns">
+              <a href="https://wa.me/?text=Hey! Check out this event: {{ event.title }} 🎉 {{ request.build_absolute_uri }}"
+                 target="_blank" class="btn-share share-wa">💬 WhatsApp</a>
+              <a href="https://twitter.com/intent/tweet?text=Check out {{ event.title }} 🎉&url={{ request.build_absolute_uri }}"
+                 target="_blank" class="btn-share share-x">𝕏 Share</a>
+              <button class="btn-share share-copy" id="copy-btn" onclick="copyLink()">🔗 Copy Link</button>
             </div>
           </div>
 
@@ -191,6 +230,7 @@
             <a href="{% url 'event_attendees' event.id %}" class="btn-org btn-attend">👥 Attendees</a>
           </div>
         {% endif %}
+
       </div>
     </div>
 
@@ -202,7 +242,6 @@
         </div>
         <div class="booking-body">
 
-          <!-- Live indicator -->
           <div class="live-status-bar">
             <div class="live-indicator">
               <div class="live-dot"></div>
@@ -212,6 +251,7 @@
           </div>
 
           {% if user.is_authenticated %}
+
             {% if user_booked %}
               <div class="booked-badge">✅ You're going!</div>
               {% for booking in event.booking_set.all %}
@@ -229,7 +269,6 @@
               <form method="post" action="{% url 'book_event' event.id %}">
                 {% csrf_token %}
                 <span class="ticket-select-label">🎫 Choose your ticket:</span>
-
                 <div class="ticket-options" id="ticket-options">
                   {% for tier in ticket_tiers %}
                     <label class="ticket-option {% if tier.is_sold_out %}sold-out{% endif %}"
@@ -260,9 +299,8 @@
                     <div class="alert-y2k" style="background:var(--lemon);">⚠️ No ticket tiers set up yet.</div>
                   {% endfor %}
                 </div>
-
                 {% if ticket_tiers %}
-                  <button type="submit" class="btn-book-now" id="book-btn">🚀 Book Now!</button>
+                  <button type="submit" class="btn-book-now">🚀 Book Now!</button>
                 {% endif %}
               </form>
 
@@ -270,9 +308,20 @@
               <div class="alert-y2k alert-full">😔 Event is Full!</div>
             {% endif %}
 
+            <!-- Save Button -->
+            <button class="btn-save {% if is_saved %}saved{% endif %}"
+                    id="save-btn" onclick="toggleSave({{ event.id }})">
+              <span id="save-icon">{% if is_saved %}💜{% else %}🤍{% endif %}</span>
+              <span id="save-text">{% if is_saved %}Saved!{% else %}Interested{% endif %}</span>
+              <span class="save-count" id="save-count">({{ save_count }})</span>
+            </button>
+
           {% else %}
             <div class="alert-y2k alert-login">
               <a href="/accounts/login/">🔑 Login</a> to book this event!
+            </div>
+            <div class="alert-y2k" style="background:var(--lavender);color:#fff;margin-top:.7rem;">
+              <a href="/accounts/login/" style="color:#fff;font-weight:800;">💜 Login</a> to save this event!
             </div>
           {% endif %}
 
@@ -283,74 +332,110 @@
   </div>
 </div>
 
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
+  // ── Render Markdown Description ──
+  document.getElementById('event-description').innerHTML =
+    marked.parse(`{{ event.description|escapejs }}`);
+
   // ── Countdown ──
   const eventDate = new Date("{{ event.date|date:'Y-m-d H:i:s' }}").getTime();
   const timer = setInterval(function(){
     const distance = eventDate - new Date().getTime();
-    if(distance < 0){
-      document.getElementById("countdown").innerHTML = "🎉 Event Started!";
-      clearInterval(timer); return;
-    }
-    const d = Math.floor(distance/(1000*60*60*24));
-    const h = Math.floor((distance%(1000*60*60*24))/(1000*60*60));
-    const m = Math.floor((distance%(1000*60*60))/(1000*60));
-    const s = Math.floor((distance%(1000*60))/1000);
-    document.getElementById("countdown").innerHTML = d+"d "+h+"h "+m+"m "+s+"s";
+    if(distance < 0){ document.getElementById("countdown").innerHTML="🎉 Event Started!"; clearInterval(timer); return; }
+    const d=Math.floor(distance/(1000*60*60*24));
+    const h=Math.floor((distance%(1000*60*60*24))/(1000*60*60));
+    const m=Math.floor((distance%(1000*60*60))/(1000*60));
+    const s=Math.floor((distance%(1000*60))/1000);
+    document.getElementById("countdown").innerHTML=d+"d "+h+"h "+m+"m "+s+"s";
   }, 1000);
 
-  // ── Live Ticker ──
-  const EVENT_ID       = {{ event.id }};
-  const EVENT_CAPACITY = {{ event.capacity }};
-  const API_URL        = `/event/${EVENT_ID}/availability/`;
+  // ── Leaflet Map via Nominatim ──
+  {% if event.latitude and event.longitude %}
+  const map = L.map('event-map', { zoomControl: true, scrollWheelZoom: false })
+    .setView([{{ event.latitude }}, {{ event.longitude }}], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+  }).addTo(map);
+  const pinIcon = L.divIcon({
+    className: '',
+    html: `<div style="width:20px;height:20px;background:#ff6eb4;border:3px solid #1a1035;border-radius:50%;box-shadow:3px 3px 0 #1a1035;"></div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+  L.marker([{{ event.latitude }}, {{ event.longitude }}], {icon: pinIcon})
+    .addTo(map)
+    .bindPopup(`<b style="font-family:Fredoka One,cursive">📍 {{ event.title|escapejs }}</b><br>{{ event.location|escapejs }}`)
+    .openPopup();
+  {% else %}
+  document.getElementById('event-map').innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:Fredoka One,cursive;color:rgba(26,16,53,.4);font-size:.9rem;">📍 Map unavailable for this location</div>';
+  {% endif %}
 
+  // ── Live Ticker ──
+  const EVENT_ID = {{ event.id }};
+  const EVENT_CAPACITY = {{ event.capacity }};
   function updateTickers(data){
-    // Update overall seats left
-    const seatsLeftEl = document.getElementById('event-seats-left');
+    const seatsLeftEl  = document.getElementById('event-seats-left');
     const seatsLabelEl = document.getElementById('seats-count-label');
     const progressBar  = document.getElementById('seats-progress-bar');
-
     if(seatsLeftEl) seatsLeftEl.textContent = data.event_seats_left;
-    if(seatsLabelEl) seatsLabelEl.textContent = data.event_seats_left + ' / ' + EVENT_CAPACITY;
-    if(progressBar){
-      const pct = (data.event_seats_left / EVENT_CAPACITY) * 100;
-      progressBar.style.width = pct + '%';
-    }
-
-    // Update per-tier tickers
+    if(seatsLabelEl) seatsLabelEl.textContent = data.event_seats_left+' / '+EVENT_CAPACITY;
+    if(progressBar) progressBar.style.width = (data.event_seats_left/EVENT_CAPACITY*100)+'%';
     data.tiers.forEach(tier => {
       const seatsEl  = document.getElementById(`seats-${tier.id}`);
       const tickerEl = document.getElementById(`ticker-${tier.id}`);
       const optionEl = document.getElementById(`tier-option-${tier.id}`);
       const radioEl  = optionEl ? optionEl.querySelector('input[type="radio"]') : null;
-
       if(tier.is_sold_out){
-        if(tickerEl) tickerEl.outerHTML = `<span class="sold-out-badge">😔 Sold Out</span>`;
-        if(optionEl){ optionEl.classList.add('sold-out'); }
-        if(radioEl){ radioEl.disabled = true; }
+        if(tickerEl) tickerEl.outerHTML=`<span class="sold-out-badge">😔 Sold Out</span>`;
+        if(optionEl) optionEl.classList.add('sold-out');
+        if(radioEl) radioEl.disabled=true;
       } else {
-        if(seatsEl) seatsEl.textContent = tier.seats_left;
-        if(optionEl){ optionEl.classList.remove('sold-out'); }
-        if(radioEl){ radioEl.disabled = false; }
+        if(seatsEl) seatsEl.textContent=tier.seats_left;
+        if(optionEl) optionEl.classList.remove('sold-out');
+        if(radioEl) radioEl.disabled=false;
       }
     });
-
-    // Update last-updated
-    const now = new Date();
     document.getElementById('last-updated').textContent =
-      'updated ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+      'updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }
-
   function fetchAvailability(){
-    fetch(API_URL)
-      .then(r => r.json())
-      .then(data => updateTickers(data))
-      .catch(() => {}); // silently fail if offline
+    fetch(`/event/${EVENT_ID}/availability/`).then(r=>r.json()).then(updateTickers).catch(()=>{});
   }
-
-  // Poll every 5 seconds
   fetchAvailability();
   setInterval(fetchAvailability, 5000);
+
+  // ── Save / Interested ──
+  function toggleSave(eventId){
+    fetch(`/event/${eventId}/save/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'}
+    })
+    .then(r => r.json())
+    .then(data => {
+      const btn   = document.getElementById('save-btn');
+      const icon  = document.getElementById('save-icon');
+      const text  = document.getElementById('save-text');
+      const count = document.getElementById('save-count');
+      if(data.saved){ btn.classList.add('saved'); icon.textContent='💜'; text.textContent='Saved!'; }
+      else { btn.classList.remove('saved'); icon.textContent='🤍'; text.textContent='Interested'; }
+      count.textContent = `(${data.count})`;
+    });
+  }
+
+  // ── Copy Link ──
+  function copyLink(){
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✅ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent='🔗 Copy Link'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
 </script>
 
 {% endblock %}

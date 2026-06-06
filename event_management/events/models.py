@@ -21,6 +21,8 @@ class Event(models.Model):
     created_by  = models.ForeignKey(User, on_delete=models.CASCADE)
     image       = models.ImageField(upload_to='event_images/', blank=True, null=True)
     category    = models.CharField(max_length=100)
+    latitude  = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -33,6 +35,10 @@ class Event(models.Model):
     def seats_left(self):
         return self.capacity - self.total_booked
 
+    @property
+    def save_count(self):
+        return self.savedevent_set.count()
+
 
 # ══════════════════════════════════════
 # TICKET TIER
@@ -41,7 +47,7 @@ class TicketTier(models.Model):
     event    = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='ticket_tiers')
     name     = models.CharField(max_length=100)
     price    = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-    capacity = models.IntegerField(default=0)  # 0 = unlimited within event capacity
+    capacity = models.IntegerField(default=0)  # 0 = no tier limit
 
     def __str__(self):
         return f"{self.event.title} — {self.name} (Rs.{self.price})"
@@ -57,7 +63,6 @@ class TicketTier(models.Model):
     @property
     def seats_left(self):
         if self.capacity == 0:
-            # No tier limit — bounded only by event capacity
             return self.event.seats_left
         return max(0, self.capacity - self.booked_count)
 
@@ -73,7 +78,6 @@ class Booking(models.Model):
     event       = models.ForeignKey(Event, on_delete=models.CASCADE)
     user        = models.ForeignKey(User, on_delete=models.CASCADE)
     ticket_tier = models.ForeignKey(TicketTier, on_delete=models.SET_NULL, null=True, blank=True)
-    # Snapshot name+price at booking time so history stays intact if tier is edited
     ticket_type = models.CharField(max_length=100, default='General')
     price       = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     booked_at   = models.DateTimeField(auto_now_add=True)
@@ -82,6 +86,21 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.user.username} — {self.event.title} ({self.ticket_type})"
+
+
+# ══════════════════════════════════════
+# SAVED EVENT (Interested)
+# ══════════════════════════════════════
+class SavedEvent(models.Model):
+    user     = models.ForeignKey(User, on_delete=models.CASCADE)
+    event    = models.ForeignKey(Event, on_delete=models.CASCADE)
+    saved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'event']
+
+    def __str__(self):
+        return f"{self.user.username} saved {self.event.title}"
 
 
 # ══════════════════════════════════════

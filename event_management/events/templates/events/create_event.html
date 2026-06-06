@@ -23,10 +23,35 @@
   .alert-danger { background:#ffe4e0 !important;color:var(--dark) !important; }
   .alert-warning { background:#fff3cc !important;color:var(--dark) !important; }
   #custom-category-wrap { display:none;margin-top:.6rem; }
+
+  /* ── AUTOCOMPLETE ── */
+  .location-wrap { position:relative; }
+  .autocomplete-dropdown {
+    position:absolute;top:100%;left:0;right:0;
+    background:#fff;border:2.5px solid var(--dark);
+    border-top:none;border-radius:0 0 14px 14px;
+    box-shadow:3px 3px 0 var(--dark);
+    z-index:999;max-height:200px;overflow-y:auto;
+    display:none;
+  }
+  .autocomplete-item {
+    padding:.65rem 1rem;
+    font-family:'Nunito',sans-serif;font-weight:700;font-size:.88rem;
+    color:var(--dark);cursor:pointer;
+    border-bottom:1px solid rgba(26,16,53,.07);
+    transition:background .15s;
+  }
+  .autocomplete-item:hover { background:var(--bg); }
+  .autocomplete-item:last-child { border-bottom:none;border-radius:0 0 12px 12px; }
+  .autocomplete-loading {
+    padding:.65rem 1rem;font-family:'Nunito',sans-serif;
+    font-weight:700;font-size:.82rem;color:rgba(26,16,53,.4);
+  }
+
   /* Tier builder */
   .tier-row { display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.6rem;align-items:center;margin-bottom:.7rem; }
   .tier-col-label { font-family:'Fredoka One',cursive;font-size:.72rem;color:rgba(26,16,53,.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:.25rem; }
-  .btn-remove-tier { background:#ffe4e0 !important;border:2px solid var(--dark) !important;border-radius:100px !important;padding:.45rem .9rem !important;font-family:'Fredoka One',cursive !important;font-size:.85rem !important;cursor:pointer !important;box-shadow:2px 2px 0 var(--dark) !important;transition:all .15s !important;color:var(--dark) !important;align-self:flex-end;margin-bottom:0; }
+  .btn-remove-tier { background:#ffe4e0 !important;border:2px solid var(--dark) !important;border-radius:100px !important;padding:.45rem .9rem !important;font-family:'Fredoka One',cursive !important;font-size:.85rem !important;cursor:pointer !important;box-shadow:2px 2px 0 var(--dark) !important;transition:all .15s !important;color:var(--dark) !important; }
   .btn-remove-tier:hover { transform:translate(-1px,-1px) !important;box-shadow:3px 3px 0 var(--dark) !important; }
   .btn-add-tier { background:var(--lemon) !important;border:2px solid var(--dark) !important;border-radius:100px !important;padding:.5rem 1.4rem !important;font-family:'Fredoka One',cursive !important;font-size:.9rem !important;cursor:pointer !important;box-shadow:3px 3px 0 var(--dark) !important;transition:all .2s !important;color:var(--dark) !important;display:inline-flex;align-items:center;gap:.4rem; }
   .btn-add-tier:hover { transform:translate(-1px,-1px) !important;box-shadow:4px 4px 0 var(--dark) !important; }
@@ -66,10 +91,23 @@
 
       <hr class="form-divider">
       <div class="form-section-label">📍 Location & Time</div>
+
       <div class="form-grid-2">
         <div class="mb-3">
           <label class="form-label">📍 Location</label>
-          <input type="text" name="location" class="form-control" placeholder="e.g. Mumbai, India" required>
+          <!-- Autocomplete wrapper -->
+          <div class="location-wrap">
+            <input
+              type="text"
+              name="location"
+              id="location-input"
+              class="form-control"
+              placeholder="Search for a location..."
+              autocomplete="off"
+              required
+            >
+            <div class="autocomplete-dropdown" id="location-dropdown"></div>
+          </div>
         </div>
         <div class="mb-3">
           <label class="form-label">📅 Date & Time</label>
@@ -101,17 +139,13 @@
 
       <hr class="form-divider">
       <div class="form-section-label">🎟️ Ticket Tiers</div>
-
-      <!-- Column headers -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.6rem;margin-bottom:.3rem;">
         <div class="tier-col-label">Tier Name</div>
         <div class="tier-col-label">Price (₹)</div>
         <div class="tier-col-label">Seats (0=unlimited)</div>
         <div></div>
       </div>
-
       <div id="tier-container"></div>
-
       <button type="button" class="btn-add-tier" id="add-tier-btn" onclick="addTier()">➕ Add Tier</button>
       <div class="tier-hint">Max 4 tiers · Price 0 = Free/RSVP · Seats 0 = no tier limit</div>
 
@@ -131,13 +165,69 @@
 </div>
 
 <script>
-  const MAX_TIERS = 4;
+  // ── Category toggle ──
   document.getElementById('category-select').addEventListener('change', function(){
     const wrap = document.getElementById('custom-category-wrap');
     const input = document.getElementById('category-custom');
     if(this.value === 'Other'){ wrap.style.display='block'; input.required=true; }
     else { wrap.style.display='none'; input.required=false; input.value=''; }
   });
+
+  // ── Nominatim Autocomplete ──
+  const locationInput    = document.getElementById('location-input');
+  const locationDropdown = document.getElementById('location-dropdown');
+  let debounceTimer;
+
+  locationInput.addEventListener('input', function(){
+    clearTimeout(debounceTimer);
+    const query = this.value.trim();
+
+    if(query.length < 3){
+      locationDropdown.style.display = 'none';
+      return;
+    }
+
+    // Show loading
+    locationDropdown.innerHTML = '<div class="autocomplete-loading">🔍 Searching...</div>';
+    locationDropdown.style.display = 'block';
+
+    // Debounce — wait 400ms after user stops typing
+    debounceTimer = setTimeout(() => {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`, {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'EventHub/1.0' }
+      })
+      .then(r => r.json())
+      .then(results => {
+        if(results.length === 0){
+          locationDropdown.innerHTML = '<div class="autocomplete-loading">😕 No results found</div>';
+          return;
+        }
+        locationDropdown.innerHTML = results.map(place => `
+          <div class="autocomplete-item" onclick="selectLocation('${place.display_name.replace(/'/g, "\\'")}')">
+            📍 ${place.display_name}
+          </div>
+        `).join('');
+      })
+      .catch(() => {
+        locationDropdown.style.display = 'none';
+      });
+    }, 400);
+  });
+
+  function selectLocation(name){
+    locationInput.value = name;
+    locationDropdown.style.display = 'none';
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.location-wrap')){
+      locationDropdown.style.display = 'none';
+    }
+  });
+
+  // ── Tier builder ──
+  const MAX_TIERS = 4;
   function getTierCount(){ return document.querySelectorAll('.tier-row').length; }
   function updateAddBtn(){ document.getElementById('add-tier-btn').disabled = getTierCount() >= MAX_TIERS; }
   function addTier(name='', price='', capacity=''){

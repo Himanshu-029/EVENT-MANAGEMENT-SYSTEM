@@ -12,10 +12,27 @@ from django.utils import timezone
 from django.conf import settings
 from datetime import datetime
 import qrcode
+import requests as req
 from io import BytesIO
 from django.core.files import File
 
-from .models import Event, Booking, TicketTier, UserProfile, OTPVerification
+from .models import Event, Booking, TicketTier, UserProfile, OTPVerification, SavedEvent
+
+
+def geocode_location(location):
+    try:
+        r = req.get(
+            'https://nominatim.openstreetmap.org/search',
+            params={'format': 'json', 'q': location, 'limit': 1},
+            headers={'User-Agent': 'EventHub/1.0 (giri.himanshu2911@gmail.com)'},
+            timeout=5
+        )
+        data = r.json()
+        if data:
+            return float(data[0]['lat']), float(data[0]['lon'])
+    except:
+        pass
+    return None, None
 
 
 # ══════════════════════════════════════
@@ -59,14 +76,20 @@ def event_detail(request, id):
     ticket_tiers = event.ticket_tiers.all()
 
     user_booked = False
+    is_saved    = False
+
     if request.user.is_authenticated:
         user_booked = Booking.objects.filter(event=event, user=request.user).exists()
+        is_saved    = SavedEvent.objects.filter(event=event, user=request.user).exists()
 
     return render(request, 'events/event_detail.html', {
-        'event':        event,
-        'seats_left':   seats_left,
-        'user_booked':  user_booked,
-        'ticket_tiers': ticket_tiers,
+        'event':           event,
+        'seats_left':      seats_left,
+        'user_booked':     user_booked,
+        'ticket_tiers':    ticket_tiers,
+        'is_saved':        is_saved,
+        'save_count':      event.save_count,
+        
     })
 
 
@@ -95,6 +118,32 @@ def tier_availability(request, id):
 
 
 # ══════════════════════════════════════
+# TOGGLE SAVE EVENT (Interested)
+# ══════════════════════════════════════
+@login_required
+def toggle_save_event(request, id):
+    event = get_object_or_404(Event, id=id)
+    saved_obj, created = SavedEvent.objects.get_or_create(
+        user=request.user, event=event
+    )
+    if not created:
+        saved_obj.delete()
+        return JsonResponse({'saved': False, 'count': event.save_count})
+    return JsonResponse({'saved': True, 'count': event.save_count})
+
+
+# ══════════════════════════════════════
+# SAVED EVENTS LIST
+# ══════════════════════════════════════
+@login_required
+def saved_events(request):
+    saved = SavedEvent.objects.filter(
+        user=request.user
+    ).order_by('-saved_at').select_related('event')
+    return render(request, 'events/saved_events.html', {'saved': saved})
+
+
+# ══════════════════════════════════════
 # CREATE EVENT
 # ══════════════════════════════════════
 @login_required
@@ -113,14 +162,14 @@ def create_event(request):
 
         if not category:
             messages.error(request, "Please select or enter a category.")
-            return render(request, 'events/create_event.html')
+            return render(request, 'events/create_event.html', {})
 
         event_datetime = datetime.strptime(event_date, "%Y-%m-%dT%H:%M")
         event_datetime = timezone.make_aware(event_datetime)
 
         if event_datetime < timezone.now():
             messages.error(request, "Event date cannot be in the past.")
-            return render(request, 'events/create_event.html')
+            return render(request, 'events/create_event.html', {})
 
         event = Event.objects.create(
             title=title, description=description, location=location,
@@ -128,8 +177,8 @@ def create_event(request):
             image=image, created_by=request.user
         )
 
-        tier_names     = request.POST.getlist('tier_name')
-        tier_prices    = request.POST.getlist('tier_price')
+        tier_names      = request.POST.getlist('tier_name')
+        tier_prices     = request.POST.getlist('tier_price')
         tier_capacities = request.POST.getlist('tier_capacity')
 
         for name, price, cap in zip(tier_names, tier_prices, tier_capacities):
@@ -141,11 +190,17 @@ def create_event(request):
                     price=float(price) if price else 0,
                     capacity=int(cap) if cap else 0,
                 )
-
+        lat, lon = geocode_location(location)
+        if lat and lon:
+            event.latitude  = lat
+            event.longitude = lon
+            event.save()
         messages.success(request, "Event created successfully! 🎉")
         return redirect('event_list')
 
-    return render(request, 'events/create_event.html')
+    return render(request, 'events/create_event.html', {
+        
+    })
 
 
 # ══════════════════════════════════════
@@ -159,14 +214,15 @@ def edit_event(request, id):
         return redirect('event_list')
 
     if request.method == 'POST':
-        event_date = request.POST.get('date')
+        event_date     = request.POST.get('date')
         event_datetime = datetime.strptime(event_date, "%Y-%m-%dT%H:%M")
         event_datetime = timezone.make_aware(event_datetime)
 
         if event_datetime < timezone.now():
             messages.error(request, "Event date cannot be in the past.")
             return render(request, 'events/edit_event.html', {
-                'event': event, 'ticket_tiers': event.ticket_tiers.all()
+                'event': event,
+                'ticket_tiers': event.ticket_tiers.all()
             })
 
         category_select = request.POST.get('category_select', '').strip()
@@ -176,7 +232,9 @@ def edit_event(request, id):
         if not category:
             messages.error(request, "Please select or enter a category.")
             return render(request, 'events/edit_event.html', {
-                'event': event, 'ticket_tiers': event.ticket_tiers.all()
+                'event': event,
+                'ticket_tiers': event.ticket_tiers.all(),
+                'ticket_tiers_json': list(event.ticket_tiers.values('name', 'price', 'capacity')),
             })
 
         event.title       = request.POST.get('title')
@@ -189,7 +247,6 @@ def edit_event(request, id):
             event.image = request.FILES.get('image')
         event.save()
 
-        # Replace all tiers
         event.ticket_tiers.all().delete()
         tier_names      = request.POST.getlist('tier_name')
         tier_prices     = request.POST.getlist('tier_price')
@@ -204,6 +261,11 @@ def edit_event(request, id):
                     price=float(price) if price else 0,
                     capacity=int(cap) if cap else 0,
                 )
+        lat, lon = geocode_location(event.location)
+        if lat and lon:
+            event.latitude  = lat
+            event.longitude = lon
+            event.save()
 
         messages.success(request, "Event updated successfully! ✅")
         return redirect('event_detail', id=event.id)
@@ -211,6 +273,7 @@ def edit_event(request, id):
     return render(request, 'events/edit_event.html', {
         'event':        event,
         'ticket_tiers': event.ticket_tiers.all(),
+        
     })
 
 
@@ -220,15 +283,12 @@ def edit_event(request, id):
 @login_required
 def delete_event(request, id):
     event = get_object_or_404(Event, id=id)
-
     if request.user != event.created_by and not request.user.is_superuser:
         return redirect('event_list')
-
     if request.method == 'POST':
         event.delete()
         messages.success(request, "Event deleted successfully.")
         return redirect('event_list')
-
     return render(request, 'events/delete_event.html', {'event': event})
 
 
@@ -243,7 +303,6 @@ def book_event(request, id):
         messages.warning(request, "You have already booked this event.")
         return redirect('event_detail', id=id)
 
-    # Check overall event capacity
     if event.seats_left <= 0:
         messages.error(request, "Unable to book. Maximum audience reached.")
         return redirect('event_detail', id=id)
@@ -251,7 +310,6 @@ def book_event(request, id):
     tier_id = request.POST.get('tier_id')
     tier    = get_object_or_404(TicketTier, id=tier_id, event=event)
 
-    # Check tier-specific capacity
     if tier.is_sold_out:
         messages.error(request, f"Sorry! {tier.name} tickets are sold out.")
         return redirect('event_detail', id=id)
@@ -261,7 +319,6 @@ def book_event(request, id):
         ticket_tier=tier, ticket_type=tier.name, price=tier.price
     )
 
-    # Generate QR code
     qr_data = (
         f"Event: {event.title}\n"
         f"User: {request.user.username}\n"
@@ -345,7 +402,6 @@ def verify_ticket(request):
 @login_required
 def event_attendees(request, id):
     event = get_object_or_404(Event, id=id)
-
     if request.user != event.created_by and not request.user.is_superuser:
         return redirect('event_detail', id=id)
 
@@ -363,16 +419,13 @@ def event_attendees(request, id):
 @login_required
 def cancel_booking(request, id):
     booking = get_object_or_404(Booking, id=id)
-
     if booking.user != request.user:
         return redirect('event_detail', id=booking.event.id)
-
     if request.method == 'POST':
         event_id = booking.event.id
         booking.delete()
         messages.success(request, "Booking cancelled successfully.")
         return redirect('event_detail', id=event_id)
-
     return render(request, 'events/cancel_booking.html', {'booking': booking})
 
 

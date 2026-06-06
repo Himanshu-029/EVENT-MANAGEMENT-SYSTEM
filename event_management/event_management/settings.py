@@ -2,7 +2,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
-# Load .env file
 load_dotenv()
 
 # ══════════════════════════════════════
@@ -13,12 +12,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ══════════════════════════════════════
 # SECURITY
 # ══════════════════════════════════════
-# Loaded from .env — never hardcoded
 SECRET_KEY = os.getenv('SECRET_KEY')
-
-# DEBUG: set DEBUG=True in .env for development, leave it out for production
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
-
+DEBUG      = os.getenv('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # ══════════════════════════════════════
@@ -116,3 +111,6 @@ EMAIL_USE_TLS       = True
 EMAIL_HOST_USER     = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL  = f'EventHub <{os.getenv("EMAIL_HOST_USER")}>'
+
+# ══════════════════════════════════════
+# ══════════════════════════════════════

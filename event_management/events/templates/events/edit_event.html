@@ -30,6 +30,26 @@
   .img-preview-wrap img { border:2px solid var(--dark);border-radius:12px;display:block;max-width:200px;max-height:140px;object-fit:cover; }
   .field-row { display:grid;grid-template-columns:1fr 1fr;gap:1rem; }
   .form-divider { height:2px;background:rgba(26,16,53,.07);border-radius:2px;margin:1.5rem 0; }
+
+  /* ── AUTOCOMPLETE ── */
+  .location-wrap { position:relative; }
+  .autocomplete-dropdown {
+    position:absolute;top:100%;left:0;right:0;
+    background:#fff;border:2.5px solid var(--dark);
+    border-top:none;border-radius:0 0 20px 20px;
+    box-shadow:3px 3px 0 var(--dark);
+    z-index:999;max-height:200px;overflow-y:auto;display:none;
+  }
+  .autocomplete-item {
+    padding:.65rem 1.3rem;
+    font-family:'Nunito',sans-serif;font-weight:700;font-size:.88rem;
+    color:var(--dark);cursor:pointer;
+    border-bottom:1px solid rgba(26,16,53,.07);transition:background .15s;
+  }
+  .autocomplete-item:hover { background:var(--bg); }
+  .autocomplete-item:last-child { border-bottom:none;border-radius:0 0 18px 18px; }
+  .autocomplete-loading { padding:.65rem 1.3rem;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;color:rgba(26,16,53,.4); }
+
   /* Tier builder */
   .tier-section-label { font-family:'Boogaloo',cursive;font-size:1rem;color:rgba(26,16,53,.4);text-transform:uppercase;letter-spacing:2px;margin-bottom:.5rem; }
   .tier-col-label { font-family:'Fredoka One',cursive;font-size:.72rem;color:rgba(26,16,53,.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:.25rem; }
@@ -68,6 +88,7 @@
           <label class="field-label">📝 Event Title</label>
           <input type="text" name="title" class="field-input" value="{{ event.title }}" required>
         </div>
+
         <div class="field-group">
           <label class="field-label">📄 Description</label>
           <textarea name="description" class="field-textarea" rows="4">{{ event.description }}</textarea>
@@ -76,7 +97,18 @@
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">📍 Location</label>
-            <input type="text" name="location" class="field-input" value="{{ event.location }}">
+            <div class="location-wrap">
+              <input
+                type="text"
+                name="location"
+                id="location-input"
+                class="field-input"
+                value="{{ event.location }}"
+                placeholder="Search for a location..."
+                autocomplete="off"
+              >
+              <div class="autocomplete-dropdown" id="location-dropdown"></div>
+            </div>
           </div>
           <div class="field-group">
             <label class="field-label">📅 Date & Time</label>
@@ -108,14 +140,12 @@
 
         <div class="form-divider"></div>
         <div class="tier-section-label">🎟️ Ticket Tiers</div>
-
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.6rem;margin-bottom:.3rem;">
           <div class="tier-col-label">Tier Name</div>
           <div class="tier-col-label">Price (₹)</div>
           <div class="tier-col-label">Seats (0=unlimited)</div>
           <div></div>
         </div>
-
         <div id="tier-container"></div>
         <button type="button" class="btn-add-tier" id="add-tier-btn" onclick="addTier()">➕ Add Tier</button>
         <div class="tier-hint">Max 4 tiers · Price 0 = Free/RSVP · Seats 0 = no tier limit</div>
@@ -141,11 +171,11 @@
   </div>
 </div>
 
-{{ ticket_tiers|json_script:"existing-tiers" }}
+{{ ticket_tiers_json|json_script:"existing-tiers" }}
 
 <script>
-  const MAX_TIERS = 4;
-  const catSelect = document.getElementById('category-select');
+  // ── Category toggle ──
+  const catSelect  = document.getElementById('category-select');
   const customWrap = document.getElementById('custom-category-wrap');
   const customInput = document.getElementById('category-custom');
   function toggleCustomCategory(){
@@ -155,6 +185,50 @@
   catSelect.addEventListener('change', toggleCustomCategory);
   toggleCustomCategory();
 
+  // ── Nominatim Autocomplete ──
+  const locationInput    = document.getElementById('location-input');
+  const locationDropdown = document.getElementById('location-dropdown');
+  let debounceTimer;
+
+  locationInput.addEventListener('input', function(){
+    clearTimeout(debounceTimer);
+    const query = this.value.trim();
+    if(query.length < 3){ locationDropdown.style.display='none'; return; }
+
+    locationDropdown.innerHTML = '<div class="autocomplete-loading">🔍 Searching...</div>';
+    locationDropdown.style.display = 'block';
+
+    debounceTimer = setTimeout(() => {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`, {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'EventHub/1.0' }
+      })
+      .then(r => r.json())
+      .then(results => {
+        if(results.length === 0){
+          locationDropdown.innerHTML = '<div class="autocomplete-loading">😕 No results found</div>';
+          return;
+        }
+        locationDropdown.innerHTML = results.map(place => `
+          <div class="autocomplete-item" onclick="selectLocation('${place.display_name.replace(/'/g, "\\'")}')">
+            📍 ${place.display_name}
+          </div>
+        `).join('');
+      })
+      .catch(() => { locationDropdown.style.display='none'; });
+    }, 400);
+  });
+
+  function selectLocation(name){
+    locationInput.value = name;
+    locationDropdown.style.display = 'none';
+  }
+
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.location-wrap')) locationDropdown.style.display='none';
+  });
+
+  // ── Tier builder ──
+  const MAX_TIERS = 4;
   function getTierCount(){ return document.querySelectorAll('.tier-row').length; }
   function updateAddBtn(){ document.getElementById('add-tier-btn').disabled = getTierCount() >= MAX_TIERS; }
   function addTier(name='', price='', capacity=''){

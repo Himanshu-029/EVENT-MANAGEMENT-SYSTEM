@@ -13,10 +13,13 @@ urlpatterns = [
     path('event/<int:id>/delete/', views.delete_event, name='delete_event'),
     path('event/<int:id>/book/', views.book_event, name='book_event'),
     path('event/<int:id>/attendees/', views.event_attendees, name='event_attendees'),
+    path('event/<int:id>/availability/', views.tier_availability, name='tier_availability'),
+    path('event/<int:id>/save/', views.toggle_save_event, name='toggle_save_event'),
 
     # ── BOOKINGS ──
     path('my-bookings/', views.my_bookings, name='my_bookings'),
     path('booking/<int:id>/cancel/', views.cancel_booking, name='cancel_booking'),
+    path('saved-events/', views.saved_events, name='saved_events'),
 
     # ── ADMIN ──
     path('dashboard/', views.dashboard, name='dashboard'),
