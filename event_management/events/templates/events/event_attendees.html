@@ -447,9 +447,21 @@
   {% endif %}
 
   <!-- Back button -->
-  <a href="{% url 'event_detail' event.id %}" class="btn-back-bottom">
-    ← Back to Event
-  </a>
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+    <a href="{% url 'event_detail' event.id %}" class="btn-back-bottom">
+      ← Back to Event
+    </a>
+    {% if user == event.created_by and event.status == 'active' %}
+    <form method="post" action="{% url 'finish_event' event.id %}">
+      {% csrf_token %}
+      <button type="submit"
+        style="background:var(--coral);border:2.5px solid var(--dark);border-radius:100px;padding:.65rem 1.5rem;font-family:'Fredoka One',cursive;font-size:.95rem;color:#fff;cursor:pointer;box-shadow:4px 4px 0 var(--dark);transition:all .2s;"
+        onclick="return confirm('Mark this event as finished? A report will be emailed to you. This cannot be undone.')">
+        🏁 Mark as Finished
+      </button>
+    </form>
+    {% endif %}
+  </div>
 
 </div>
 

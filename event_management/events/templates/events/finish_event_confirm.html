@@ -1,0 +1,21 @@
+{% extends 'events/base.html' %}
+{% block content %}
+<div style="max-width:500px;margin:4rem auto;padding:2rem;">
+  <div style="background:#fff;border:2.5px solid #1a1035;border-radius:24px;padding:2rem;box-shadow:6px 6px 0 #1a1035;text-align:center;">
+    <div style="font-size:3rem;margin-bottom:1rem;">🏁</div>
+    <h2 style="font-family:'Boogaloo',cursive;color:#1a1035;">Finish Event?</h2>
+    <p style="font-family:'Fredoka One',cursive;font-size:.9rem;color:rgba(26,16,53,.6);margin-bottom:1.5rem;">
+      This will mark <b>{{ event.title }}</b> as finished and email you a full Excel report. This cannot be undone.
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" style="background:#ff7f6e;border:2.5px solid #1a1035;border-radius:100px;padding:.7rem 2rem;font-family:'Fredoka One',cursive;font-size:1rem;color:#fff;cursor:pointer;box-shadow:4px 4px 0 #1a1035;margin-right:.5rem;">
+        ✅ Yes, Finish It
+      </button>
+      <a href="{% url 'event_attendees' event.id %}" style="background:#fff;border:2.5px solid #1a1035;border-radius:100px;padding:.7rem 2rem;font-family:'Fredoka One',cursive;font-size:1rem;color:#1a1035;text-decoration:none;box-shadow:4px 4px 0 #1a1035;">
+        ✕ Cancel
+      </a>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -17,10 +17,12 @@ import requests as req
 from io import BytesIO
 from django.core.files import File
 import razorpay
-
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
+from datetime import timedelta
 from .models import (Event, Booking, TicketTier, UserProfile, OTPVerification,
                      SavedEvent, OrganizerPayout, TermsAcceptance, CommissionRecord,
-                     EventModerator)
+                     EventModerator, EventReport)
 
 
 def geocode_location(location):
@@ -43,7 +45,7 @@ def geocode_location(location):
 # HOME
 # ══════════════════════════════════════
 def home(request):
-    events = Event.objects.all().order_by('-id')[:6]
+    events = Event.objects.filter(status='active').order_by('-id')[:6]
     return render(request, 'events/home.html', {'events': events})
 
 
@@ -1102,3 +1104,204 @@ def assign_moderator(request, event_id):
         return redirect('event_attendees', id=event_id)
 
     return redirect('event_attendees', id=event_id)
+
+
+
+# ══════════════════════════════════════
+# GENERATE EVENT REPORT (Excel)
+# ══════════════════════════════════════
+def generate_event_excel(event):
+    """Generate (create/produce) an Excel report for a finished event."""
+    wb = openpyxl.Workbook()
+
+    # ── Sheet 1: Summary ──
+    ws1 = wb.active
+    ws1.title = 'Summary'
+
+    header_fill = PatternFill(start_color='1a1035', end_color='1a1035', fill_type='solid')
+    header_font = Font(color='ffe566', bold=True, name='Calibri', size=11)
+    title_font  = Font(bold=True, name='Calibri', size=14, color='1a1035')
+
+    ws1['A1'] = f'Event Report — {event.title}'
+    ws1['A1'].font = title_font
+    ws1.merge_cells('A1:D1')
+
+    summary_data = [
+        ('Event Title',      event.title),
+        ('Location',         event.location),
+        ('Date',             event.date.strftime('%B %d, %Y · %I:%M %p')),
+        ('Total Capacity',   event.capacity),
+        ('Tickets Sold',     event.total_booked),
+        ('Total Revenue',    f'₹{event.total_revenue}'),
+        ('Platform Fee',     f'₹{event.platform_fee:.2f}'),
+        ('Organizer Payout', f'₹{event.organizer_payout:.2f}'),
+        ('Organizer',        event.created_by.username),
+        ('Status',           event.status),
+    ]
+
+    for i, (label, value) in enumerate(summary_data, start=3):
+        ws1[f'A{i}'] = label
+        ws1[f'A{i}'].font = Font(bold=True, name='Calibri')
+        ws1[f'B{i}'] = str(value)
+
+    ws1.column_dimensions['A'].width = 22
+    ws1.column_dimensions['B'].width = 35
+
+    # ── Sheet 2: Attendees ──
+    ws2 = wb.create_sheet('Attendees')
+    headers = ['#', 'Username', 'Email', 'Ticket Type', 'Price (₹)', 'Booked At', 'Check-in Status']
+
+    for col, h in enumerate(headers, 1):
+        cell = ws2.cell(row=1, column=col, value=h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center')
+
+    bookings = Booking.objects.filter(event=event).select_related('user').order_by('booked_at')
+    for i, b in enumerate(bookings, 1):
+        ws2.append([
+            i,
+            b.user.username,
+            b.user.email,
+            b.ticket_type,
+            float(b.price),
+            b.booked_at.strftime('%Y-%m-%d %H:%M'),
+            'Used ✓' if b.is_used else 'Not checked in',
+        ])
+
+    for col in range(1, 8):
+        ws2.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 20
+
+    # ── Sheet 3: Tier Breakdown ──
+    ws3 = wb.create_sheet('Ticket Tiers')
+    tier_headers = ['Tier Name', 'Price (₹)', 'Capacity', 'Sold', 'Revenue (₹)']
+    for col, h in enumerate(tier_headers, 1):
+        cell = ws3.cell(row=1, column=col, value=h)
+        cell.fill = header_fill
+        cell.font = header_font
+
+    for tier in event.ticket_tiers.all():
+        tier_revenue = float(tier.price) * tier.booked_count
+        ws3.append([tier.name, float(tier.price), tier.capacity, tier.booked_count, tier_revenue])
+
+    for col in range(1, 6):
+        ws3.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 18
+
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+
+# ══════════════════════════════════════
+# FINISH EVENT + SEND REPORT
+# ══════════════════════════════════════
+@login_required
+def finish_event(request, id):
+    event = get_object_or_404(Event, id=id)
+
+    if request.user != event.created_by and not request.user.is_superuser:
+        messages.error(request, "Only the creator can finish this event.")
+        return redirect('event_detail', id=id)
+
+    if event.status == 'finished':
+        messages.warning(request, "Event is already finished.")
+        return redirect('event_detail', id=id)
+
+    if request.method == 'POST':
+        # Mark event as finished
+        event.status       = 'finished'
+        event.finished_at  = timezone.now()
+        event.cleanup_after = timezone.now() + timedelta(days=7)
+        event.save()
+
+        # Recalculate final commission
+        commission, _ = CommissionRecord.objects.get_or_create(event=event)
+        commission.recalculate()
+
+        # Generate Excel report
+        excel_bytes = generate_event_excel(event)
+
+        # Save report record
+        report, _ = EventReport.objects.get_or_create(event=event)
+        report.total_tickets_sold = event.total_booked
+        report.total_revenue      = event.total_revenue
+        report.platform_fee       = event.platform_fee
+        report.organizer_payout   = event.organizer_payout
+        report.save()
+
+        # Email report to organizer
+        try:
+            email_msg = EmailMessage(
+                subject=f"📊 Event Report — {event.title}",
+                body=f"""Hi {event.created_by.username}!
+
+Your event has concluded. Here's a quick summary:
+
+─────────────────────────────
+Event:           {event.title}
+Date:            {event.date.strftime('%B %d, %Y')}
+Tickets Sold:    {event.total_booked}
+Total Revenue:   ₹{event.total_revenue}
+Platform Fee:    ₹{event.platform_fee:.2f}
+Your Payout:     ₹{event.organizer_payout:.2f}
+─────────────────────────────
+
+Full Excel report is attached with all attendee details.
+
+Thanks for hosting on EventHub! 🎉
+
+— The EventHub Team""",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[event.created_by.email],
+            )
+            email_msg.attach(
+                f'EventHub_Report_{event.title}.xlsx',
+                excel_bytes,
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            email_msg.send(fail_silently=True)
+            report.email_sent = True
+            report.save()
+        except Exception:
+            pass
+
+        messages.success(request, f"Event marked as finished! Report emailed to {event.created_by.email} 📊")
+        return redirect('finished_events')
+
+    return render(request, 'events/finish_event_confirm.html', {'event': event})
+
+
+# ══════════════════════════════════════
+# FINISHED EVENTS (organizer view)
+# ══════════════════════════════════════
+@login_required
+def finished_events(request):
+    events = Event.objects.filter(
+        created_by=request.user,
+        status='finished'
+    ).order_by('-finished_at')
+
+    return render(request, 'events/finished_events.html', {'events': events})
+
+
+# ══════════════════════════════════════
+# AUTO CLEANUP (run via management command or cron)
+# ══════════════════════════════════════
+@login_required
+def trigger_cleanup(request):
+    """Manual trigger (admin only) to delete events past their cleanup date."""
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied.")
+        return redirect('event_list')
+
+    now = timezone.now()
+    expired = Event.objects.filter(
+        status='finished',
+        cleanup_after__lte=now
+    )
+    count = expired.count()
+    expired.delete()
+
+    messages.success(request, f"Cleaned up {count} expired event(s) ✅")
+    return redirect('dashboard')

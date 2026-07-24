@@ -47,4 +47,8 @@ urlpatterns = [
     path('event/<int:id>/create-order/', views.create_razorpay_order, name='create_razorpay_order'),
     path('event/<int:id>/verify-payment/', views.verify_payment, name='verify_payment'),
 
+    path('event/<int:id>/finish/', views.finish_event, name='finish_event'),
+    path('finished-events/', views.finished_events, name='finished_events'),
+    path('admin/cleanup/', views.trigger_cleanup, name='trigger_cleanup'),
+
 ]
