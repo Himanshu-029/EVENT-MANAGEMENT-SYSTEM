@@ -324,6 +324,18 @@
       <div class="stat-value">₹{{ total_revenue }}</div>
       <div class="stat-sub">Collected so far</div>
     </div>
+    {% if commission %}
+    <div class="stat-card" data-emoji="🏦" style="border-color:var(--lavender) !important;box-shadow:5px 5px 0 var(--lavender) !important;">
+      <div class="stat-label">Platform Fee ({{ commission.commission_rate }}%)</div>
+      <div class="stat-value" style="color:var(--lavender)">₹{{ commission.commission_amount|floatformat:0 }}</div>
+      <div class="stat-sub">Auto-deducted</div>
+    </div>
+    <div class="stat-card" data-emoji="💸" style="border-color:#3dd6a0 !important;box-shadow:5px 5px 0 #3dd6a0 !important;">
+      <div class="stat-label">Your Payout</div>
+      <div class="stat-value" style="color:#2bbf8a">₹{{ commission.organizer_payout|floatformat:0 }}</div>
+      <div class="stat-sub">After platform fee</div>
+    </div>
+    {% endif %}
   </div>
 
   <!-- ══ TABLE ══ -->
@@ -392,6 +404,47 @@
       </tbody>
     </table>
   </div>
+
+  <!-- ══ ASSIGN MODERATOR ══ -->
+  {% if user == event.created_by %}
+  <div class="section-title">🛡️ Assign Moderator</div>
+  <div class="table-card" style="padding:1.5rem;">
+    <form method="post" action="{% url 'assign_moderator' event.id %}" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;">
+      {% csrf_token %}
+      <div style="flex:1;min-width:180px;">
+        <label style="font-family:'Fredoka One',cursive;font-size:.85rem;color:var(--dark);display:block;margin-bottom:.4rem;">👤 Username</label>
+        <input type="text" name="username" class="form-control" placeholder="Enter username" required>
+      </div>
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+        <label style="font-family:'Fredoka One',cursive;font-size:.85rem;color:var(--dark);display:flex;align-items:center;gap:.4rem;cursor:pointer;">
+          <input type="checkbox" name="can_edit" style="accent-color:var(--pink);width:16px;height:16px;"> Can Edit Event
+        </label>
+        <label style="font-family:'Fredoka One',cursive;font-size:.85rem;color:var(--dark);display:flex;align-items:center;gap:.4rem;cursor:pointer;">
+          <input type="checkbox" name="can_check_in" checked style="accent-color:var(--pink);width:16px;height:16px;"> Can Check-In
+        </label>
+      </div>
+      <button type="submit" style="background:var(--mint);border:2.5px solid var(--dark);border-radius:100px;padding:.6rem 1.5rem;font-family:'Fredoka One',cursive;font-size:.9rem;cursor:pointer;box-shadow:3px 3px 0 var(--dark);transition:all .2s;">
+        ➕ Assign
+      </button>
+    </form>
+
+    <!-- List existing moderators -->
+    {% with moderators=event.moderators.all %}
+    {% if moderators %}
+    <div style="margin-top:1.2rem;border-top:2px dashed rgba(26,16,53,.1);padding-top:1rem;">
+      <div style="font-family:'Fredoka One',cursive;font-size:.85rem;color:rgba(26,16,53,.5);margin-bottom:.6rem;">Current Moderators</div>
+      {% for mod in moderators %}
+      <span style="display:inline-flex;align-items:center;gap:.4rem;background:var(--bg);border:2px solid var(--dark);border-radius:100px;padding:.2rem .8rem;font-family:'Fredoka One',cursive;font-size:.8rem;margin:.2rem;">
+        🛡️ {{ mod.user.username }}
+        {% if mod.can_edit %}<span style="color:var(--lavender)">✏️</span>{% endif %}
+        {% if mod.can_check_in %}<span style="color:var(--mint)">✅</span>{% endif %}
+      </span>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+  </div>
+  {% endif %}
 
   <!-- Back button -->
   <a href="{% url 'event_detail' event.id %}" class="btn-back-bottom">

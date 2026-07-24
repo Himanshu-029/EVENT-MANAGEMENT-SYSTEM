@@ -148,6 +148,56 @@
       <div id="tier-container"></div>
       <button type="button" class="btn-add-tier" id="add-tier-btn" onclick="addTier()">➕ Add Tier</button>
       <div class="tier-hint">Max 4 tiers · Price 0 = Free/RSVP · Seats 0 = no tier limit</div>
+      <hr class="form-divider">
+<div class="form-section-label">🏦 Payout Details</div>
+<p style="font-family:'Nunito',sans-serif;font-size:.82rem;color:rgba(26,16,53,.5);font-weight:700;margin-bottom:1rem;">
+  Required for platform to transfer (remit) your earnings after the event.
+</p>
+
+<div class="mb-3">
+  <label class="form-label">📲 UPI ID</label>
+  <input type="text" name="upi_id" class="form-control" placeholder="yourname@upi">
+</div>
+
+<div class="form-grid-2">
+  <div class="mb-3">
+    <label class="form-label">👤 Account Holder Name</label>
+    <input type="text" name="account_holder_name" class="form-control" placeholder="Full name">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">🏦 Bank Name</label>
+    <input type="text" name="bank_name" class="form-control" placeholder="e.g. HDFC Bank">
+  </div>
+</div>
+
+<div class="form-grid-2">
+  <div class="mb-3">
+    <label class="form-label">🔢 Account Number</label>
+    <input type="text" name="account_number" class="form-control" placeholder="Account number">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">🏷️ IFSC Code</label>
+    <input type="text" name="ifsc_code" class="form-control" placeholder="e.g. HDFC0001234">
+  </div>
+</div>
+
+<hr class="form-divider">
+
+<!-- Terms & Conditions -->
+<div style="background:#fff3cc;border:2px solid #1a1035;border-radius:14px;padding:1.2rem;box-shadow:3px 3px 0 #1a1035;margin-bottom:1.5rem;">
+  <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:#1a1035;margin-bottom:.6rem;">📋 Terms & Conditions</div>
+  <ul style="font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:700;color:rgba(26,16,53,.7);padding-left:1.2rem;margin-bottom:.8rem;">
+    <li>Platform charges <b>5%</b> on paid ticket revenue up to ₹1,00,000.</li>
+    <li>Platform charges <b>10%</b> once revenue exceeds ₹1,00,000.</li>
+    <li>Free events are <b>not charged</b> any platform fee.</li>
+    <li>Policies may change — publishing means you agree to all current & future terms.</li>
+  </ul>
+  <label style="display:flex;align-items:center;gap:.6rem;font-family:'Fredoka One',cursive;font-size:.9rem;cursor:pointer;">
+    <input type="checkbox" name="terms_accepted" id="terms_accepted"
+      style="width:18px;height:18px;accent-color:#ff6eb4;cursor:pointer;">
+    I have read and accept the Terms & Conditions
+  </label>
+</div>
 
       <hr class="form-divider">
       <div class="form-section-label">🖼️ Event Image</div>

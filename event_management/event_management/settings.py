@@ -114,3 +114,7 @@ DEFAULT_FROM_EMAIL  = f'EventHub <{os.getenv("EMAIL_HOST_USER")}>'
 
 # ══════════════════════════════════════
 # ══════════════════════════════════════
+
+# ══ RAZORPAY ══
+RAZORPAY_KEY_ID     = os.getenv('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')

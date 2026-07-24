@@ -3,10 +3,12 @@
 
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<!-- Razor Pay CSS -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <!-- Marked.js for markdown rendering -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<!-- canvas-confetti CDN -->
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
 <style>
   body{background:#fff0fa !important;background-image:none !important;}
@@ -59,7 +61,7 @@
   /* ── MAP ── */
   .map-section{margin-bottom:1.5rem;}
   .map-section-label{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:rgba(26,16,53,.45);margin-bottom:.6rem;}
-  #event-map{width:100%;height:240px;border:2.5px solid var(--dark);border-radius:16px;box-shadow:3px 3px 0 var(--dark);z-index:0;position:relative;}
+  #event-map{width:100%;height:240px;border:2.5px solid var(--dark);border-radius:16px;box-shadow:3px 3px 0 var(--dark);overflow:hidden;z-index:0;position:relative;}
   .leaflet-container{border-radius:14px;}
   .btn-directions{display:inline-flex;align-items:center;gap:.5rem;background:var(--sky);border:2px solid var(--dark);border-radius:100px;padding:.5rem 1.3rem;font-family:'Fredoka One',cursive;font-size:.88rem;color:var(--dark) !important;text-decoration:none !important;box-shadow:3px 3px 0 var(--dark);transition:all .2s;margin-top:.7rem;}
   .btn-directions:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--dark);}
@@ -122,46 +124,51 @@
   .live-indicator{display:flex;align-items:center;gap:.3rem;background:#e8fff5;border:1.5px solid var(--mint);border-radius:100px;padding:.2rem .7rem;color:#1a8c5c;font-size:.75rem;}
   @media(max-width:900px){.detail-grid{grid-template-columns:1fr}.booking-panel{position:static}.detail-page{padding:2rem 1.5rem 4rem}.info-grid{grid-template-columns:1fr}}
 
-  /* ── CONFETTI CELEBRATION ── */
-  .celebration-overlay{
-    position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(26,16,53,.6);z-index:9999;
-    display:flex;align-items:center;justify-content:center;
-    opacity:0;transition:opacity .3s;pointer-events:none;
-  }
-  .celebration-overlay.show{opacity:1;pointer-events:all;}
-  .celebration-card{
-    background:#fff;border:3px solid var(--dark);
-    border-radius:28px;padding:2.5rem;
-    box-shadow:8px 8px 0 var(--dark);
-    text-align:center;max-width:360px;width:90%;
-    transform:scale(.8);transition:transform .3s;
-  }
-  .celebration-overlay.show .celebration-card{transform:scale(1);}
-  .celebration-emoji{font-size:4rem;margin-bottom:.5rem;}
-  .celebration-title{font-family:'Boogaloo',cursive;font-size:2rem;color:var(--dark);margin-bottom:.3rem;}
-  .celebration-sub{font-family:'Fredoka One',cursive;font-size:.95rem;color:rgba(26,16,53,.55);margin-bottom:1.5rem;}
-  .celebration-close{
-    background:var(--mint);border:2.5px solid var(--dark);
-    border-radius:100px;padding:.6rem 2rem;
-    font-family:'Fredoka One',cursive;font-size:1rem;
-    cursor:pointer;box-shadow:3px 3px 0 var(--dark);
-    transition:all .2s;
-  }
-  .celebration-close:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--dark);}
+  /* ── DARK MODE ── */
+  [data-theme="dark"] .detail-page{background:#0f0a1e !important;}
+  [data-theme="dark"] .main-card{background:#1a1035 !important;border-color:#2d1f5e !important;box-shadow:6px 6px 0 #2d1f5e !important;}
+  [data-theme="dark"] .main-card-img{border-bottom-color:#2d1f5e !important;}
+  [data-theme="dark"] .main-card-top{border-bottom-color:#2d1f5e !important;background:linear-gradient(135deg,#1a0d2e,#2d1545) !important;}
+  [data-theme="dark"] .main-card-body{background:#1a1035 !important;}
+  [data-theme="dark"] .event-title-big{color:#e8e0ff !important;}
+  [data-theme="dark"] .event-desc{color:rgba(232,224,255,.65) !important;border-bottom-color:rgba(232,224,255,.1) !important;}
+  [data-theme="dark"] .event-desc h1,[data-theme="dark"] .event-desc h2,[data-theme="dark"] .event-desc h3{color:#e8e0ff !important;}
+  [data-theme="dark"] .info-item{background:#2d1f5e !important;border-color:#3d2f6e !important;box-shadow:2px 2px 0 #3d2f6e !important;}
+  [data-theme="dark"] .info-label{color:rgba(232,224,255,.45) !important;}
+  [data-theme="dark"] .info-value{color:#e8e0ff !important;}
+  [data-theme="dark"] .countdown-box{background:#0f0a1e !important;border-color:#2d1f5e !important;}
+  [data-theme="dark"] .seats-label{color:#e8e0ff !important;}
+  [data-theme="dark"] .seats-count{color:#ff6eb4 !important;}
+  [data-theme="dark"] .progress-y2k{background:rgba(232,224,255,.1) !important;border-color:#2d1f5e !important;}
+  [data-theme="dark"] .map-section-label,[data-theme="dark"] .share-label{color:rgba(232,224,255,.45) !important;}
+  [data-theme="dark"] .btn-directions{background:#74c7f5 !important;border-color:#2d1f5e !important;color:#0f0a1e !important;}
+  [data-theme="dark"] .organizer-bar{background:#2d1f5e !important;border-top-color:#3d2f6e !important;}
+  [data-theme="dark"] .booking-panel{background:#1a1035 !important;border-color:#2d1f5e !important;box-shadow:6px 6px 0 #2d1f5e !important;}
+  [data-theme="dark"] .booking-header{background:#0f0a1e !important;}
+  [data-theme="dark"] .booking-body{background:#1a1035 !important;}
+  [data-theme="dark"] .live-indicator{background:#0d2e1f !important;border-color:#5ee7bf !important;color:#5ee7bf !important;}
+  [data-theme="dark"] .live-status-bar{color:rgba(232,224,255,.5) !important;}
+  [data-theme="dark"] .booked-badge{background:#0d2e1f !important;border-color:#2d1f5e !important;color:#5ee7bf !important;}
+  [data-theme="dark"] .qr-section{background:#2d1f5e !important;border-color:#3d2f6e !important;}
+  [data-theme="dark"] .qr-label{color:rgba(232,224,255,.45) !important;}
+  [data-theme="dark"] .booking-id{color:rgba(232,224,255,.5) !important;}
+  [data-theme="dark"] .ticket-select-label{color:#e8e0ff !important;}
+  [data-theme="dark"] .ticket-option{background:#2d1f5e !important;border-color:#3d2f6e !important;box-shadow:2px 2px 0 #3d2f6e !important;}
+  [data-theme="dark"] .ticket-option.sold-out{background:#1a1035 !important;}
+  [data-theme="dark"] .ticket-type-name{color:#e8e0ff !important;}
+  [data-theme="dark"] .ticket-type-price{color:rgba(232,224,255,.5) !important;}
+  [data-theme="dark"] .btn-save{background:#2d1f5e !important;border-color:#3d2f6e !important;color:#e8e0ff !important;box-shadow:3px 3px 0 #3d2f6e !important;}
+  [data-theme="dark"] .btn-save.saved{background:#7c3aed !important;color:#fff !important;}
+  [data-theme="dark"] .alert-y2k{border-color:#2d1f5e !important;}
+  [data-theme="dark"] .alert-full{background:#2e0d0d !important;color:#ff7f6e !important;}
+  [data-theme="dark"] .alert-login{background:#2d1f5e !important;color:#e8e0ff !important;}
+  [data-theme="dark"] .celebration-card{background:#1a1035 !important;border-color:#2d1f5e !important;box-shadow:8px 8px 0 #2d1f5e !important;}
+  [data-theme="dark"] .celebration-title{color:#e8e0ff !important;}
+  [data-theme="dark"] .celebration-sub{color:rgba(232,224,255,.55) !important;}
+  [data-theme="dark"] .celebration-overlay{background:rgba(0,0,0,.8) !important;}
 </style>
 
 <div class="detail-page">
-  <!-- ── CONFETTI CELEBRATION OVERLAY ── -->
-  <div class="celebration-overlay" id="celebration-overlay">
-    <div class="celebration-card">
-      <div class="celebration-emoji">🎊</div>
-      <div class="celebration-title">You're In!</div>
-      <div class="celebration-sub">Booking confirmed! Check your email for your ticket + QR code 🎟️</div>
-      <button class="celebration-close" onclick="closeCelebration()">Let's gooo! 🚀</button>
-    </div>
-  </div>
-
   <a href="{% url 'event_list' %}" class="btn-back">← Back to Events</a>
 
   <div class="detail-grid">
@@ -306,7 +313,7 @@
               {% endfor %}
 
             {% elif seats_left > 0 %}
-              <form method="post" action="{% url 'book_event' event.id %}">
+              <form id="booking-form" method="post" action="{% url 'book_event' event.id %}">
                 {% csrf_token %}
                 <span class="ticket-select-label">🎫 Choose your ticket:</span>
                 <div class="ticket-options" id="ticket-options">
@@ -329,7 +336,7 @@
                             </span>
                           {% endif %}
                         </div>
-                        <div class="ticket-type-price">
+                        <div class="ticket-type-price" data-price="{% if tier.is_free %}0{% else %}{{ tier.price }}{% endif %}">
                           {% if tier.is_free %}Free 🎁{% else %}₹{{ tier.price }}{% endif %}
                           {% if tier.capacity > 0 %} · {{ tier.capacity }} total{% endif %}
                         </div>
@@ -340,7 +347,7 @@
                   {% endfor %}
                 </div>
                 {% if ticket_tiers %}
-                  <button type="submit" class="btn-book-now">🚀 Book Now!</button>
+                  <button type="button" class="btn-book-now" onclick="handleBooking()">🚀 Book Now!</button>
                 {% endif %}
               </form>
 
@@ -392,7 +399,7 @@
     document.getElementById("countdown").innerHTML=d+"d "+h+"h "+m+"m "+s+"s";
   }, 1000);
 
-  // ── Leaflet Map via Nominatim ──
+// ── Leaflet Map (server-side coordinates) ──
   {% if event.latitude and event.longitude %}
   const map = L.map('event-map', { zoomControl: true, scrollWheelZoom: false })
     .setView([{{ event.latitude }}, {{ event.longitude }}], 13);
@@ -477,46 +484,77 @@
     });
   }
 
-  // ── Confetti Celebration ──
-  {% if request.GET.booked %}
-  function launchConfetti(){
-    const colors = ['#ff6eb4','#74c7f5','#5ee7bf','#ffe566','#c084fc'];
-    confetti({
-      particleCount: 120,
-      spread: 80,
-      origin: { y: 0.5 },
-      colors: colors,
-    });
-    setTimeout(() => confetti({
-      particleCount: 80,
-      angle: 60,
-      spread: 55,
-      origin: { x: 0 },
-      colors: colors,
-    }), 300);
-    setTimeout(() => confetti({
-      particleCount: 80,
-      angle: 120,
-      spread: 55,
-      origin: { x: 1 },
-      colors: colors,
-    }), 600);
-  }
+  // ── Razorpay Payment Handler ──
+  function handleBooking(){
+    const selectedTier = document.querySelector('input[name="tier_id"]:checked');
+    if(!selectedTier){
+      alert('Please select a ticket tier!');
+      return;
+    }
 
-  function closeCelebration(){
-    document.getElementById('celebration-overlay').classList.remove('show');
-  }
+    const tierId    = selectedTier.value;
+    const tierPrice = parseFloat(selectedTier.closest('.ticket-option')
+                        .querySelector('.ticket-type-price').dataset.price || '0');
 
-  // Trigger on page load
-  window.addEventListener('load', function(){
-    setTimeout(() => {
-      document.getElementById('celebration-overlay').classList.add('show');
-      launchConfetti();
-      // Auto close after 6 seconds
-      setTimeout(closeCelebration, 6000);
-    }, 500);
-  });
-  {% endif %}
+    // Free ticket — submit form directly
+    if(tierPrice === 0){
+      document.getElementById('booking-form').submit();
+      return;
+    }
+
+    // Paid ticket — initiate (start) Razorpay flow
+    const csrfToken = '{{ csrf_token }}';
+    const formData  = new FormData();
+    formData.append('tier_id', tierId);
+    formData.append('csrfmiddlewaretoken', csrfToken);
+
+    fetch('/event/{{ event.id }}/create-order/', {
+      method: 'POST',
+      body: formData,
+    })
+    .then(r => r.json())
+    .then(data => {
+      if(data.error){ alert(data.error); return; }
+
+      const options = {
+        key:          data.key,
+        amount:       data.amount,
+        currency:     data.currency,
+        name:         'EventHub',
+        description:  `${data.event_title} — ${data.tier_name}`,
+        order_id:     data.order_id,
+        prefill: {
+          name:  data.user_name,
+          email: data.user_email,
+        },
+        theme: { color: '#ff6eb4' },
+        handler: function(response){
+          // Payment successful — verify on backend
+          const verifyForm = new FormData();
+          verifyForm.append('csrfmiddlewaretoken', csrfToken);
+          verifyForm.append('razorpay_order_id',   response.razorpay_order_id);
+          verifyForm.append('razorpay_payment_id',  response.razorpay_payment_id);
+          verifyForm.append('razorpay_signature',   response.razorpay_signature);
+          verifyForm.append('tier_id', data.tier_id);
+
+          fetch('/event/{{ event.id }}/verify-payment/', {
+            method: 'POST',
+            body: verifyForm,
+          })
+          .then(() => {
+            window.location.href = '/event/{{ event.id }}/?booked=1';
+          });
+        },
+        modal: {
+          ondismiss: function(){ console.log('Payment cancelled'); }
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    })
+    .catch(() => alert('Something went wrong. Please try again.'));
+  }
 </script>
 
 {% endblock %}

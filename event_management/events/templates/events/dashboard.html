@@ -308,6 +308,12 @@
       <div class="stat-card-sub">Total earnings</div>
     </div>
 
+    <div class="stat-card" data-emoji="🏦" style="border-color:var(--lavender) !important;box-shadow:5px 5px 0 var(--lavender) !important;">
+      <div class="stat-card-label">Platform Commission</div>
+      <div class="stat-card-value" style="color:var(--lavender)">₹{{ platform_commission|floatformat:0 }}</div>
+      <div class="stat-card-sub">5% / 10% auto-deducted</div>
+    </div>
+
   </div>
 
   <!-- ══ TOP EVENT ══ -->
@@ -353,6 +359,11 @@
       <div class="action-icon">🎟️</div>
       <div class="action-title">My Bookings</div>
       <div class="action-sub">View your tickets</div>
+    </a>
+    <a href="{% url 'super_admin_dashboard' %}" class="action-card" style="background:linear-gradient(135deg,#f5f0ff,#fff);">
+      <div class="action-icon">👑</div>
+      <div class="action-title">Super Admin</div>
+      <div class="action-sub">Users & badges</div>
     </a>
   </div>
 

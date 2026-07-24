@@ -37,4 +37,14 @@ urlpatterns = [
     path('accounts/edit-profile/', views.edit_profile, name='edit_profile'),
     path('accounts/change-password/', views.change_password, name='change_password'),
     path('accounts/verify-email-change/', views.verify_email_change, name='verify_email_change'),
+
+    # --- Admin ---
+    path('super-admin/', views.super_admin_dashboard, name='super_admin_dashboard'),
+    path('super-admin/toggle-verified/<int:user_id>/', views.toggle_verified_organizer, name='toggle_verified_organizer'),
+    path('event/<int:event_id>/assign-moderator/', views.assign_moderator, name='assign_moderator'),
+
+    # --- Razor Pay ---
+    path('event/<int:id>/create-order/', views.create_razorpay_order, name='create_razorpay_order'),
+    path('event/<int:id>/verify-payment/', views.verify_payment, name='verify_payment'),
+
 ]

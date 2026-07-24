@@ -14,3 +14,6 @@ qrcode==8.2
 
 # ── Rate limiting (django-ratelimit) ──
 django-ratelimit==4.1.0
+
+# --- Razor Pay ---
+razorpay==1.4.2

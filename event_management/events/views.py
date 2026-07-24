@@ -16,8 +16,11 @@ import qrcode
 import requests as req
 from io import BytesIO
 from django.core.files import File
+import razorpay
 
-from .models import Event, Booking, TicketTier, UserProfile, OTPVerification, SavedEvent
+from .models import (Event, Booking, TicketTier, UserProfile, OTPVerification,
+                     SavedEvent, OrganizerPayout, TermsAcceptance, CommissionRecord,
+                     EventModerator)
 
 
 def geocode_location(location):
@@ -50,7 +53,7 @@ def home(request):
 def event_list(request):
     category = request.GET.get('category', '').strip()
     query    = request.GET.get('q', '').strip()
-    events   = Event.objects.all().order_by('-id')
+    events   = Event.objects.filter(status='active').order_by('-id')
 
     if category:
         events = events.filter(category__iexact=category)
@@ -196,7 +199,39 @@ def create_event(request):
             event.latitude  = lat
             event.longitude = lon
             event.save()
-        messages.success(request, "Event created successfully! 🎉")
+        
+        # T&C must be accepted before publishing
+        terms_accepted = request.POST.get('terms_accepted')
+        if not terms_accepted:
+            messages.error(request, "You must accept the Terms & Conditions to publish your event.")
+            event.delete()
+            return render(request, 'events/create_event.html', {})
+
+        event.is_published  = True
+        event.terms_accepted = True
+        event.save()
+
+        # Save T&C acceptance record (immutable audit trail)
+        TermsAcceptance.objects.create(
+            event=event,
+            accepted_by=request.user,
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+
+        # Save organizer payout details
+        OrganizerPayout.objects.create(
+            event=event,
+            upi_id=request.POST.get('upi_id', '').strip(),
+            account_holder_name=request.POST.get('account_holder_name', '').strip(),
+            account_number=request.POST.get('account_number', '').strip(),
+            ifsc_code=request.POST.get('ifsc_code', '').strip(),
+            bank_name=request.POST.get('bank_name', '').strip(),
+        )
+
+        # Initialise (set up) commission record
+        CommissionRecord.objects.create(event=event)
+
+        messages.success(request, "Event published successfully! 🎉")
         return redirect('event_list')
 
     return render(request, 'events/create_event.html', {
@@ -211,7 +246,12 @@ def create_event(request):
 def edit_event(request, id):
     event = get_object_or_404(Event, id=id)
 
-    if request.user != event.created_by and not request.user.is_superuser:
+    # Only creator, assigned moderator with edit rights, or super admin can edit
+    is_moderator = EventModerator.objects.filter(
+        event=event, user=request.user, can_edit=True
+    ).exists()
+    if request.user != event.created_by and not request.user.is_superuser and not is_moderator:
+        messages.error(request, "You don't have permission to edit this event.")
         return redirect('event_list')
 
     if request.method == 'POST':
@@ -271,10 +311,12 @@ def edit_event(request, id):
         messages.success(request, "Event updated successfully! ✅")
         return redirect('event_detail', id=event.id)
 
+    payout = OrganizerPayout.objects.filter(event=event).first()
     return render(request, 'events/edit_event.html', {
-        'event':        event,
-        'ticket_tiers': event.ticket_tiers.all(),
-        
+        'event':             event,
+        'ticket_tiers':      event.ticket_tiers.all(),
+        'ticket_tiers_json': list(event.ticket_tiers.values('name', 'price', 'capacity')),
+        'payout':            payout,
     })
 
 
@@ -284,8 +326,10 @@ def edit_event(request, id):
 @login_required
 def delete_event(request, id):
     event = get_object_or_404(Event, id=id)
+    # Strictly (exclusively) only creator can delete — moderators cannot
     if request.user != event.created_by and not request.user.is_superuser:
-        return redirect('event_list')
+        messages.error(request, "Only the event creator can delete this event.")
+        return redirect('event_detail', id=id)
     if request.method == 'POST':
         event.delete()
         messages.success(request, "Event deleted successfully.")
@@ -315,9 +359,15 @@ def book_event(request, id):
         messages.error(request, f"Sorry! {tier.name} tickets are sold out.")
         return redirect('event_detail', id=id)
 
+    # Paid tickets go through Razorpay — only free tickets book directly here
+    if not tier.is_free:
+        messages.error(request, "Please complete payment through Razorpay.")
+        return redirect('event_detail', id=id)
+
     booking = Booking.objects.create(
         event=event, user=request.user,
-        ticket_tier=tier, ticket_type=tier.name, price=tier.price
+        ticket_tier=tier, ticket_type=tier.name,
+        price=0, payment_status='paid'
     )
 
     qr_data = (
@@ -368,6 +418,142 @@ See you there! 🚀
     messages.success(request, f"Booking confirmed! 🎉 {tier.name} | {price_display}")
     return redirect(f'/event/{id}/?booked=1')
 
+# ══════════════════════════════════════
+# CREATE RAZORPAY ORDER
+# ══════════════════════════════════════
+@login_required
+def create_razorpay_order(request, id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+
+    event   = get_object_or_404(Event, id=id)
+    tier_id = request.POST.get('tier_id')
+    tier    = get_object_or_404(TicketTier, id=tier_id, event=event)
+
+    if Booking.objects.filter(event=event, user=request.user).exists():
+        return JsonResponse({'error': 'Already booked'}, status=400)
+
+    if tier.is_sold_out or event.seats_left <= 0:
+        return JsonResponse({'error': 'Sold out'}, status=400)
+
+    client       = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    amount_paise = int(float(tier.price) * 100)  # Razorpay needs paise (₹1 = 100 paise)
+
+    order = client.order.create({
+        'amount':          amount_paise,
+        'currency':        'INR',
+        'payment_capture': 1,
+        'notes': {
+            'event_id': str(event.id),
+            'tier_id':  str(tier.id),
+            'user_id':  str(request.user.id),
+        }
+    })
+
+    return JsonResponse({
+        'order_id':    order['id'],
+        'amount':      amount_paise,
+        'currency':    'INR',
+        'key':         settings.RAZORPAY_KEY_ID,
+        'event_title': event.title,
+        'tier_name':   tier.name,
+        'user_name':   request.user.get_full_name() or request.user.username,
+        'user_email':  request.user.email,
+        'tier_id':     tier.id,
+    })
+
+
+# ══════════════════════════════════════
+# VERIFY RAZORPAY PAYMENT + CREATE BOOKING
+# ══════════════════════════════════════
+@login_required
+def verify_payment(request, id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+
+    event               = get_object_or_404(Event, id=id)
+    razorpay_order_id   = request.POST.get('razorpay_order_id')
+    razorpay_payment_id = request.POST.get('razorpay_payment_id')
+    razorpay_signature  = request.POST.get('razorpay_signature')
+    tier_id             = request.POST.get('tier_id')
+    tier                = get_object_or_404(TicketTier, id=tier_id, event=event)
+
+    # Verify cryptographic (encryption-based) signature from Razorpay
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    try:
+        client.utility.verify_payment_signature({
+            'razorpay_order_id':   razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature':  razorpay_signature,
+        })
+    except Exception:
+        messages.error(request, "Payment verification failed. Contact support.")
+        return redirect('event_detail', id=id)
+
+    if Booking.objects.filter(event=event, user=request.user).exists():
+        messages.warning(request, "Already booked!")
+        return redirect('event_detail', id=id)
+
+    booking = Booking.objects.create(
+        event=event, user=request.user,
+        ticket_tier=tier, ticket_type=tier.name, price=tier.price,
+        payment_status='paid',
+        razorpay_order_id=razorpay_order_id,
+        razorpay_payment_id=razorpay_payment_id,
+    )
+
+    # Generate QR code
+    qr_data = (
+        f"Event: {event.title}\n"
+        f"User: {request.user.username}\n"
+        f"Ticket: {tier.name}\n"
+        f"Payment: {razorpay_payment_id}\n"
+        f"Booking ID: {booking.id}"
+    )
+    qr     = qrcode.make(qr_data)
+    buffer = BytesIO()
+    qr.save(buffer, format='PNG')
+    qr_bytes = buffer.getvalue()
+    buffer.seek(0)
+    booking.qr_code.save(f"booking_{booking.id}.png", File(buffer), save=True)
+
+    # Recalculate (update) commission after new payment
+    commission, _ = CommissionRecord.objects.get_or_create(event=event)
+    commission.recalculate()
+
+    # Send confirmation email with QR attached
+    try:
+        email_msg = EmailMessage(
+            subject=f"🎉 Booking Confirmed — {event.title}",
+            body=f"""Hi {request.user.username}!
+
+Payment successful & booking confirmed! 🎊
+
+─────────────────────────────
+Event:      {event.title}
+Date:       {event.date.strftime('%B %d, %Y · %I:%M %p')}
+Location:   {event.location}
+Ticket:     {tier.name}
+Price:      ₹{tier.price}
+Payment ID: {razorpay_payment_id}
+Booking #:  {booking.id}
+─────────────────────────────
+
+Your QR code is attached — show it at the entrance.
+
+See you there! 🚀
+
+— The EventHub Team""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[request.user.email],
+        )
+        email_msg.attach(f"ticket_{booking.id}.png", qr_bytes, 'image/png')
+        email_msg.send(fail_silently=True)
+    except Exception:
+        pass
+
+    messages.success(request, f"Payment successful! 🎉 {tier.name} | ₹{tier.price}")
+    return redirect(f'/event/{id}/?booked=1')
 
 # ══════════════════════════════════════
 # MY BOOKINGS
@@ -395,12 +581,17 @@ def dashboard(request):
         booking_count=Count('booking')
     ).order_by('-booking_count').first()
 
+    platform_commission = CommissionRecord.objects.aggregate(
+        total=Sum('commission_amount')
+    )['total'] or 0
+
     return render(request, 'events/dashboard.html', {
-        'total_events':   total_events,
-        'total_bookings': total_bookings,
-        'total_users':    total_users,
-        'top_event':      top_event,
-        'total_revenue':  total_revenue,
+        'total_events':        total_events,
+        'total_bookings':      total_bookings,
+        'total_users':         total_users,
+        'top_event':           top_event,
+        'total_revenue':       total_revenue,
+        'platform_commission': platform_commission,
     })
 
 
@@ -436,14 +627,25 @@ def verify_ticket(request):
 @login_required
 def event_attendees(request, id):
     event = get_object_or_404(Event, id=id)
-    if request.user != event.created_by and not request.user.is_superuser:
+    can_view = EventModerator.objects.filter(
+        event=event, user=request.user, can_view_attendees=True
+    ).exists()
+    if request.user != event.created_by and not request.user.is_superuser and not can_view:
+        messages.error(request, "Access denied.")
         return redirect('event_detail', id=id)
 
     bookings      = Booking.objects.filter(event=event).order_by('-booked_at')
     total_revenue = bookings.aggregate(total=Sum('price'))['total'] or 0
 
+    commission = CommissionRecord.objects.filter(event=event).first()
+    if commission:
+        commission.recalculate()
+
     return render(request, 'events/event_attendees.html', {
-        'event': event, 'bookings': bookings, 'total_revenue': total_revenue,
+        'event':         event,
+        'bookings':      bookings,
+        'total_revenue': total_revenue,
+        'commission':    commission,
     })
 
 
@@ -810,3 +1012,93 @@ def change_password(request):
         form = PasswordChangeForm(request.user)
 
     return render(request, 'events/change_password.html', {'form': form})
+
+
+# ══════════════════════════════════════
+# SUPER ADMIN DASHBOARD
+# ══════════════════════════════════════
+@login_required
+def super_admin_dashboard(request):
+    try:
+        is_super = request.user.userprofile.is_super_admin
+    except:
+        is_super = False
+
+    if not is_super and not request.user.is_superuser:
+        messages.error(request, "Access denied.")
+        return redirect('event_list')
+
+    all_users   = User.objects.select_related('userprofile').order_by('-date_joined')
+    all_events  = Event.objects.all().order_by('-id')
+    total_rev   = Booking.objects.aggregate(total=Sum('price'))['total'] or 0
+
+    return render(request, 'events/super_admin_dashboard.html', {
+        'all_users':  all_users,
+        'all_events': all_events,
+        'total_rev':  total_rev,
+    })
+
+
+# ══════════════════════════════════════
+# TOGGLE VERIFIED ORGANIZER BADGE
+# ══════════════════════════════════════
+@login_required
+def toggle_verified_organizer(request, user_id):
+    try:
+        is_super = request.user.userprofile.is_super_admin
+    except:
+        is_super = False
+
+    if not is_super and not request.user.is_superuser:
+        messages.error(request, "Access denied.")
+        return redirect('event_list')
+
+    target_profile = get_object_or_404(UserProfile, user__id=user_id)
+    target_profile.is_verified_organizer = not target_profile.is_verified_organizer
+    target_profile.save()
+
+    status = "granted ✅" if target_profile.is_verified_organizer else "revoked ❌"
+    messages.success(request, f"Verified Organizer badge {status} for {target_profile.user.username}.")
+    return redirect('super_admin_dashboard')
+
+
+# ══════════════════════════════════════
+# ASSIGN MODERATOR
+# ══════════════════════════════════════
+@login_required
+def assign_moderator(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    # Only the creator can assign (delegate) moderators
+    if request.user != event.created_by:
+        messages.error(request, "Only the event creator can assign moderators.")
+        return redirect('event_detail', id=event_id)
+
+    if request.method == 'POST':
+        username   = request.POST.get('username', '').strip()
+        can_edit   = request.POST.get('can_edit') == 'on'
+        can_checkin = request.POST.get('can_check_in') == 'on'
+
+        try:
+            mod_user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            messages.error(request, f"User '{username}' not found.")
+            return redirect('event_attendees', id=event_id)
+
+        if mod_user == event.created_by:
+            messages.error(request, "You are already the creator — no need to assign yourself!")
+            return redirect('event_attendees', id=event_id)
+
+        EventModerator.objects.update_or_create(
+            event=event, user=mod_user,
+            defaults={
+                'assigned_by':        request.user,
+                'can_edit':           can_edit,
+                'can_view_attendees': True,
+                'can_check_in':       can_checkin,
+            }
+        )
+        messages.success(request, f"@{username} is now a moderator for this event! 🎉")
+        return redirect('event_attendees', id=event_id)
+
+    return redirect('event_attendees', id=event_id)

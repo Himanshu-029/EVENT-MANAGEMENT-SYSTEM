@@ -20,15 +20,7 @@
     position: relative;
     overflow: hidden;
   }
-  .el-hero::before {
-    content: '🎉';
-    position: absolute;
-    font-size: 18rem;
-    opacity: 0.04;
-    top: -3rem; right: -2rem;
-    line-height: 1;
-    pointer-events: none;
-  }
+  .el-hero::before { content: '🎉'; position: absolute; font-size: 18rem; opacity: 0.04; top: -3rem; right: -2rem; line-height: 1; pointer-events: none; }
   .el-hero h1 { font-family: 'Boogaloo', cursive; font-size: clamp(2.5rem, 6vw, 4.5rem); color: var(--dark); margin-bottom: 0.5rem; line-height: 1.1; }
   .el-hero h1 span { color: var(--pink); }
   .el-hero p { color: rgba(26,16,53,0.6); font-weight: 600; font-size: 1rem; max-width: 500px; margin: 0 auto; }
@@ -56,24 +48,20 @@
 
   .ev-card { background: #fff; border: 2.5px solid var(--dark); border-radius: 20px; overflow: hidden; box-shadow: 5px 5px 0 var(--dark); transition: all 0.2s; }
   .ev-card:hover { transform: translate(-4px,-4px); box-shadow: 9px 9px 0 var(--dark); }
-
   .ev-img { width: 100%; height: 180px; object-fit: cover; border-bottom: 2px solid var(--dark); display: block; }
-
   .ev-top-nimg { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 4rem; border-bottom: 2px solid var(--dark); }
   .top-tech     { background: linear-gradient(135deg, #d4f0ff, #e0f7ff); }
   .top-music    { background: linear-gradient(135deg, #ffd6ec, #ffe4f8); }
   .top-sports   { background: linear-gradient(135deg, #d4fce8, #e0fff0); }
   .top-business { background: linear-gradient(135deg, #fff3cc, #fffae0); }
   .top-default  { background: linear-gradient(135deg, #f0e0ff, #fce0ff); }
-
   .ev-body { padding: 1.1rem; }
   .mini-tag { display: inline-block; padding: 0.12rem 0.65rem; border-radius: 100px; font-size: 0.68rem; font-weight: 800; border: 2px solid var(--dark); margin-bottom: 0.5rem; }
-  .t-sky    { background: var(--sky);      color: var(--dark); }
-  .t-pink   { background: var(--pink);     color: #fff; }
-  .t-mint   { background: var(--mint);     color: var(--dark); }
-  .t-lemon  { background: var(--lemon);    color: var(--dark); }
-  .t-lav    { background: var(--lavender); color: #fff; }
-
+  .t-sky   { background: var(--sky);      color: var(--dark); }
+  .t-pink  { background: var(--pink);     color: #fff; }
+  .t-mint  { background: var(--mint);     color: var(--dark); }
+  .t-lemon { background: var(--lemon);    color: var(--dark); }
+  .t-lav   { background: var(--lavender); color: #fff; }
   .ev-title { font-family: 'Fredoka One', cursive; font-size: 1.1rem; margin-bottom: 0.4rem; }
   .ev-title a { color: var(--dark) !important; text-decoration: none !important; }
   .ev-title a:hover { color: var(--pink) !important; }
@@ -83,17 +71,72 @@
   .ev-footer { display: flex; justify-content: flex-end; align-items: center; padding-top: 0.8rem; border-top: 2px dashed rgba(26,16,53,0.12); }
   .btn-view { background: var(--pink) !important; color: #fff !important; border: 2px solid var(--dark) !important; border-radius: 100px !important; padding: 0.35rem 1.1rem !important; font-family: 'Fredoka One', cursive !important; font-size: 0.82rem !important; cursor: pointer !important; box-shadow: 2px 2px 0 var(--dark) !important; transition: all 0.2s !important; text-decoration: none !important; display: inline-block !important; }
   .btn-view:hover { transform: translate(-1px,-1px) !important; box-shadow: 4px 4px 0 var(--dark) !important; text-decoration: none !important; }
-
   .empty-state { text-align: center; padding: 4rem 2rem; grid-column: 1 / -1; }
   .empty-emoji { font-size: 4rem; margin-bottom: 1rem; }
   .empty-state h3 { font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: var(--dark); margin-bottom: 0.5rem; }
   .empty-state p { color: rgba(26,16,53,0.55); font-weight: 600; }
-
   .pagination-wrap { display: flex; justify-content: center; align-items: center; gap: 0.8rem; padding: 0 3rem 4rem; flex-wrap: wrap; }
   .page-btn { background: #fff; border: 2.5px solid var(--dark); border-radius: 100px; padding: 0.5rem 1.4rem; font-family: 'Fredoka One', cursive; font-size: 0.9rem; color: var(--dark) !important; text-decoration: none !important; box-shadow: 3px 3px 0 var(--dark); transition: all 0.2s; cursor: pointer; }
   .page-btn:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--dark); }
   .page-btn.active { background: var(--pink); color: #fff !important; }
   .page-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+  /* ── SKELETON LOADERS ── */
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .skeleton-grid {
+    display: none;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  .skeleton-card {
+    background: #fff;
+    border: 2.5px solid var(--dark);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 5px 5px 0 var(--dark);
+  }
+  .skeleton-top {
+    height: 140px;
+    background: linear-gradient(90deg,#f0e0ff 25%,#ffe0f7 50%,#f0e0ff 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+  }
+  .skeleton-body { padding: 1.1rem; }
+  .skeleton-tag {
+    height: 18px; width: 60px; border-radius: 100px; margin-bottom: 0.6rem;
+    background: linear-gradient(90deg,#f0e0ff 25%,#ffe0f7 50%,#f0e0ff 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+  }
+  .skeleton-line {
+    height: 12px; border-radius: 6px; margin-bottom: 0.6rem;
+    background: linear-gradient(90deg,#f0e0ff 25%,#ffe0f7 50%,#f0e0ff 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+  }
+  .skeleton-line.full  { width: 100%; }
+  .skeleton-line.med   { width: 75%; }
+  .skeleton-line.short { width: 50%; }
+  .skeleton-footer { display: flex; justify-content: flex-end; padding-top: 0.8rem; border-top: 2px dashed rgba(26,16,53,0.1); }
+  .skeleton-btn {
+    height: 28px; width: 90px; border-radius: 100px;
+    background: linear-gradient(90deg,#f0e0ff 25%,#ffe0f7 50%,#f0e0ff 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+  }
+
+  /* Dark mode skeletons */
+  [data-theme="dark"] .skeleton-card { background: #1a1035 !important; border-color: #2d1f5e !important; box-shadow: 5px 5px 0 #2d1f5e !important; }
+  [data-theme="dark"] .skeleton-top,
+  [data-theme="dark"] .skeleton-tag,
+  [data-theme="dark"] .skeleton-line,
+  [data-theme="dark"] .skeleton-btn {
+    background: linear-gradient(90deg,#2d1f5e 25%,#3d2f6e 50%,#2d1f5e 75%) !important;
+    background-size: 200% 100% !important;
+  }
 
   @media (max-width: 768px) {
     .el-hero, .search-bar-wrap { padding-left: 1.5rem; padding-right: 1.5rem; }
@@ -113,30 +156,13 @@
 <div class="search-bar-wrap">
   <form method="get">
     <div class="search-bar-inner">
-      <input
-        type="text"
-        name="q"
-        placeholder="🔍 Search by title, artist, city..."
-        value="{{ query }}"
-      >
+      <input type="text" name="q" placeholder="🔍 Search by title, artist, city..." value="{{ query }}">
       <select name="category">
         <option value="">All Categories</option>
-        <option value="Tech"
-          {% if selected_category == 'Tech' %}selected{% endif %}>
-          💻 Tech
-        </option>
-        <option value="Music"
-          {% if selected_category == 'Music' %}selected{% endif %}>
-          🎵 Music
-        </option>
-        <option value="Sports"
-          {% if selected_category == 'Sports' %}selected{% endif %}>
-          ⚽ Sports
-        </option>
-        <option value="Business"
-          {% if selected_category == 'Business' %}selected{% endif %}>
-          💼 Business
-        </option>
+        <option value="Tech"     {% if selected_category == 'Tech'     %}selected{% endif %}>💻 Tech</option>
+        <option value="Music"    {% if selected_category == 'Music'    %}selected{% endif %}>🎵 Music</option>
+        <option value="Sports"   {% if selected_category == 'Sports'   %}selected{% endif %}>⚽ Sports</option>
+        <option value="Business" {% if selected_category == 'Business' %}selected{% endif %}>💼 Business</option>
       </select>
       <button type="submit" class="btn-filter">Filter! 🎯</button>
     </div>
@@ -146,76 +172,64 @@
 <!-- ══ CATEGORY PILLS ══ -->
 <div class="cats-wrap">
   <div class="cats-pills">
-    <a href="{% url 'event_list' %}{% if query %}?q={{ query }}{% endif %}"
-      class="cat-pill {% if not selected_category %}active{% endif %}">
-      🌟 All
-    </a>
-    <a href="?category=Tech{% if query %}&q={{ query }}{% endif %}"
-      class="cat-pill {% if selected_category == 'Tech' %}active{% endif %}">
-      💻 Tech
-    </a>
-    <a href="?category=Music{% if query %}&q={{ query }}{% endif %}"
-      class="cat-pill {% if selected_category == 'Music' %}active{% endif %}">
-      🎵 Music
-    </a>
-    <a href="?category=Sports{% if query %}&q={{ query }}{% endif %}"
-      class="cat-pill {% if selected_category == 'Sports' %}active{% endif %}">
-      ⚽ Sports
-    </a>
-    <a href="?category=Business{% if query %}&q={{ query }}{% endif %}"
-      class="cat-pill {% if selected_category == 'Business' %}active{% endif %}">
-      💼 Business
-    </a>
+    <a href="{% url 'event_list' %}{% if query %}?q={{ query }}{% endif %}" class="cat-pill {% if not selected_category %}active{% endif %}">🌟 All</a>
+    <a href="?category=Tech{% if query %}&q={{ query }}{% endif %}"     class="cat-pill {% if selected_category == 'Tech'     %}active{% endif %}">💻 Tech</a>
+    <a href="?category=Music{% if query %}&q={{ query }}{% endif %}"    class="cat-pill {% if selected_category == 'Music'    %}active{% endif %}">🎵 Music</a>
+    <a href="?category=Sports{% if query %}&q={{ query }}{% endif %}"   class="cat-pill {% if selected_category == 'Sports'   %}active{% endif %}">⚽ Sports</a>
+    <a href="?category=Business{% if query %}&q={{ query }}{% endif %}" class="cat-pill {% if selected_category == 'Business' %}active{% endif %}">💼 Business</a>
   </div>
 </div>
 
 <!-- ══ SECTION HEADER ══ -->
 <div class="section-header">
   <h2>All <span>Events</span> 🔥</h2>
-  <span class="result-count">
-    {{ page_obj.paginator.count }} events found
-  </span>
+  <span class="result-count">{{ page_obj.paginator.count }} events found</span>
 </div>
 
-<!-- ══ EVENTS GRID ══ -->
+<!-- ══ EVENTS WRAP ══ -->
 <div class="events-wrap">
-  <div class="events-grid">
 
+  <!-- Skeleton grid (shown while loading) -->
+  <div class="skeleton-grid" id="skeleton-grid">
+    {% for i in "123456" %}
+    <div class="skeleton-card">
+      <div class="skeleton-top"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-tag"></div>
+        <div class="skeleton-line full"></div>
+        <div class="skeleton-line med"></div>
+        <div class="skeleton-line full"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-footer"><div class="skeleton-btn"></div></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Real events grid -->
+  <div class="events-grid" id="events-grid-real" style="opacity:0;transition:opacity 0.4s;">
     {% for event in page_obj %}
     <div class="ev-card">
 
       {% if event.image %}
         <img src="{{ event.image.url }}" class="ev-img" alt="{{ event.title }}">
       {% else %}
-        {% if event.category == 'Tech' %}
-          <div class="ev-top-nimg top-tech">💻</div>
-        {% elif event.category == 'Music' %}
-          <div class="ev-top-nimg top-music">🎵</div>
-        {% elif event.category == 'Sports' %}
-          <div class="ev-top-nimg top-sports">⚽</div>
-        {% elif event.category == 'Business' %}
-          <div class="ev-top-nimg top-business">💼</div>
-        {% else %}
-          <div class="ev-top-nimg top-default">🎉</div>
+        {% if event.category == 'Tech' %}<div class="ev-top-nimg top-tech">💻</div>
+        {% elif event.category == 'Music' %}<div class="ev-top-nimg top-music">🎵</div>
+        {% elif event.category == 'Sports' %}<div class="ev-top-nimg top-sports">⚽</div>
+        {% elif event.category == 'Business' %}<div class="ev-top-nimg top-business">💼</div>
+        {% else %}<div class="ev-top-nimg top-default">🎉</div>
         {% endif %}
       {% endif %}
 
       <div class="ev-body">
-        {% if event.category == 'Tech' %}
-          <span class="mini-tag t-sky">💻 {{ event.category }}</span>
-        {% elif event.category == 'Music' %}
-          <span class="mini-tag t-pink">🎵 {{ event.category }}</span>
-        {% elif event.category == 'Sports' %}
-          <span class="mini-tag t-mint">⚽ {{ event.category }}</span>
-        {% elif event.category == 'Business' %}
-          <span class="mini-tag t-lemon">💼 {{ event.category }}</span>
-        {% else %}
-          <span class="mini-tag t-lav">🎉 {{ event.category }}</span>
+        {% if event.category == 'Tech' %}<span class="mini-tag t-sky">💻 {{ event.category }}</span>
+        {% elif event.category == 'Music' %}<span class="mini-tag t-pink">🎵 {{ event.category }}</span>
+        {% elif event.category == 'Sports' %}<span class="mini-tag t-mint">⚽ {{ event.category }}</span>
+        {% elif event.category == 'Business' %}<span class="mini-tag t-lemon">💼 {{ event.category }}</span>
+        {% else %}<span class="mini-tag t-lav">🎉 {{ event.category }}</span>
         {% endif %}
-
-        <div class="ev-title">
-          <a href="{% url 'event_detail' event.id %}">{{ event.title }}</a>
-        </div>
+        <div class="ev-title"><a href="{% url 'event_detail' event.id %}">{{ event.title }}</a></div>
         <div class="ev-desc">{{ event.description|truncatewords:20 }}</div>
         <div class="ev-meta">
           📍 <b>{{ event.location }}</b><br>
@@ -223,13 +237,10 @@
           👥 <b>Capacity:</b> {{ event.capacity }}
         </div>
         <div class="ev-footer">
-          <a href="{% url 'event_detail' event.id %}" class="btn-view">
-            View Event!
-          </a>
+          <a href="{% url 'event_detail' event.id %}" class="btn-view">View Event!</a>
         </div>
       </div>
     </div>
-
     {% empty %}
       <div class="empty-state">
         <div class="empty-emoji">🎪</div>
@@ -237,29 +248,49 @@
         <p>Try a different search or category.</p>
       </div>
     {% endfor %}
-
   </div>
+
 </div>
 
 <!-- ══ PAGINATION ══ -->
 <div class="pagination-wrap">
   {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"
-      class="page-btn">← Previous</a>
+    <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="page-btn">← Previous</a>
   {% else %}
     <span class="page-btn disabled">← Previous</span>
   {% endif %}
 
-  <span class="page-btn active">
-    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-  </span>
+  <span class="page-btn active">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
 
   {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"
-      class="page-btn">Next →</a>
+    <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="page-btn">Next →</a>
   {% else %}
     <span class="page-btn disabled">Next →</span>
   {% endif %}
 </div>
+
+<script>
+  // ── Skeleton Loader ──
+  const skeleton = document.getElementById('skeleton-grid');
+  const realGrid = document.getElementById('events-grid-real');
+
+  // Show skeleton, hide real grid immediately
+  skeleton.style.display = 'grid';
+  realGrid.style.display = 'none';
+
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      // Fade out skeleton
+      skeleton.style.transition = 'opacity 0.35s';
+      skeleton.style.opacity = '0';
+      setTimeout(function(){
+        skeleton.style.display = 'none';
+        // Fade in real grid
+        realGrid.style.display = 'grid';
+        setTimeout(function(){ realGrid.style.opacity = '1'; }, 30);
+      }, 350);
+    }, 600);
+  });
+</script>
 
 {% endblock %}
