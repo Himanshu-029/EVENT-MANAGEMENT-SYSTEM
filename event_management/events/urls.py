@@ -51,4 +51,8 @@ urlpatterns = [
     path('finished-events/', views.finished_events, name='finished_events'),
     path('admin/cleanup/', views.trigger_cleanup, name='trigger_cleanup'),
 
+    # ---About Us ---
+    path('about/',   views.about,   name='about'),
+    path('contact/', views.contact, name='contact'),
+
 ]

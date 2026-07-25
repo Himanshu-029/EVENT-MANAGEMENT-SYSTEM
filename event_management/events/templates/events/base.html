@@ -399,11 +399,23 @@ a { transition: all 0.2s; }
         <a class="text-light me-3" href="{% url 'my_bookings' %}">
             <i class="fa-solid fa-ticket"></i> My Bookings
         </a>
+        <a class="text-light me-3" href="{% url 'saved_events' %}">
+            <i class="fa-solid fa-heart"></i> Saved
+        </a>
+        <a class="text-light me-3" href="{% url 'finished_events' %}">
+            <i class="fa-solid fa-flag-checkered"></i> Finished
+        </a>
         <a class="text-light me-3" href="{% url 'dashboard' %}">
             <i class="fa-solid fa-chart-line"></i> Dashboard
         </a>
         <a class="text-light me-3" href="{% url 'verify_ticket' %}">
             <i class="fa-solid fa-check-circle"></i> Verify Ticket
+        </a>
+        <a class="text-light me-3" href="{% url 'about' %}">
+            <i class="fa-solid fa-circle-info"></i> About
+        </a>
+        <a class="text-light me-3" href="{% url 'contact' %}">
+            <i class="fa-solid fa-envelope"></i> Contact
         </a>
 
         {% if user.is_authenticated %}

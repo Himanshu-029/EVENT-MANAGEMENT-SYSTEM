@@ -1,0 +1,45 @@
+{% extends 'events/base.html' %}
+{% block content %}
+<div style="max-width:800px;margin:4rem auto;padding:0 2rem 5rem;">
+
+  <div style="background:#fff;border:2.5px solid #1a1035;border-radius:24px;overflow:hidden;box-shadow:6px 6px 0 #1a1035;">
+
+    <div style="background:#ffe566;border-bottom:2.5px solid #1a1035;padding:2.5rem 2rem;text-align:center;">
+      <div style="font-size:3.5rem;margin-bottom:.5rem;">🎉</div>
+      <h1 style="font-family:'Boogaloo',cursive;font-size:3rem;color:#1a1035;margin:0;">About EventHub</h1>
+      <p style="font-family:'Fredoka One',cursive;font-size:1rem;color:rgba(26,16,53,.6);margin-top:.5rem;">
+        The platform built for event lovers, by event lovers.
+      </p>
+    </div>
+
+    <div style="padding:2rem;">
+
+      <h2 style="font-family:'Boogaloo',cursive;font-size:1.8rem;color:#1a1035;">What is EventHub? 🚀</h2>
+      <p style="font-family:'Nunito',sans-serif;font-weight:600;font-size:.95rem;color:rgba(26,16,53,.7);line-height:1.8;">
+        EventHub is a full-stack event management platform where anyone can create, discover, and book events — from tech conferences to music festivals. We handle ticketing, payments, QR check-ins, and post-event analytics so you can focus on what matters: the experience.
+      </p>
+
+      <h2 style="font-family:'Boogaloo',cursive;font-size:1.8rem;color:#1a1035;margin-top:1.5rem;">Why EventHub? ✨</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+        {% for item in features %}
+        <div style="background:#fff0fa;border:2px solid #1a1035;border-radius:14px;padding:.8rem 1rem;font-family:'Fredoka One',cursive;font-size:.9rem;color:#1a1035;box-shadow:2px 2px 0 #1a1035;">
+          {{ item }}
+        </div>
+        {% endfor %}
+      </div>
+
+      <h2 style="font-family:'Boogaloo',cursive;font-size:1.8rem;color:#1a1035;margin-top:1.5rem;">Built With 🛠️</h2>
+      <p style="font-family:'Nunito',sans-serif;font-weight:600;font-size:.95rem;color:rgba(26,16,53,.7);line-height:1.8;">
+        Django 5.2 · Python 3.11 · SQLite · Razorpay · Leaflet.js · OpenStreetMap · Bootstrap · openpyxl
+      </p>
+
+      <h2 style="font-family:'Boogaloo',cursive;font-size:1.8rem;color:#1a1035;margin-top:1.5rem;">Made By 💖</h2>
+      <p style="font-family:'Nunito',sans-serif;font-weight:600;font-size:.95rem;color:rgba(26,16,53,.7);line-height:1.8;">
+        Built by <b>Himanshu</b> as a full-stack portfolio project. If you like it, drop a ⭐ on
+        <a href="https://github.com/Himanshu-029/EVENT-MANAGEMENT-SYSTEM" target="_blank" style="color:#ff6eb4;font-weight:800;">GitHub</a>!
+      </p>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

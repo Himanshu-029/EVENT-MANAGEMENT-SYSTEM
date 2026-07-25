@@ -1305,3 +1305,47 @@ def trigger_cleanup(request):
 
     messages.success(request, f"Cleaned up {count} expired event(s) ✅")
     return redirect('dashboard')
+
+
+# ══════════════════════════════════════
+# ABOUT PAGE
+# ══════════════════════════════════════
+def about(request):
+    features = [
+        "🎟️ Flexible ticket tiers",
+        "💳 Secure Razorpay payments",
+        "🗺️ Live maps & location",
+        "📊 Excel reports",
+        "🌙 Dark mode",
+        "🎊 Confetti on booking",
+        "📧 QR code emails",
+        "🔴 Live seat tracker",
+    ]
+    return render(request, 'events/about.html', {'features': features})
+
+
+# ══════════════════════════════════════
+# CONTACT PAGE
+# ══════════════════════════════════════
+def contact(request):
+    if request.method == 'POST':
+        name    = request.POST.get('name', '').strip()
+        email   = request.POST.get('email', '').strip()
+        message = request.POST.get('message', '').strip()
+
+        if name and email and message:
+            try:
+                send_mail(
+                    subject=f"EventHub Contact — {name}",
+                    message=f"From: {name} <{email}>\n\n{message}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                    fail_silently=True,
+                )
+                messages.success(request, "Message sent! We'll get back to you soon 🎉")
+            except Exception:
+                messages.error(request, "Something went wrong. Please try again.")
+        else:
+            messages.error(request, "All fields are required.")
+
+    return render(request, 'events/contact.html')
