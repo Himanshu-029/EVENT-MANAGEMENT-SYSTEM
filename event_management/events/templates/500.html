@@ -1,0 +1,45 @@
+{% extends 'events/base.html' %}
+{% block content %}
+
+<style>
+  body{background:#fff0fa !important;background-image:none !important;}
+  body::before{display:none !important;}
+  .container.mt-5{margin-top:0 !important;max-width:100% !important;padding:0 !important;}
+  :root{--pink:#ff6eb4;--sky:#74c7f5;--mint:#5ee7bf;--lemon:#ffe566;--lavender:#c084fc;--coral:#ff7f6e;--bg:#fff0fa;--dark:#1a1035;}
+
+  .error-page{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:3rem 2rem;}
+  .error-card{background:#fff;border:3px solid var(--dark);border-radius:28px;padding:3rem 2.5rem;box-shadow:8px 8px 0 var(--dark);text-align:center;max-width:500px;width:100%;}
+  .error-emoji{font-size:6rem;margin-bottom:1rem;animation:shake 1s infinite;}
+  @keyframes shake{0%,100%{transform:rotate(0deg);}25%{transform:rotate(-8deg);}75%{transform:rotate(8deg);}}
+  .error-code{font-family:'Boogaloo',cursive;font-size:7rem;color:var(--coral);line-height:1;margin-bottom:.3rem;}
+  .error-title{font-family:'Boogaloo',cursive;font-size:2rem;color:var(--dark);margin-bottom:.5rem;}
+  .error-desc{font-family:'Fredoka One',cursive;font-size:.95rem;color:rgba(26,16,53,.55);margin-bottom:2rem;line-height:1.6;}
+  .error-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+  .btn-home{background:var(--coral) !important;color:#fff !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.65rem 2rem !important;font-family:'Fredoka One',cursive !important;font-size:1rem !important;cursor:pointer !important;box-shadow:4px 4px 0 var(--dark) !important;transition:all .2s !important;text-decoration:none !important;display:inline-block !important;}
+  .btn-home:hover{transform:translate(-2px,-2px) !important;box-shadow:6px 6px 0 var(--dark) !important;}
+  .btn-back{background:#fff !important;color:var(--dark) !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.65rem 2rem !important;font-family:'Fredoka One',cursive !important;font-size:1rem !important;cursor:pointer !important;box-shadow:4px 4px 0 var(--dark) !important;transition:all .2s !important;text-decoration:none !important;display:inline-block !important;}
+  .btn-back:hover{transform:translate(-2px,-2px) !important;box-shadow:6px 6px 0 var(--dark) !important;}
+
+  [data-theme="dark"] .error-card{background:#1a1035 !important;border-color:#2d1f5e !important;box-shadow:8px 8px 0 #2d1f5e !important;}
+  [data-theme="dark"] .error-title{color:#e8e0ff !important;}
+  [data-theme="dark"] .error-desc{color:rgba(232,224,255,.55) !important;}
+  [data-theme="dark"] .btn-back{background:#2d1f5e !important;border-color:#3d2f6e !important;color:#e8e0ff !important;box-shadow:4px 4px 0 #3d2f6e !important;}
+</style>
+
+<div class="error-page">
+  <div class="error-card">
+    <div class="error-emoji">💥</div>
+    <div class="error-code">500</div>
+    <div class="error-title">Server Went Brr 💀</div>
+    <div class="error-desc">
+      Something broke on our end — not yours! 😅<br>
+      We're on it. Try again in a bit.
+    </div>
+    <div class="error-btns">
+      <a href="{% url 'home' %}" class="btn-home">🏠 Go Home</a>
+      <a href="{% url 'contact' %}" class="btn-back">📬 Contact Us</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

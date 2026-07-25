@@ -1,0 +1,129 @@
+{% extends 'events/base.html' %}
+{% block content %}
+
+<style>
+  body{background:#fff0fa !important;background-image:none !important;}
+  body::before{display:none !important;}
+  .container.mt-5{margin-top:0 !important;max-width:100% !important;padding:0 !important;}
+  :root{--pink:#ff6eb4;--sky:#74c7f5;--mint:#5ee7bf;--lemon:#ffe566;--lavender:#c084fc;--coral:#ff7f6e;--bg:#fff0fa;--dark:#1a1035;}
+
+  .saved-page{max-width:1100px;margin:0 auto;padding:3rem 2rem 5rem;}
+
+  /* Header */
+  .saved-header{text-align:center;margin-bottom:2.5rem;}
+  .saved-header .header-badge{display:inline-flex;align-items:center;gap:.4rem;background:var(--lavender);border:2px solid var(--dark);border-radius:100px;padding:.3rem 1rem;font-weight:800;font-size:.82rem;color:#fff;margin-bottom:1rem;box-shadow:2px 2px 0 var(--dark);}
+  .saved-header h1{font-family:'Boogaloo',cursive;font-size:clamp(2.5rem,5vw,3.5rem);color:var(--dark);margin-bottom:.3rem;}
+  .saved-header h1 span{color:var(--lavender);}
+  .saved-header p{color:rgba(26,16,53,.55);font-weight:600;font-size:.95rem;}
+
+  /* Grid */
+  .saved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;}
+
+  /* Card */
+  .saved-card{background:#fff;border:2.5px solid var(--dark);border-radius:20px;overflow:hidden;box-shadow:5px 5px 0 var(--dark);transition:all .2s;}
+  .saved-card:hover{transform:translate(-4px,-4px);box-shadow:9px 9px 0 var(--dark);}
+  .saved-card-top{height:130px;display:flex;align-items:center;justify-content:center;font-size:3.5rem;border-bottom:2px solid var(--dark);}
+  .top-tech{background:linear-gradient(135deg,#d4f0ff,#e0f7ff);}
+  .top-music{background:linear-gradient(135deg,#ffd6ec,#ffe4f8);}
+  .top-sports{background:linear-gradient(135deg,#d4fce8,#e0fff0);}
+  .top-business{background:linear-gradient(135deg,#fff3cc,#fffae0);}
+  .top-default{background:linear-gradient(135deg,#f0e0ff,#fce0ff);}
+  .saved-card-body{padding:1.1rem;}
+  .mini-tag{display:inline-block;padding:.12rem .65rem;border-radius:100px;font-size:.68rem;font-weight:800;border:2px solid var(--dark);margin-bottom:.5rem;}
+  .t-sky{background:var(--sky);color:var(--dark);}
+  .t-pink{background:var(--pink);color:#fff;}
+  .t-mint{background:var(--mint);color:var(--dark);}
+  .t-lemon{background:var(--lemon);color:var(--dark);}
+  .t-lav{background:var(--lavender);color:#fff;}
+  .saved-title{font-family:'Fredoka One',cursive;font-size:1.05rem;color:var(--dark);margin-bottom:.4rem;}
+  .saved-meta{font-size:.78rem;color:rgba(26,16,53,.55);font-weight:700;line-height:1.8;margin-bottom:.8rem;}
+  .saved-meta b{color:var(--dark);}
+  .saved-footer{display:flex;justify-content:space-between;align-items:center;padding-top:.8rem;border-top:2px dashed rgba(26,16,53,.12);}
+  .saved-date{font-size:.7rem;color:rgba(26,16,53,.4);font-weight:700;}
+  .btn-view{background:var(--lavender) !important;color:#fff !important;border:2px solid var(--dark) !important;border-radius:100px !important;padding:.35rem 1.1rem !important;font-family:'Fredoka One',cursive !important;font-size:.82rem !important;cursor:pointer !important;box-shadow:2px 2px 0 var(--dark) !important;transition:all .2s !important;text-decoration:none !important;display:inline-block !important;}
+  .btn-view:hover{transform:translate(-1px,-1px) !important;box-shadow:4px 4px 0 var(--dark) !important;}
+
+  /* Empty state */
+  .empty-state{text-align:center;padding:5rem 2rem;grid-column:1 / -1;}
+  .empty-emoji{font-size:5rem;margin-bottom:1rem;}
+  .empty-state h3{font-family:'Fredoka One',cursive;font-size:1.5rem;color:var(--dark);margin-bottom:.5rem;}
+  .empty-state p{color:rgba(26,16,53,.55);font-weight:600;margin-bottom:1.5rem;}
+  .btn-explore{background:var(--lavender) !important;color:#fff !important;border:2.5px solid var(--dark) !important;border-radius:100px !important;padding:.65rem 2rem !important;font-family:'Fredoka One',cursive !important;font-size:1rem !important;cursor:pointer !important;box-shadow:4px 4px 0 var(--dark) !important;transition:all .2s !important;text-decoration:none !important;display:inline-block !important;}
+  .btn-explore:hover{transform:translate(-2px,-2px) !important;box-shadow:6px 6px 0 var(--dark) !important;}
+
+  /* Dark mode */
+  [data-theme="dark"] .saved-page{background:#0f0a1e !important;}
+  [data-theme="dark"] .saved-header h1{color:#e8e0ff !important;}
+  [data-theme="dark"] .saved-header p{color:rgba(232,224,255,.55) !important;}
+  [data-theme="dark"] .saved-card{background:#1a1035 !important;border-color:#2d1f5e !important;box-shadow:5px 5px 0 #2d1f5e !important;}
+  [data-theme="dark"] .saved-card:hover{box-shadow:9px 9px 0 #2d1f5e !important;}
+  [data-theme="dark"] .saved-card-top{border-bottom-color:#2d1f5e !important;}
+  [data-theme="dark"] .saved-title{color:#e8e0ff !important;}
+  [data-theme="dark"] .saved-meta{color:rgba(232,224,255,.55) !important;}
+  [data-theme="dark"] .saved-meta b{color:#e8e0ff !important;}
+  [data-theme="dark"] .saved-footer{border-top-color:rgba(232,224,255,.12) !important;}
+  [data-theme="dark"] .saved-date{color:rgba(232,224,255,.4) !important;}
+  [data-theme="dark"] .empty-state h3{color:#e8e0ff !important;}
+  [data-theme="dark"] .empty-state p{color:rgba(232,224,255,.55) !important;}
+
+  @media(max-width:768px){.saved-page{padding:2rem 1rem 4rem;}}
+</style>
+
+<div class="saved-page">
+
+  <!-- Header -->
+  <div class="saved-header">
+    <div class="header-badge">💜 {{ saved|length }} Saved Event{{ saved|length|pluralize }}</div>
+    <h1>Your <span>Saved</span> Events</h1>
+    <p>Events you're interested in — all in one place 🎯</p>
+  </div>
+
+  <!-- Grid -->
+  <div class="saved-grid">
+    {% for item in saved %}
+    {% with event=item.event %}
+    <div class="saved-card">
+
+      {% if event.category == 'Tech' %}<div class="saved-card-top top-tech">💻</div>
+      {% elif event.category == 'Music' %}<div class="saved-card-top top-music">🎵</div>
+      {% elif event.category == 'Sports' %}<div class="saved-card-top top-sports">⚽</div>
+      {% elif event.category == 'Business' %}<div class="saved-card-top top-business">💼</div>
+      {% else %}<div class="saved-card-top top-default">🎉</div>
+      {% endif %}
+
+      <div class="saved-card-body">
+        {% if event.category == 'Tech' %}<span class="mini-tag t-sky">💻 {{ event.category }}</span>
+        {% elif event.category == 'Music' %}<span class="mini-tag t-pink">🎵 {{ event.category }}</span>
+        {% elif event.category == 'Sports' %}<span class="mini-tag t-mint">⚽ {{ event.category }}</span>
+        {% elif event.category == 'Business' %}<span class="mini-tag t-lemon">💼 {{ event.category }}</span>
+        {% else %}<span class="mini-tag t-lav">🎉 {{ event.category }}</span>
+        {% endif %}
+
+        <div class="saved-title">{{ event.title }}</div>
+        <div class="saved-meta">
+          📍 <b>{{ event.location }}</b><br>
+          📅 <b>{{ event.date|date:"M d, Y · g A" }}</b><br>
+          👥 <b>{{ event.seats_left }}</b> seats left
+        </div>
+
+        <div class="saved-footer">
+          <span class="saved-date">💜 Saved {{ item.saved_at|date:"M d" }}</span>
+          <a href="{% url 'event_detail' event.id %}" class="btn-view">View Event →</a>
+        </div>
+      </div>
+
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div class="empty-state">
+      <div class="empty-emoji">💜</div>
+      <h3>No saved events yet!</h3>
+      <p>Hit the "Interested" button on any event to save it here.</p>
+      <a href="{% url 'event_list' %}" class="btn-explore">Explore Events</a>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+{% endblock %}

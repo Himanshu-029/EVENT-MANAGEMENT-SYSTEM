@@ -1349,3 +1349,12 @@ def contact(request):
             messages.error(request, "All fields are required.")
 
     return render(request, 'events/contact.html')
+
+
+# Temporary test URLs (remove after testing)
+def test_404(request):
+    from django.http import Http404
+    raise Http404
+
+def test_500(request):
+    raise Exception("Test 500")
