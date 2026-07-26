@@ -899,14 +899,14 @@ def resend_otp(request):
                 <p>If you didn't request this, please contact us immediately.</p>
             """
         )
-        email_msg = EmailMessage(
+    email_msg = EmailMessage(
             subject='EventHub — Your New OTP 🔄',
             body=html,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[user.email],
         )
-        email_msg.content_subtype = 'html'
-        email_msg.send(fail_silently=False)
+    email_msg.content_subtype = 'html'
+    email_msg.send(fail_silently=False)
 
     messages.success(request, f"New OTP sent to {user.email}!")
     return redirect('verify_otp')
