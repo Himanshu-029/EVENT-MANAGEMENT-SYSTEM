@@ -353,6 +353,10 @@
 
             {% else %}
               <div class="alert-y2k alert-full">😔 Event is Full!</div>
+              <a href="{% url 'toggle_waitlist' event.id %}"
+                style="display:block;text-align:center;margin-top:.8rem;background:var(--lemon);border:2.5px solid var(--dark);border-radius:100px;padding:.65rem;font-family:'Fredoka One',cursive;font-size:.95rem;color:var(--dark);text-decoration:none;box-shadow:3px 3px 0 var(--dark);transition:all .2s;">
+                🔔 Join Waitlist
+              </a>
             {% endif %}
 
             <!-- Save Button -->

@@ -164,6 +164,12 @@
         <option value="Sports"   {% if selected_category == 'Sports'   %}selected{% endif %}>⚽ Sports</option>
         <option value="Business" {% if selected_category == 'Business' %}selected{% endif %}>💼 Business</option>
       </select>
+      <select name="date_filter">
+        <option value="">Any Date</option>
+        <option value="today"   {% if request.GET.date_filter == 'today'   %}selected{% endif %}>📅 Today</option>
+        <option value="week"    {% if request.GET.date_filter == 'week'    %}selected{% endif %}>📅 This Week</option>
+        <option value="month"   {% if request.GET.date_filter == 'month'   %}selected{% endif %}>📅 This Month</option>
+      </select>
       <button type="submit" class="btn-filter">Filter! 🎯</button>
     </div>
   </form>
@@ -237,6 +243,9 @@
           👥 <b>Capacity:</b> {{ event.capacity }}
         </div>
         <div class="ev-footer">
+          <span style="font-family:'Fredoka One',cursive;font-size:.78rem;color:rgba(26,16,53,.45);">
+            💜 {{ event.save_count }} interested
+          </span>
           <a href="{% url 'event_detail' event.id %}" class="btn-view">View Event!</a>
         </div>
       </div>

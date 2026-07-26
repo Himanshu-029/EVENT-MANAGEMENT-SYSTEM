@@ -60,4 +60,8 @@ urlpatterns = [
     path('test-404/', views.test_404),
     path('test-500/', views.test_500),
 
+
+    # ---Saved Event Wishlist---
+    path('event/<int:id>/waitlist/', views.toggle_waitlist, name='toggle_waitlist'),
+
 ]

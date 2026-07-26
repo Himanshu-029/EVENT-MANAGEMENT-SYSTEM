@@ -299,4 +299,54 @@
 
 </div>
 
+
+<!-- ── CREATED EVENTS ── -->
+  {% with created=request.user.event_set.all %}
+  {% if created %}
+  <div class="profile-section-title">🎪 Events You've Created</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem;margin-bottom:2rem;">
+    {% for event in created %}
+    <a href="{% url 'event_detail' event.id %}" style="text-decoration:none;">
+      <div style="background:#fff;border:2.5px solid #1a1035;border-radius:16px;padding:1rem;box-shadow:4px 4px 0 #1a1035;transition:all .2s;" onmouseover="this.style.transform='translate(-3px,-3px)';this.style.boxShadow='7px 7px 0 #1a1035'" onmouseout="this.style.transform='';this.style.boxShadow='4px 4px 0 #1a1035'">
+        <div style="font-family:'Fredoka One',cursive;font-size:.95rem;color:#1a1035;margin-bottom:.3rem;">{{ event.title|truncatechars:30 }}</div>
+        <div style="font-size:.75rem;font-weight:700;color:rgba(26,16,53,.5);">
+          📅 {{ event.date|date:"M d, Y" }}<br>
+          🎟️ {{ event.total_booked }}/{{ event.capacity }} booked<br>
+          {% if event.status == 'finished' %}
+            <span style="color:#ff7f6e;">🏁 Finished</span>
+          {% else %}
+            <span style="color:#5ee7bf;">🟢 Active</span>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- ── SAVED EVENTS ── -->
+  {% with saved=request.user.savedevent_set.all %}
+  {% if saved %}
+  <div class="profile-section-title">💜 Saved Events</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem;margin-bottom:2rem;">
+    {% for item in saved %}
+    <a href="{% url 'event_detail' item.event.id %}" style="text-decoration:none;">
+      <div style="background:#fff;border:2.5px solid #1a1035;border-radius:16px;padding:1rem;box-shadow:4px 4px 0 #1a1035;transition:all .2s;" onmouseover="this.style.transform='translate(-3px,-3px)';this.style.boxShadow='7px 7px 0 #1a1035'" onmouseout="this.style.transform='';this.style.boxShadow='4px 4px 0 #1a1035'">
+        <div style="font-family:'Fredoka One',cursive;font-size:.95rem;color:#1a1035;margin-bottom:.3rem;">{{ item.event.title|truncatechars:30 }}</div>
+        <div style="font-size:.75rem;font-weight:700;color:rgba(26,16,53,.5);">
+          📅 {{ item.event.date|date:"M d, Y" }}<br>
+          📍 {{ item.event.location }}<br>
+          💜 Saved {{ item.saved_at|date:"M d" }}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+
+
+
 {% endblock %}

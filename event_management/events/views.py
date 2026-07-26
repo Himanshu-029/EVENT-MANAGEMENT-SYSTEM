@@ -22,7 +22,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from datetime import timedelta
 from .models import (Event, Booking, TicketTier, UserProfile, OTPVerification,
                      SavedEvent, OrganizerPayout, TermsAcceptance, CommissionRecord,
-                     EventModerator, EventReport)
+                     EventModerator, EventReport, Waitlist)
 
 
 def geocode_location(location):
@@ -62,6 +62,16 @@ def event_list(request):
     if query:
         events = events.filter(title__icontains=query)
 
+    # Date filter
+    date_filter = request.GET.get('date_filter', '').strip()
+    now = timezone.now()
+    if date_filter == 'today':
+        events = events.filter(date__date=now.date())
+    elif date_filter == 'week':
+        events = events.filter(date__gte=now, date__lte=now + timedelta(days=7))
+    elif date_filter == 'month':
+        events = events.filter(date__gte=now, date__lte=now + timedelta(days=30))
+
     paginator = Paginator(events, 6)
     page_obj  = paginator.get_page(request.GET.get('page'))
 
@@ -69,6 +79,7 @@ def event_list(request):
         'page_obj':          page_obj,
         'selected_category': category,
         'query':             query,
+        'date_filter':       date_filter,
     })
 
 
@@ -147,6 +158,27 @@ def saved_events(request):
         user=request.user
     ).order_by('-saved_at').select_related('event')
     return render(request, 'events/saved_events.html', {'saved': saved})
+
+
+# ══════════════════════════════════════
+# WAITLIST
+# ══════════════════════════════════════
+@login_required
+def toggle_waitlist(request, id):
+    event = get_object_or_404(Event, id=id)
+
+    if event.seats_left > 0:
+        messages.info(request, "Seats are available! Book directly instead.")
+        return redirect('event_detail', id=id)
+
+    obj, created = Waitlist.objects.get_or_create(user=request.user, event=event)
+    if not created:
+        obj.delete()
+        messages.success(request, "Removed from waitlist.")
+    else:
+        messages.success(request, "Added to waitlist! 🎉 We'll notify you if a spot opens.")
+    return redirect('event_detail', id=id)
+
 
 
 # ══════════════════════════════════════

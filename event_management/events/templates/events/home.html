@@ -292,7 +292,9 @@ body::before { display: none !important; }
             Capacity: <b>{{ event.capacity }}</b>
           </div>
           <div class="card-footer-y2k">
-            <span style="font-family:'Fredoka One',cursive;font-size:0.8rem;color:rgba(26,16,53,0.35)">#{{ forloop.counter }}</span>
+            <span style="font-family:'Fredoka One',cursive;font-size:.78rem;color:rgba(26,16,53,.45);">
+              💜 {{ event.save_count }} interested
+            </span>
             <a href="{% url 'event_detail' event.id %}" class="btn-view-pop">View Event!</a>
           </div>
         </div>
