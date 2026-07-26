@@ -25,6 +25,59 @@ from .models import (Event, Booking, TicketTier, UserProfile, OTPVerification,
                      EventModerator, EventReport, Waitlist)
 
 
+
+# ══════════════════════════════════════
+# HTML EMAIL HELPER
+# ══════════════════════════════════════
+def get_email_html(title, subtitle, body_html, footer="— The EventHub Team"):
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <style>
+        body{{margin:0;padding:0;background:#fff0fa;font-family:'Helvetica Neue',Arial,sans-serif;}}
+        .wrap{{max-width:560px;margin:2rem auto;background:#ffffff;border:3px solid #1a1035;border-radius:24px;overflow:hidden;box-shadow:6px 6px 0 #1a1035;}}
+        .header{{background:#1a1035;padding:2rem;text-align:center;}}
+        .logo{{font-size:2rem;font-weight:900;color:#ffe566;letter-spacing:1px;}}
+        .logo span{{color:#ff6eb4;}}
+        .hero{{background:#ffe566;border-bottom:3px solid #1a1035;padding:1.5rem 2rem;text-align:center;}}
+        .hero h1{{margin:0;font-size:1.8rem;font-weight:900;color:#1a1035;}}
+        .hero p{{margin:.4rem 0 0;font-size:.9rem;color:rgba(26,16,53,.6);font-weight:600;}}
+        .body{{padding:2rem;}}
+        .info-box{{background:#fff0fa;border:2px solid #1a1035;border-radius:16px;padding:1.2rem 1.5rem;margin:1.2rem 0;}}
+        .info-row{{display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px dashed rgba(26,16,53,.1);font-size:.88rem;}}
+        .info-row:last-child{{border-bottom:none;}}
+        .info-label{{color:rgba(26,16,53,.5);font-weight:700;}}
+        .info-value{{color:#1a1035;font-weight:800;}}
+        .otp-box{{background:#1a1035;border-radius:16px;padding:1.5rem;text-align:center;margin:1.5rem 0;}}
+        .otp-code{{font-size:3rem;font-weight:900;color:#ffe566;letter-spacing:8px;}}
+        .otp-hint{{color:rgba(255,255,255,.5);font-size:.8rem;margin-top:.4rem;}}
+        .btn{{display:inline-block;background:#ff6eb4;color:#ffffff !important;border:2px solid #1a1035;border-radius:100px;padding:.7rem 2rem;font-weight:800;font-size:.95rem;text-decoration:none;margin:1rem 0;box-shadow:3px 3px 0 #1a1035;}}
+        .footer{{background:#fff0fa;border-top:2px solid #1a1035;padding:1.2rem 2rem;text-align:center;font-size:.78rem;color:rgba(26,16,53,.45);font-weight:700;}}
+        p{{color:rgba(26,16,53,.7);font-size:.9rem;line-height:1.7;font-weight:600;margin:.5rem 0;}}
+      </style>
+    </head>
+    <body>
+      <div class="wrap">
+        <div class="header">
+          <div class="logo">Event<span>Hub</span></div>
+        </div>
+        <div class="hero">
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
+        </div>
+        <div class="body">
+          {body_html}
+        </div>
+        <div class="footer">{footer} · EventHub 2026</div>
+      </div>
+    </body>
+    </html>
+    """
+
+
 def geocode_location(location):
     try:
         r = req.get(
@@ -557,30 +610,30 @@ def verify_payment(request, id):
 
     # Send confirmation email with QR attached
     try:
+        html = get_email_html(
+            title="Booking Confirmed! 🎉",
+            subtitle="Your ticket is ready — see you there!",
+            body_html=f"""
+                <p>Hey <b>{request.user.username}</b>! You're officially going! 🎊</p>
+                <div class="info-box">
+                  <div class="info-row"><span class="info-label">🎪 Event</span><span class="info-value">{event.title}</span></div>
+                  <div class="info-row"><span class="info-label">📅 Date</span><span class="info-value">{event.date.strftime('%B %d, %Y · %I:%M %p')}</span></div>
+                  <div class="info-row"><span class="info-label">📍 Location</span><span class="info-value">{event.location}</span></div>
+                  <div class="info-row"><span class="info-label">🎟️ Ticket</span><span class="info-value">{tier.name}</span></div>
+                  <div class="info-row"><span class="info-label">💰 Price</span><span class="info-value">₹{tier.price}</span></div>
+                  <div class="info-row"><span class="info-label">🔖 Booking #</span><span class="info-value">{booking.id}</span></div>
+                </div>
+                <p>Your QR code is attached — show it at the entrance for entry. 📱</p>
+                <p style="color:rgba(26,16,53,.5);font-size:.82rem;">Payment ID: {razorpay_payment_id}</p>
+            """
+        )
         email_msg = EmailMessage(
             subject=f"🎉 Booking Confirmed — {event.title}",
-            body=f"""Hi {request.user.username}!
-
-Payment successful & booking confirmed! 🎊
-
-─────────────────────────────
-Event:      {event.title}
-Date:       {event.date.strftime('%B %d, %Y · %I:%M %p')}
-Location:   {event.location}
-Ticket:     {tier.name}
-Price:      ₹{tier.price}
-Payment ID: {razorpay_payment_id}
-Booking #:  {booking.id}
-─────────────────────────────
-
-Your QR code is attached — show it at the entrance.
-
-See you there! 🚀
-
-— The EventHub Team""",
+            body=html,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[request.user.email],
         )
+        email_msg.content_subtype = 'html'
         email_msg.attach(f"ticket_{booking.id}.png", qr_bytes, 'image/png')
         email_msg.send(fail_silently=True)
     except Exception:
@@ -737,13 +790,28 @@ def register(request):
         otp_code = OTPVerification.generate_otp()
         OTPVerification.objects.create(user=user, otp=otp_code, otp_type='email_verify')
 
-        send_mail(
-            subject='EventHub — Verify Your Email',
-            message=f"Hi {username}!\n\nWelcome to EventHub! 🎉\n\nYour OTP is: {otp_code}\n\nValid for 10 minutes.\n\n— The EventHub Team",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=False,
+        html = get_email_html(
+            title="Verify Your Email! 🎉",
+            subtitle="One step away from joining EventHub",
+            body_html=f"""
+                <p>Hey <b>{username}</b>! Welcome to EventHub 🎊</p>
+                <p>Use this OTP to verify your email address:</p>
+                <div class="otp-box">
+                  <div class="otp-code">{otp_code}</div>
+                  <div class="otp-hint">Valid for 10 minutes only</div>
+                </div>
+                <p>If you didn't create an account, ignore this email.</p>
+            """
         )
+        email_msg = EmailMessage(
+            subject='EventHub — Verify Your Email 🎉',
+            body=html,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[email],
+        )
+        email_msg.content_subtype = 'html'
+        email_msg.send(fail_silently=False)
+
 
         request.session['otp_user_id'] = user.id
         request.session['otp_type']    = 'email_verify'
@@ -819,13 +887,26 @@ def resend_otp(request):
     otp_code = OTPVerification.generate_otp()
     OTPVerification.objects.create(user=user, otp=otp_code, otp_type=otp_type)
 
-    send_mail(
-        subject='EventHub — Your New OTP',
-        message=f"Hi {user.username}!\n\nYour new OTP is: {otp_code}\n\nValid for 10 minutes.\n\n— The EventHub Team",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=False,
-    )
+    html = get_email_html(
+            title="New OTP Generated 🔄",
+            subtitle="Your previous OTP has been invalidated",
+            body_html=f"""
+                <p>Hey <b>{user.username}</b>! Here's your new OTP:</p>
+                <div class="otp-box">
+                  <div class="otp-code">{otp_code}</div>
+                  <div class="otp-hint">Valid for 10 minutes only</div>
+                </div>
+                <p>If you didn't request this, please contact us immediately.</p>
+            """
+        )
+        email_msg = EmailMessage(
+            subject='EventHub — Your New OTP 🔄',
+            body=html,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email],
+        )
+        email_msg.content_subtype = 'html'
+        email_msg.send(fail_silently=False)
 
     messages.success(request, f"New OTP sent to {user.email}!")
     return redirect('verify_otp')
@@ -847,13 +928,27 @@ def forgot_password(request):
         otp_code = OTPVerification.generate_otp()
         OTPVerification.objects.create(user=user, otp=otp_code, otp_type='password_reset')
 
-        send_mail(
-            subject='EventHub — Password Reset OTP',
-            message=f"Hi {user.username}!\n\nYour password reset OTP is: {otp_code}\n\nValid for 10 minutes.\n\n— The EventHub Team",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=False,
+        html = get_email_html(
+            title="Reset Your Password 🔐",
+            subtitle="We received a password reset request",
+            body_html=f"""
+                <p>Hey <b>{user.username}</b>! No worries — it happens 😄</p>
+                <p>Use this OTP to reset your password:</p>
+                <div class="otp-box">
+                  <div class="otp-code">{otp_code}</div>
+                  <div class="otp-hint">Valid for 10 minutes only</div>
+                </div>
+                <p>If you didn't request a password reset, ignore this email and your account stays safe.</p>
+            """
         )
+        email_msg = EmailMessage(
+            subject='EventHub — Password Reset OTP 🔐',
+            body=html,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[email],
+        )
+        email_msg.content_subtype = 'html'
+        email_msg.send(fail_silently=False)
 
         request.session['otp_user_id'] = user.id
         request.session['otp_type']    = 'password_reset'
@@ -955,13 +1050,27 @@ def edit_profile(request):
                 profile.profile_picture = request.FILES['profile_picture']
             profile.save()
 
-            send_mail(
-                subject='EventHub — Verify Your New Email',
-                message=f"Hi {request.user.username}!\n\nYour email change OTP is: {otp_code}\n\nValid for 10 minutes.\n\n— The EventHub Team",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[new_email],
-                fail_silently=False,
+            html = get_email_html(
+                title="Verify New Email 📧",
+                subtitle="Confirm your new email address",
+                body_html=f"""
+                    <p>Hey <b>{request.user.username}</b>!</p>
+                    <p>Use this OTP to verify your new email address:</p>
+                    <div class="otp-box">
+                      <div class="otp-code">{otp_code}</div>
+                      <div class="otp-hint">Valid for 10 minutes only</div>
+                    </div>
+                    <p>If you didn't request this change, please secure your account immediately.</p>
+                """
             )
+            email_msg = EmailMessage(
+                subject='EventHub — Verify Your New Email 📧',
+                body=html,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[new_email],
+            )
+            email_msg.content_subtype = 'html'
+            email_msg.send(fail_silently=False)
 
             request.session['otp_user_id']   = request.user.id
             request.session['otp_type']      = 'email_change'
@@ -1264,29 +1373,30 @@ def finish_event(request, id):
 
         # Email report to organizer
         try:
+            html = get_email_html(
+                title="Event Report Ready! 📊",
+                subtitle=f"Your event '{event.title}' has concluded",
+                body_html=f"""
+                    <p>Hey <b>{event.created_by.username}</b>! Your event wrapped up successfully 🎊</p>
+                    <div class="info-box">
+                      <div class="info-row"><span class="info-label">🎪 Event</span><span class="info-value">{event.title}</span></div>
+                      <div class="info-row"><span class="info-label">📅 Date</span><span class="info-value">{event.date.strftime('%B %d, %Y')}</span></div>
+                      <div class="info-row"><span class="info-label">🎟️ Tickets Sold</span><span class="info-value">{event.total_booked}</span></div>
+                      <div class="info-row"><span class="info-label">💰 Total Revenue</span><span class="info-value">₹{event.total_revenue}</span></div>
+                      <div class="info-row"><span class="info-label">🏦 Platform Fee</span><span class="info-value">₹{event.platform_fee:.2f}</span></div>
+                      <div class="info-row"><span class="info-label">💸 Your Payout</span><span class="info-value">₹{event.organizer_payout:.2f}</span></div>
+                    </div>
+                    <p>Full Excel report with all attendee details is attached 📎</p>
+                    <p>Thanks for hosting on EventHub — hope to see you again! 🚀</p>
+                """
+            )
             email_msg = EmailMessage(
                 subject=f"📊 Event Report — {event.title}",
-                body=f"""Hi {event.created_by.username}!
-
-Your event has concluded. Here's a quick summary:
-
-─────────────────────────────
-Event:           {event.title}
-Date:            {event.date.strftime('%B %d, %Y')}
-Tickets Sold:    {event.total_booked}
-Total Revenue:   ₹{event.total_revenue}
-Platform Fee:    ₹{event.platform_fee:.2f}
-Your Payout:     ₹{event.organizer_payout:.2f}
-─────────────────────────────
-
-Full Excel report is attached with all attendee details.
-
-Thanks for hosting on EventHub! 🎉
-
-— The EventHub Team""",
+                body=html,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[event.created_by.email],
             )
+            email_msg.content_subtype = 'html'
             email_msg.attach(
                 f'EventHub_Report_{event.title}.xlsx',
                 excel_bytes,
