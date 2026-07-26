@@ -27,6 +27,11 @@
   .msg-error { background: #ffe4e0; color: var(--dark); }
   .password-hint { font-size: 0.7rem; color: rgba(26,16,53,0.45); font-weight: 600; margin-top: 0.3rem; padding-left: 0.5rem; }
   @media (max-width: 600px) { .field-row { grid-template-columns: 1fr; } }
+  
+  .pass-wrap { position: relative; }
+  .pass-wrap .field-input { padding-right: 3rem !important; }
+  .eye-btn { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: rgba(26,16,53,.4); padding: 0; line-height: 1; }
+  .eye-btn:hover { color: var(--pink); }
 </style>
 
 <div class="reg-page">
@@ -65,11 +70,17 @@
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">🔒 Password</label>
-            <input type="password" name="password1" class="field-input" placeholder="Min 8 chars" required>
+            <div class="pass-wrap">
+              <input type="password" name="password1" id="pass1" class="field-input" placeholder="Min 8 chars" required>
+              <button type="button" class="eye-btn" onclick="togglePass('pass1', this)">👁️</button>
+            </div>
           </div>
           <div class="field-group">
             <label class="field-label">🔒 Confirm</label>
-            <input type="password" name="password2" class="field-input" placeholder="Repeat password" required>
+            <div class="pass-wrap">
+              <input type="password" name="password2" id="pass2" class="field-input" placeholder="Repeat password" required>
+              <button type="button" class="eye-btn" onclick="togglePass('pass2', this)">👁️</button>
+            </div>
           </div>
         </div>
         <div class="password-hint">Password must be at least 8 characters long</div>
@@ -85,4 +96,40 @@
     </div>
   </div>
 </div>
+
+<script>
+  // ── Eye Toggle ──
+  function togglePass(id, btn){
+    const input = document.getElementById(id);
+    if(input.type === 'password'){ input.type = 'text'; btn.textContent = '🙈'; }
+    else { input.type = 'password'; btn.textContent = '👁️'; }
+  }
+
+  // ── Auto-save form (localStorage) ──
+  const SAVE_KEY = 'eventhub_register_draft';
+  const fields   = ['username','email','mobile'];
+
+  // Restore saved data
+  const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+  fields.forEach(name => {
+    const el = document.querySelector(`[name="${name}"]`);
+    if(el && saved[name]) el.value = saved[name];
+  });
+
+  // Save on input
+  fields.forEach(name => {
+    const el = document.querySelector(`[name="${name}"]`);
+    if(el) el.addEventListener('input', () => {
+      const data = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+      data[name] = el.value;
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    });
+  });
+
+  // Clear on successful submit
+  document.querySelector('form').addEventListener('submit', () => {
+    localStorage.removeItem(SAVE_KEY);
+  });
+</script>
+
 {% endblock %}

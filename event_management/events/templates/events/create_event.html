@@ -297,4 +297,71 @@
   function removeTier(btn){ btn.closest('.tier-row').remove(); updateAddBtn(); }
   addTier('General', '', '');
 </script>
+
+<script>
+  // ── Auto-save create event form ──
+  const CREATE_KEY = 'eventhub_create_event_draft';
+  const autoFields = ['title','description','location','capacity','date'];
+
+  // Restore
+  const draft = JSON.parse(localStorage.getItem(CREATE_KEY) || '{}');
+  autoFields.forEach(name => {
+    const el = document.querySelector(`[name="${name}"]`);
+    if(el && draft[name]) el.value = draft[name];
+  });
+
+  // Restore category
+  if(draft.category_select){
+    const sel = document.getElementById('category-select');
+    if(sel){ sel.value = draft.category_select; sel.dispatchEvent(new Event('change')); }
+  }
+  if(draft.category_custom){
+    const ci = document.getElementById('category-custom');
+    if(ci) ci.value = draft.category_custom;
+  }
+
+  // Save on input
+  function saveDraft(){
+    const data = {};
+    autoFields.forEach(name => {
+      const el = document.querySelector(`[name="${name}"]`);
+      if(el) data[name] = el.value;
+    });
+    data.category_select = document.getElementById('category-select')?.value || '';
+    data.category_custom = document.getElementById('category-custom')?.value || '';
+    localStorage.setItem(CREATE_KEY, JSON.stringify(data));
+  }
+
+  autoFields.forEach(name => {
+    document.querySelector(`[name="${name}"]`)?.addEventListener('input', saveDraft);
+  });
+  document.getElementById('category-select')?.addEventListener('change', saveDraft);
+  document.getElementById('category-custom')?.addEventListener('input', saveDraft);
+
+  // Show auto-save indicator
+  let saveTimeout;
+  function showSaved(){
+    clearTimeout(saveTimeout);
+    let ind = document.getElementById('autosave-ind');
+    if(!ind){
+      ind = document.createElement('div');
+      ind.id = 'autosave-ind';
+      ind.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#1a1035;color:#ffe566;font-family:Fredoka One,cursive;font-size:.85rem;padding:.5rem 1.2rem;border-radius:100px;box-shadow:3px 3px 0 rgba(0,0,0,.3);z-index:9999;transition:opacity .3s;';
+      document.body.appendChild(ind);
+    }
+    ind.textContent = '💾 Draft saved!';
+    ind.style.opacity = '1';
+    saveTimeout = setTimeout(() => ind.style.opacity = '0', 2000);
+  }
+
+  autoFields.forEach(name => {
+    document.querySelector(`[name="${name}"]`)?.addEventListener('input', showSaved);
+  });
+
+  // Clear on submit
+  document.querySelector('form').addEventListener('submit', () => {
+    localStorage.removeItem(CREATE_KEY);
+  });
+</script>
+
 {% endblock %}

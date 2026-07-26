@@ -255,4 +255,46 @@
     addTier('General','','');
   }
 </script>
+
+<script>
+  // ── Auto-save edit event form ──
+  const EDIT_KEY = 'eventhub_edit_event_{{ event.id }}_draft';
+  const editFields = ['title','description','location','capacity'];
+
+  // Save on input
+  function saveEditDraft(){
+    const data = {};
+    editFields.forEach(name => {
+      const el = document.querySelector(`[name="${name}"]`);
+      if(el) data[name] = el.value;
+    });
+    localStorage.setItem(EDIT_KEY, JSON.stringify(data));
+    showEditSaved();
+  }
+
+  editFields.forEach(name => {
+    document.querySelector(`[name="${name}"]`)?.addEventListener('input', saveEditDraft);
+  });
+
+  let editSaveTimeout;
+  function showEditSaved(){
+    clearTimeout(editSaveTimeout);
+    let ind = document.getElementById('autosave-ind');
+    if(!ind){
+      ind = document.createElement('div');
+      ind.id = 'autosave-ind';
+      ind.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#1a1035;color:#ffe566;font-family:Fredoka One,cursive;font-size:.85rem;padding:.5rem 1.2rem;border-radius:100px;box-shadow:3px 3px 0 rgba(0,0,0,.3);z-index:9999;transition:opacity .3s;';
+      document.body.appendChild(ind);
+    }
+    ind.textContent = '💾 Draft saved!';
+    ind.style.opacity = '1';
+    editSaveTimeout = setTimeout(() => ind.style.opacity = '0', 2000);
+  }
+
+  // Clear on submit
+  document.querySelector('form').addEventListener('submit', () => {
+    localStorage.removeItem(EDIT_KEY);
+  });
+</script>
+
 {% endblock %}
