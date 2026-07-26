@@ -1494,9 +1494,8 @@ def contact(request):
 
 
 # Temporary test URLs (remove after testing)
-def test_404(request):
-    from django.http import Http404
-    raise Http404
+def custom_404(request, exception):
+    return render(request, '404.html', status=404)
 
-def test_500(request):
-    raise Exception("Test 500")
+def custom_500(request):
+    return render(request, '500.html', status=500)

@@ -55,12 +55,6 @@ urlpatterns = [
     path('about/',   views.about,   name='about'),
     path('contact/', views.contact, name='contact'),
 
-
-    # Test only — remove in production
-    path('test-404/', views.test_404),
-    path('test-500/', views.test_500),
-
-
     # ---Saved Event Wishlist---
     path('event/<int:id>/waitlist/', views.toggle_waitlist, name='toggle_waitlist'),
 

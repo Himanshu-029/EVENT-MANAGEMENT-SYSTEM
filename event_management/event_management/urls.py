@@ -8,5 +8,12 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('', include('events.urls')),
 ]
+
+# Custom Error Handlers
+handler404 = 'events.views.custom_404'
+handler500 = 'events.views.custom_500'
+
+
+# Serve media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
