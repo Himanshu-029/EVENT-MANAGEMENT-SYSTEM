@@ -687,23 +687,49 @@ def dashboard(request):
 # ══════════════════════════════════════
 @login_required
 def verify_ticket(request):
-    if not request.user.is_superuser:
-        messages.error(request, "Access denied. Admins only.")
-        return redirect('event_list')
+    result    = None
+    booking   = None
+    user      = request.user
 
-    result = None
     if request.method == 'POST':
         booking_id = request.POST.get('booking_id')
         try:
-            booking = Booking.objects.get(id=booking_id)
-            if booking.is_used:
-                result = "Ticket already used."
+            booking = Booking.objects.select_related('event').get(id=booking_id)
+            event   = booking.event
+
+            # ── Permission check ──
+            is_superuser    = user.is_superuser
+            is_creator      = event.created_by == user
+            is_moderator    = EventModerator.objects.filter(
+                event=event, user=user, can_check_in=True
+            ).exists()
+
+            if not (is_superuser or is_creator or is_moderator):
+                result = {
+                    'status':  'denied',
+                    'message': "❌ You don't have permission to verify tickets for this event."
+                }
+            elif booking.is_used:
+                result = {
+                    'status':  'used',
+                    'message': f"⚠️ Ticket already used for '{event.title}'."
+                }
             else:
                 booking.is_used = True
                 booking.save()
-                result = "Valid ticket. Entry allowed."
+                result = {
+                    'status':  'valid',
+                    'message': f"✅ Valid ticket! Entry allowed for '{event.title}'.",
+                    'user':    booking.user.username,
+                    'ticket':  booking.ticket_type,
+                    'event':   event.title,
+                }
+
         except Booking.DoesNotExist:
-            result = "Invalid ticket."
+            result = {
+                'status':  'invalid',
+                'message': "❌ Invalid ticket ID. No booking found."
+            }
 
     return render(request, 'events/verify_ticket.html', {'result': result})
 

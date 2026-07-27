@@ -164,38 +164,6 @@
     box-shadow: 6px 6px 0 var(--dark) !important;
   }
 
-  /* ── RESULT BOX ── */
-  .result-box {
-    margin-top: 1.5rem;
-    border: 2.5px solid var(--dark);
-    border-radius: 20px;
-    padding: 1.5rem;
-    text-align: center;
-    box-shadow: 4px 4px 0 var(--dark);
-  }
-  .result-valid {
-    background: linear-gradient(135deg, #d4fce8, #e0fff0);
-  }
-  .result-used {
-    background: linear-gradient(135deg, #fff3cc, #fffae0);
-  }
-  .result-invalid {
-    background: linear-gradient(135deg, #ffe4e0, #fff0ee);
-  }
-
-  .result-emoji { font-size: 3rem; margin-bottom: 0.5rem; }
-  .result-title {
-    font-family: 'Boogaloo', cursive;
-    font-size: 1.5rem;
-    color: var(--dark);
-    margin-bottom: 0.3rem;
-  }
-  .result-msg {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: rgba(26,16,53,0.6);
-  }
-
   /* Info strip */
   .verify-info {
     display: flex;
@@ -280,24 +248,42 @@
 
       <!-- Result -->
       {% if result %}
-        <div class="result-box
-          {% if 'Valid' in result %}result-valid
-          {% elif 'already' in result %}result-used
-          {% else %}result-invalid{% endif %}">
-
-          <div class="result-emoji">
-            {% if 'Valid' in result %}✅
-            {% elif 'already' in result %}⚠️
-            {% else %}❌{% endif %}
-          </div>
-
-          <div class="result-title">
-            {% if 'Valid' in result %}Entry Allowed!
-            {% elif 'already' in result %}Already Used!
-            {% else %}Invalid Ticket!{% endif %}
-          </div>
-
-          <div class="result-msg">{{ result }}</div>
+        <div style="
+          margin-top:1.5rem;
+          background:{% if result.status == 'valid' %}#d4fce8{% elif result.status == 'used' %}#fff3cc{% else %}#ffe4e0{% endif %};
+          border:2.5px solid #1a1035;
+          border-radius:16px;
+          padding:1.2rem 1.5rem;
+          box-shadow:3px 3px 0 #1a1035;
+          font-family:'Fredoka One',cursive;
+          font-size:1rem;
+          color:#1a1035;
+        ">
+          <div style="font-size:1.1rem;margin-bottom:.5rem;">{{ result.message }}</div>
+          {% if result.status == 'valid' %}
+            <div style="font-size:.85rem;opacity:.7;display:flex;flex-direction:column;gap:.3rem;margin-top:.5rem;padding-top:.5rem;border-top:2px dashed rgba(26,16,53,0.15);">
+              <div>👤 {{ result.user }}</div>
+              <div>🎟️ {{ result.ticket }}</div>
+              <div>🎪 {{ result.event }}</div>
+              <div style="margin-top:.3rem;background:rgba(26,16,53,0.08);padding:.3rem .8rem;border-radius:100px;display:inline-block;font-size:.75rem;align-self:flex-start;">
+                ✅ Verified Entry
+              </div>
+            </div>
+          {% elif result.status == 'used' %}
+            <div style="font-size:.85rem;opacity:.7;margin-top:.5rem;padding-top:.5rem;border-top:2px dashed rgba(26,16,53,0.15);">
+              <div>⏰ This ticket has already been used</div>
+              <div style="margin-top:.3rem;background:rgba(26,16,53,0.08);padding:.3rem .8rem;border-radius:100px;display:inline-block;font-size:.75rem;align-self:flex-start;">
+                ⚠️ Entry Denied
+              </div>
+            </div>
+          {% else %}
+            <div style="font-size:.85rem;opacity:.7;margin-top:.5rem;padding-top:.5rem;border-top:2px dashed rgba(26,16,53,0.15);">
+              <div>🔍 No matching ticket found</div>
+              <div style="margin-top:.3rem;background:rgba(26,16,53,0.08);padding:.3rem .8rem;border-radius:100px;display:inline-block;font-size:.75rem;align-self:flex-start;">
+                ❌ Entry Denied
+              </div>
+            </div>
+          {% endif %}
         </div>
       {% endif %}
 
