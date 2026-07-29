@@ -3,23 +3,26 @@ Django==5.2.11
 asgiref==3.11.1
 sqlparse==0.5.5
 
+# ── Database ──
+psycopg[binary]==3.3.4
+
 # ── Environment ──
 python-dotenv==1.2.2
 
 # ── Image handling ──
-pillow==11.2.1
+Pillow==11.2.1
 
 # ── QR Code generation ──
 qrcode==8.2
 
-# ── Rate limiting (django-ratelimit) ──
+# ── Rate limiting ──
 django-ratelimit==4.1.0
 
-# --- Razor Pay ---
-razorpay==1.4.2
+# ── Payments ──
+razorpay==2.0.1
 
-# --- Openpyxl ---
-openpyxl==3.1.2
+# ── Excel reports ──
+openpyxl==3.1.5
 
-# --- Requests ---
+# ── HTTP requests ──
 requests==2.32.4
