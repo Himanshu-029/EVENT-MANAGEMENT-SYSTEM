@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "cd event_management && python manage.py migrate && python manage.py collectstatic --no-input && gunicorn event_management.wsgi:application --workers 2 --bind 0.0.0.0:${PORT:-8000}",
+    "startCommand": "cd event_management && python manage.py migrate && python manage.py collectstatic --no-input && gunicorn event_management.wsgi:application --workers 1 --timeout 120",
     "healthcheckPath": "/",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE"
