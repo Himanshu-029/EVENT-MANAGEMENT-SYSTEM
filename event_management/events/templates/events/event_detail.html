@@ -305,7 +305,11 @@
                 {% if booking.user == user %}
                   <div class="qr-section">
                     <div class="qr-label">Your QR Code</div>
+                    {% if booking.qr_code_base64 %}
+                    <img src="data:image/png;base64,{{ booking.qr_code_base64 }}" alt="QR Code">
+                    {% elif booking.qr_code %}
                     <img src="{{ booking.qr_code.url }}" alt="QR Code">
+                    {% endif %}
                     <div class="booking-id">Booking #{{ booking.id }} · {{ booking.ticket_type }}</div>
                   </div>
                   <a href="{% url 'cancel_booking' booking.id %}" class="btn-cancel-booking">❌ Cancel Booking</a>

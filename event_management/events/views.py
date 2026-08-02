@@ -604,6 +604,11 @@ def verify_payment(request, id):
     buffer.seek(0)
     booking.qr_code.save(f"booking_{booking.id}.png", File(buffer), save=True)
 
+    # Also store as base64 for reliable display
+    import base64
+    booking.qr_code_base64 = base64.b64encode(qr_bytes).decode('utf-8')
+    booking.save()
+
     # Recalculate (update) commission after new payment
     commission, _ = CommissionRecord.objects.get_or_create(event=event)
     commission.recalculate()
@@ -806,7 +811,7 @@ def register(request):
             return render(request, 'registration/register.html')
 
         user           = User.objects.create_user(username=username, email=email, password=password1)
-        user.is_active = False
+        user.is_active = True
         user.save()
 
         profile        = user.userprofile
@@ -836,7 +841,7 @@ def register(request):
             to=[email],
         )
         email_msg.content_subtype = 'html'
-        email_msg.send(fail_silently=False)
+        email_msg.send(fail_silently=True)
 
 
         request.session['otp_user_id'] = user.id

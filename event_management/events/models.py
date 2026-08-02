@@ -126,6 +126,7 @@ class Booking(models.Model):
     price            = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     booked_at        = models.DateTimeField(auto_now_add=True)
     qr_code          = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    qr_code_base64   = models.TextField(blank=True, null=True)
     is_used          = models.BooleanField(default=False)
 
     # Razorpay payment fields
