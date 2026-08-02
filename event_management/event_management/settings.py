@@ -64,6 +64,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'event_management.wsgi.application'
 
+
+# ══════════════════════════════════════
+# CSRF_TRUSTED_ORIGINS
+# ══════════════════════════════════════
+
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://event-management-system-production-698e.up.railway.app'
+).split(',')
+
+
 # ══════════════════════════════════════
 # DATABASE
 # ══════════════════════════════════════
