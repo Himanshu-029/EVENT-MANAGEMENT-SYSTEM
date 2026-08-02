@@ -8,13 +8,37 @@
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
 ![Razorpay](https://img.shields.io/badge/Payments-Razorpay-0C2451?style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-ff6eb4?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
 
-**A full-stack Django event management platform** — organizers can create and monetize events with tiered ticketing and live seat tracking, attendees can discover, book, and pay for tickets, and a built-in admin layer handles verification, moderation, payouts, and reporting.
+**A full-stack Django event management platform** — organizers create and monetize events with tiered ticketing and live seat tracking, attendees discover, book, and pay for tickets, and a built-in admin layer handles verification, moderation, payouts, and reporting.
 
-[Features](#-features) · [Tech Stack](#-tech-stack) · [Getting Started](#-getting-started) · [Project Structure](#-project-structure) · [Environment Variables](#-environment-variables) · [Roadmap](#-roadmap)
+🌐 **Live Demo:** <!-- PASTE YOUR DEPLOYED LINK HERE ONCE LIVE, e.g. https://eventhub.onrender.com -->
+🎥 **Demo Video:** <!-- PASTE YOUR YOUTUBE LINK HERE, e.g. https://youtu.be/xxxxxxx -->
+
+⭐ *If this project is useful to you, consider starring the repo.*
 
 </div>
+
+---
+
+## 📚 Table of Contents
+
+- [Features](#-features)
+- [Project Stats](#-project-stats)
+- [Screenshots](#-screenshots)
+- [Architecture](#️-architecture)
+- [Database Schema](#️-database-schema)
+- [Tech Stack](#️-tech-stack)
+- [Getting Started](#-getting-started)
+- [Environment Variables](#-environment-variables)
+- [Project Structure](#-project-structure)
+- [Security](#-security)
+- [Deployment](#-deployment)
+- [Roadmap](#️-roadmap)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Contact](#-contact)
 
 ---
 
@@ -31,8 +55,8 @@
 - Multiple custom ticket tiers per event (e.g. General, VIP, RSVP), each with its own name, price, and seat cap
 - Free tickets supported (price = 0) alongside paid tiers
 - Tier capacity and overall event capacity are both enforced
-- Integrated **Razorpay** checkout for paid tickets, with order creation and payment verification
-- Auto-generated **QR code** on every booking, plus a ticket verification/check-in view for staff at the door
+- Integrated **Razorpay** checkout for paid tickets, with server-side order creation and signature-verified payment confirmation
+- Auto-generated **QR code** on every booking, plus a ticket verification/check-in view for staff at the door (single-use — a scanned ticket can't be reused)
 
 ### ⚡ Real-Time Seat Availability
 - Live seat ticker per tier, polled every few seconds without a full page refresh
@@ -55,7 +79,7 @@
 - **Super admin dashboard**: platform-wide totals for events, bookings, users, and revenue, plus the ability to grant a "Verified Organizer" badge
 - **Automatic commission engine**: platform fee is calculated per event (5% up to ₹1,00,000 in revenue, 10% above), with the organizer payout computed automatically
 - **Organizer payout records**: UPI/bank details stored per event for settlement
-- **Event lifecycle**: organizers can mark an event as finished, which generates an **Excel report** (via openpyxl) of tickets sold, revenue, platform fee, and payout, and schedules the event for automatic cleanup
+- **Event lifecycle**: organizers can mark an event as finished, which generates an **Excel report** (via openpyxl) of tickets sold, revenue, platform fee, and payout
 - **Terms & conditions acceptance** is recorded per event with the accepting user and IP address
 
 ### 📧 Transactional Email
@@ -65,6 +89,174 @@
 
 ### 🌐 Static Pages
 - About and Contact pages
+
+---
+
+## 📊 Project Stats
+
+| Metric | Count |
+|---|---|
+| Python files | 13 |
+| Django models | 12 |
+| View functions | 40 |
+| HTML templates | 33 |
+| Database migrations | 14 |
+| Lines of Python code | ~2,100 |
+
+---
+
+## 📸 Screenshots
+
+> Screenshots live in the `Screenshots/` folder at the repo root — drop your images in with the filenames below (or rename the `src` paths to match your own filenames).
+
+<table>
+<tr>
+<td align="center"><b>Home / Event Listing</b><br><img src="Screenshots/home.png" width="400"/></td>
+<td align="center"><b>Event Detail</b><br><img src="Screenshots/event-detail.png" width="400"/></td>
+</tr>
+<tr>
+<td align="center"><b>Booking / Checkout</b><br><img src="Screenshots/booking.png" width="400"/></td>
+<td align="center"><b>Payment (Razorpay)</b><br><img src="Screenshots/payment.png" width="400"/></td>
+</tr>
+<tr>
+<td align="center"><b>QR Ticket / Check-in</b><br><img src="Screenshots/qr-checkin.png" width="400"/></td>
+<td align="center"><b>Organizer Dashboard</b><br><img src="Screenshots/organizer-dashboard.png" width="400"/></td>
+</tr>
+<tr>
+<td align="center"><b>Super Admin Dashboard</b><br><img src="Screenshots/admin-dashboard.png" width="400"/></td>
+<td align="center"><b>User Profile</b><br><img src="Screenshots/profile.png" width="400"/></td>
+</tr>
+</table>
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart TD
+    A[Browser] --> B[Django Templates / Static JS]
+    B --> C[Django Views]
+    C --> D[Django Models / ORM]
+    D --> E[(SQLite Database)]
+    C --> F[Razorpay API]
+    C --> G[SMTP - Gmail]
+    C --> H[QR Code Generator]
+    C --> I[openpyxl Excel Reports]
+    F --> C
+```
+
+Templates render server-side, views hold all business logic (booking, payments, reports), and the ORM talks to SQLite. Razorpay, email, QR generation, and Excel export are called from the view layer as needed — a standard Django MVT structure, no separate API layer yet.
+
+---
+
+## 🗄️ Database Schema
+
+```mermaid
+erDiagram
+    User ||--o{ Event : "creates"
+    User ||--o| UserProfile : "has"
+    User ||--o{ Booking : "makes"
+    User ||--o{ SavedEvent : "saves"
+    User ||--o{ Waitlist : "joins"
+    User ||--o{ TermsAcceptance : "accepts"
+    User ||--o{ EventModerator : "moderates as"
+    User ||--o{ OTPVerification : "verifies via"
+
+    Event ||--o{ TicketTier : "offers"
+    Event ||--o{ Booking : "has"
+    Event ||--o{ SavedEvent : "saved in"
+    Event ||--o{ Waitlist : "has"
+    Event ||--o| OrganizerPayout : "has"
+    Event ||--o| CommissionRecord : "has"
+    Event ||--o| TermsAcceptance : "has"
+    Event ||--o{ EventModerator : "has"
+    Event ||--o| EventReport : "has"
+
+    TicketTier ||--o{ Booking : "booked as"
+
+    Event {
+        int id PK
+        string title
+        text description
+        string location
+        float latitude
+        float longitude
+        datetime date_time
+        int capacity
+        string category
+        image cover_image
+        user created_by FK
+    }
+    TicketTier {
+        int id PK
+        int event FK
+        string name
+        decimal price
+        int seat_cap
+    }
+    Booking {
+        int id PK
+        int event FK
+        int user FK
+        int ticket_tier FK
+        bool is_used
+    }
+    UserProfile {
+        int id PK
+        int user FK
+        text bio
+        string mobile_number
+        string location
+        image profile_picture
+    }
+    OrganizerPayout {
+        int id PK
+        int event FK
+        string upi_or_bank_details
+    }
+    CommissionRecord {
+        int id PK
+        int event FK
+        decimal platform_fee
+        decimal payout_amount
+    }
+    EventModerator {
+        int id PK
+        int event FK
+        int user FK
+        int assigned_by FK
+        bool can_view_attendees
+        bool can_edit_event
+        bool can_check_in
+    }
+    TermsAcceptance {
+        int id PK
+        int event FK
+        int accepted_by FK
+        string ip_address
+    }
+    EventReport {
+        int id PK
+        int event FK
+        file report_file
+    }
+    Waitlist {
+        int id PK
+        int event FK
+        int user FK
+    }
+    SavedEvent {
+        int id PK
+        int event FK
+        int user FK
+    }
+    OTPVerification {
+        int id PK
+        int user FK
+        string otp_code
+        string purpose
+    }
+```
 
 ---
 
@@ -80,9 +272,8 @@
 | QR Codes | `qrcode` |
 | Images | Pillow |
 | Reports | openpyxl (Excel export) |
-| Rate Limiting | django-ratelimit |
 | Env Management | python-dotenv |
-| Frontend | HTML · CSS · Vanilla JS |
+| Frontend | HTML · CSS · Vanilla JS · Bootstrap |
 
 ---
 
@@ -117,7 +308,12 @@ pip install -r requirements.txt
 ```
 
 ### 4. Set up environment variables
-Create a `.env` file inside `event_management/event_management/` (next to `settings.py`) with:
+Copy the template and fill in your real values — it lives inside the inner `event_management/` package, next to `settings.py`:
+
+```bash
+cd event_management
+cp .env.example .env
+```
 
 ```env
 SECRET_KEY=your-django-secret-key
@@ -134,6 +330,7 @@ RAZORPAY_KEY_SECRET=your-razorpay-key-secret
 > 💡 Generate a Django secret key at [djecrety.ir](https://djecrety.ir)
 > 💡 Get a Gmail App Password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
 > 💡 Get Razorpay test keys from the [Razorpay Dashboard](https://dashboard.razorpay.com/)
+> ⚠️ Never commit your real `.env` — only `.env.example` should be tracked in git.
 
 ### 5. Run migrations
 ```bash
@@ -155,40 +352,6 @@ Visit → [http://127.0.0.1:8000](http://127.0.0.1:8000) 🎉
 
 ---
 
-## 📁 Project Structure
-
-```
-EVENT-MANAGEMENT-SYSTEM/
-├── README.md
-└── event_management/
-    ├── requirements.txt
-    ├── manage.py
-    ├── db.sqlite3
-    ├── event_management/
-    │   ├── settings.py
-    │   ├── urls.py
-    │   ├── asgi.py
-    │   └── wsgi.py
-    ├── events/
-    │   ├── models.py          ← Event, TicketTier, Booking, SavedEvent, Waitlist,
-    │   │                         OrganizerPayout, CommissionRecord, TermsAcceptance,
-    │   │                         EventModerator, EventReport, UserProfile, OTPVerification
-    │   ├── views.py            ← all views, Razorpay integration, Excel report generation
-    │   ├── urls.py              ← URL routing
-    │   ├── admin.py
-    │   ├── migrations/
-    │   ├── static/
-    │   │   ├── css/
-    │   │   └── images/
-    │   └── templates/events/  ← event pages, dashboards, profile, booking flow
-    ├── templates/
-    │   ├── 404.html / 500.html
-    │   └── registration/      ← login, register, OTP, password reset
-    └── media/                  ← uploaded event images, profile pictures, QR codes
-```
-
----
-
 ## 🔑 Environment Variables
 
 | Variable | Description | Required |
@@ -203,13 +366,103 @@ EVENT-MANAGEMENT-SYSTEM/
 
 ---
 
+## 📁 Project Structure
+
+```
+EVENT-MANAGEMENT-SYSTEM/
+├── README.md
+├── .gitignore
+├── Screenshots/                ← README screenshots (home, booking, dashboards, etc.)
+└── event_management/
+    ├── requirements.txt
+    ├── manage.py
+    ├── db.sqlite3
+    ├── event_management/
+    │   ├── settings.py
+    │   ├── urls.py
+    │   ├── asgi.py
+    │   ├── wsgi.py
+    │   └── .env.example         ← copy this to .env and fill in real values
+    ├── events/
+    │   ├── models.py            ← Event, TicketTier, Booking, SavedEvent, Waitlist,
+    │   │                           OrganizerPayout, CommissionRecord, TermsAcceptance,
+    │   │                           EventModerator, EventReport, UserProfile, OTPVerification
+    │   ├── views.py              ← all views, Razorpay integration, Excel report generation
+    │   ├── urls.py               ← URL routing
+    │   ├── admin.py
+    │   ├── apps.py
+    │   ├── migrations/
+    │   ├── static/
+    │   │   ├── css/
+    │   │   └── images/
+    │   └── templates/events/    ← event pages, dashboards, profile, booking flow
+    ├── templates/
+    │   ├── 404.html / 500.html
+    │   └── registration/         ← login, register, OTP, password reset
+    └── media/                    ← uploaded event images, profile pictures, QR codes
+```
+
+---
+
+## 🔒 Security
+
+Implemented today:
+- Django's built-in password hashing and session-based auth
+- CSRF protection on all forms
+- Email OTP verification for registration, password reset, and email changes
+- Razorpay payment signatures are verified server-side before a booking is confirmed
+- QR tickets are single-use — a booking is flagged as used on first check-in
+
+Worth hardening before/while going to production:
+- `DEBUG` must be set to `False` and `ALLOWED_HOSTS` locked down for your real domain
+- No `SECURE_SSL_REDIRECT` / `SESSION_COOKIE_SECURE` / `CSRF_COOKIE_SECURE` yet — add these once you're serving over HTTPS
+- Seat-capacity checks aren't yet wrapped in a database transaction/lock, so two people booking the last seat at the exact same instant could both succeed — fine for a demo, worth fixing with `transaction.atomic()` + `select_for_update()` before real traffic
+
+---
+
+## 🌍 Deployment
+
+Not yet deployed — <!-- once live, add the platform you used here, e.g. "currently deployed on Render" --> planned deployment stack:
+
+| Concern | Suggested choice |
+|---|---|
+| Hosting | Render / Railway |
+| WSGI server | Gunicorn |
+| Static files | WhiteNoise |
+| Database | PostgreSQL |
+| Media storage | AWS S3 (SQLite + local media don't survive redeploys on most free hosts) |
+
+Before deploying: set `DEBUG=False`, move off SQLite, and add the HTTPS/cookie settings noted above.
+
+---
+
 ## 🗺️ Roadmap
 
 - [ ] PostgreSQL support for production deployments
 - [ ] Social sharing buttons on event pages
 - [ ] Event search/filter by date range and location radius
 - [ ] Automated refunds through Razorpay on cancellation
+- [ ] REST API layer (Django REST Framework)
 - [ ] Mobile app (React Native)
+
+---
+
+## 🛠 Troubleshooting
+
+**Migrations not applying**
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+**Static files not loading**
+```bash
+python manage.py collectstatic
+```
+
+**Razorpay payment failing** — double check `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` in `.env` match your dashboard's test-mode keys.
+
+**OTP emails not sending** — confirm `EMAIL_HOST_USER` is correct and `EMAIL_HOST_PASSWORD` is a Gmail **App Password**, not your regular account password.
 
 ---
 
@@ -227,7 +480,17 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+<!-- No LICENSE file currently exists in this repo. To make the MIT claim below true, generate one at https://choosealicense.com/licenses/mit/ and add a LICENSE file to the repo root — otherwise remove this section. -->
+This project is licensed under the MIT License — see the `LICENSE` file for details.
+
+---
+
+## 📬 Contact
+
+**Himanshu Giri**
+GitHub: [@Himanshu-029](https://github.com/Himanshu-029)
+LinkedIn: <!-- paste your LinkedIn URL here -->
+Email: <!-- paste your contact email here -->
 
 ---
 
