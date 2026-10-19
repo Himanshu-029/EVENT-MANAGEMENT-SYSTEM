@@ -1,19 +1,26 @@
+
 {% extends 'events/base.html' %}
 {% block content %}
+
 <div style="max-width:600px;margin:4rem auto;padding:0 2rem 5rem;">
 
   <div style="background:#fff;border:2.5px solid #1a1035;border-radius:24px;overflow:hidden;box-shadow:6px 6px 0 #1a1035;">
 
+    <!-- Header -->
     <div style="background:#74c7f5;border-bottom:2.5px solid #1a1035;padding:2rem;text-align:center;">
       <div style="font-size:3rem;margin-bottom:.5rem;">📬</div>
-      <h1 style="font-family:'Boogaloo',cursive;font-size:2.5rem;color:#1a1035;margin:0;">Contact Us</h1>
+      <h1 style="font-family:'Boogaloo',cursive;font-size:2.5rem;color:#1a1035;margin:0;">
+        Contact Us
+      </h1>
       <p style="font-family:'Fredoka One',cursive;font-size:.9rem;color:rgba(26,16,53,.6);margin-top:.4rem;">
         Got a question? We'd love to hear from you!
       </p>
     </div>
 
+    <!-- Form Body -->
     <div style="padding:2rem;">
 
+      <!-- Success and Error Messages -->
       {% if messages %}
         {% for message in messages %}
           <div style="background:{% if message.tags == 'success' %}#d4fce8{% else %}#ffe4e0{% endif %};border:2px solid #1a1035;border-radius:14px;padding:.8rem 1rem;font-family:'Fredoka One',cursive;font-size:.9rem;box-shadow:2px 2px 0 #1a1035;margin-bottom:1.2rem;">
@@ -25,33 +32,78 @@
       <form method="post">
         {% csrf_token %}
 
+        <!-- Name -->
         <div style="margin-bottom:1rem;">
-          <label style="font-family:'Fredoka One',cursive;font-size:.9rem;color:#1a1035;display:block;margin-bottom:.4rem;">👤 Your Name</label>
-          <input type="text" name="name" class="form-control" placeholder="Your name" required>
+          <label for="contact-name" style="font-family:'Fredoka One',cursive;font-size:.9rem;color:#1a1035;display:block;margin-bottom:.4rem;">
+            👤 Your Name
+          </label>
+          <input
+            id="contact-name"
+            type="text"
+            name="name"
+            class="form-control"
+            placeholder="Your name"
+            autocomplete="name"
+            required>
         </div>
 
+        <!-- Email -->
         <div style="margin-bottom:1rem;">
-          <label style="font-family:'Fredoka One',cursive;font-size:.9rem;color:#1a1035;display:block;margin-bottom:.4rem;">📧 Email Address</label>
-          <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+          <label for="contact-email" style="font-family:'Fredoka One',cursive;font-size:.9rem;color:#1a1035;display:block;margin-bottom:.4rem;">
+            📧 Email Address
+          </label>
+          <input
+            id="contact-email"
+            type="email"
+            name="email"
+            class="form-control"
+            placeholder="your@email.com"
+            autocomplete="email"
+            required>
         </div>
 
+        <!-- Message -->
         <div style="margin-bottom:1.5rem;">
-          <label style="font-family:'Fredoka One',cursive;font-size:.9rem;color:#1a1035;display:block;margin-bottom:.4rem;">💬 Message</label>
-          <textarea name="message" class="form-control" rows="5" placeholder="What's on your mind?" required style="border-radius:14px !important;"></textarea>
+          <label for="contact-message" style="font-family:'Fredoka One',cursive;font-size:.9rem;color:#1a1035;display:block;margin-bottom:.4rem;">
+            💬 Message
+          </label>
+          <textarea
+            id="contact-message"
+            name="message"
+            class="form-control"
+            rows="5"
+            placeholder="What's on your mind?"
+            required
+            style="border-radius:14px !important;"></textarea>
         </div>
 
-        <button type="submit"
+        <!-- Cloudflare Turnstile CAPTCHA -->
+        <div style="display:flex;justify-content:center;margin:1.25rem 0;">
+          <div
+            class="cf-turnstile"
+            data-sitekey="{{ TURNSTILE_SITE_KEY }}"
+            data-theme="auto">
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button
+          type="submit"
           style="width:100%;background:#ff6eb4;border:2.5px solid #1a1035;border-radius:100px;padding:.8rem;font-family:'Fredoka One',cursive;font-size:1.05rem;color:#fff;cursor:pointer;box-shadow:4px 4px 0 #1a1035;transition:all .2s;">
           🚀 Send Message
         </button>
-      </form>
 
-      <div style="text-align:center;margin-top:1.5rem;font-family:'Fredoka One',cursive;font-size:.85rem;color:rgba(26,16,53,.5);">
-        Or email us directly at
-        <a href="mailto:giri.himanshu2911@gmail.com" style="color:#ff6eb4;font-weight:800;">giri.himanshu2911@gmail.com</a>
-      </div>
+      </form>
 
     </div>
   </div>
 </div>
+
+<!-- Cloudflare Turnstile Script -->
+<script
+  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+  async
+  defer>
+</script>
+
 {% endblock %}

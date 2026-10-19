@@ -16,9 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = [
-    'event-management-system-production-698e.up.railway.app',
-    "127.0.0.1",
-    "localhost",
+    "127.0.0.1", "localhost", "testserver"
 ]
 
 # ══════════════════════════════════════
@@ -57,6 +55,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "event_management.settings.turnstile_context",
             ],
         },
     },
@@ -81,10 +80,7 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
 
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        conn_health_checks=True,
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL')
     )
 }
 
@@ -141,3 +137,12 @@ DEFAULT_FROM_EMAIL  = os.getenv('DEFAULT_FROM_EMAIL')
 # ══ RAZORPAY ══
 RAZORPAY_KEY_ID     = os.getenv('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
+
+# ==== Captcha ====
+TURNSTILE_SITE_KEY = os.getenv("TURNSTILE_SITE_KEY", "")
+TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
+
+def turnstile_context(request):
+    return {
+        "TURNSTILE_SITE_KEY": os.getenv("TURNSTILE_SITE_KEY", "")
+    }

@@ -1,26 +1,27 @@
-# ⚠️ Environment variables — NEVER commit this
-.env
-
 # Python
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyd
 
-# Django
-*.sqlite3
-media/
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Django generated files
 staticfiles/
+*.sqlite3
 
-# Virtual environment
+# User uploads
+media/
+
+# Virtual environments
+.venv/
 venv/
 env/
-.venv/
 
-# IDE
+# IDE and OS files
 .vscode/
 .idea/
-
-# OS
 .DS_Store
 Thumbs.db

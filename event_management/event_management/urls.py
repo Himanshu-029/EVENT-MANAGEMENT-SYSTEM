@@ -1,11 +1,20 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
+from django.contrib.auth import views as auth_views
+from events.forms import EmailOrUsernameAuthenticationForm
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
+    path(
+    'accounts/login/',
+    auth_views.LoginView.as_view(
+        authentication_form=EmailOrUsernameAuthenticationForm
+    ),
+    name='login',
+),
+path('accounts/', include('django.contrib.auth.urls')),
     path('', include('events.urls')),
 ]
 
