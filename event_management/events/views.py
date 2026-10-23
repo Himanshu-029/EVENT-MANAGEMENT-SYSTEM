@@ -6,12 +6,13 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from django.http import JsonResponse
 from django.utils import timezone
 from django.conf import settings
 from datetime import datetime
 from django.core.mail import send_mail, EmailMessage
+from .turnstile import verify_turnstile
 import qrcode
 import requests as req
 from io import BytesIO
@@ -139,27 +140,47 @@ def event_list(request):
 # ══════════════════════════════════════
 # EVENT DETAIL
 # ══════════════════════════════════════
+
+@login_required
 def event_detail(request, id):
-    event        = get_object_or_404(Event, id=id)
+    event = get_object_or_404(Event, id=id)
     total_booked = Booking.objects.filter(event=event).count()
-    seats_left   = event.capacity - total_booked
+    seats_left = event.capacity - total_booked
     ticket_tiers = event.ticket_tiers.all()
 
     user_booked = False
-    is_saved    = False
+    is_saved = False
+    can_edit_event = False
 
     if request.user.is_authenticated:
-        user_booked = Booking.objects.filter(event=event, user=request.user).exists()
-        is_saved    = SavedEvent.objects.filter(event=event, user=request.user).exists()
+        user_booked = Booking.objects.filter(
+            event=event,
+            user=request.user
+        ).exists()
+
+        is_saved = SavedEvent.objects.filter(
+            event=event,
+            user=request.user
+        ).exists()
+
+        can_edit_event = (
+            request.user == event.created_by
+            or request.user.is_superuser
+            or EventModerator.objects.filter(
+                event=event,
+                user=request.user,
+                can_edit=True
+            ).exists()
+        )
 
     return render(request, 'events/event_detail.html', {
-        'event':           event,
-        'seats_left':      seats_left,
-        'user_booked':     user_booked,
-        'ticket_tiers':    ticket_tiers,
-        'is_saved':        is_saved,
-        'save_count':      event.save_count,
-        
+        'event': event,
+        'seats_left': seats_left,
+        'user_booked': user_booked,
+        'ticket_tiers': ticket_tiers,
+        'is_saved': is_saved,
+        'save_count': event.save_count,
+        'can_edit_event': can_edit_event,
     })
 
 
@@ -659,32 +680,56 @@ def my_bookings(request):
 # ══════════════════════════════════════
 # DASHBOARD
 # ══════════════════════════════════════
+
 @login_required
 def dashboard(request):
-    if not request.user.is_superuser:
-        messages.error(request, "Access denied. Admins only.")
-        return redirect('event_list')
+    user = request.user
 
-    total_events   = Event.objects.count()
-    total_bookings = Booking.objects.count()
-    total_users    = User.objects.count()
-    total_revenue  = Booking.objects.aggregate(total=Sum('price'))['total'] or 0
-    top_event      = Event.objects.annotate(
-        booking_count=Count('booking')
-    ).order_by('-booking_count').first()
+    # Super Admin retains platform-wide access.
+    is_super_admin = user.is_superuser
+    if is_super_admin:
+        events = Event.objects.all()
+    else:
+        # Only events created by this user or assigned to them.
+        moderator_event_ids = EventModerator.objects.filter(
+            user=user
+        ).values_list("event_id", flat=True)
 
-    platform_commission = CommissionRecord.objects.aggregate(
-        total=Sum('commission_amount')
-    )['total'] or 0
+        events = Event.objects.filter(
+            Q(created_by=user) | Q(id__in=moderator_event_ids)
+        ).distinct()
 
-    return render(request, 'events/dashboard.html', {
-        'total_events':        total_events,
-        'total_bookings':      total_bookings,
-        'total_users':         total_users,
-        'top_event':           top_event,
-        'total_revenue':       total_revenue,
-        'platform_commission': platform_commission,
-    })
+    event_ids = events.values_list("id", flat=True)
+
+    # Scope every metric to the permitted events.
+    bookings = Booking.objects.filter(event_id__in=event_ids)
+    total_events = events.count()
+    total_bookings = bookings.count()
+    total_revenue = bookings.aggregate(total=Sum("price"))["total"] or 0
+
+    top_event = events.annotate(
+        booking_count=Count("booking")
+    ).order_by("-booking_count").first()
+
+    platform_commission = CommissionRecord.objects.filter(
+        event_id__in=event_ids
+    ).aggregate(total=Sum("commission_amount"))["total"] or 0
+
+    context = {
+        "is_super_admin": is_super_admin,
+        "total_events": total_events,
+        "total_bookings": total_bookings,
+        "total_revenue": total_revenue,
+        "top_event": top_event,
+        "platform_commission": platform_commission,
+        "my_events": events.order_by("-id"),
+    }
+
+    # Only the platform administrator sees platform-wide user totals.
+    if is_super_admin:
+        context["total_users"] = User.objects.count()
+
+    return render(request, "events/dashboard.html", context)
 
 
 # ══════════════════════════════════════
@@ -692,51 +737,67 @@ def dashboard(request):
 # ══════════════════════════════════════
 @login_required
 def verify_ticket(request):
-    result    = None
-    booking   = None
-    user      = request.user
+    user = request.user
+    result = None
 
-    if request.method == 'POST':
-        booking_id = request.POST.get('booking_id')
-        try:
-            booking = Booking.objects.select_related('event').get(id=booking_id)
-            event   = booking.event
+    is_super_admin = user.is_superuser
 
-            # ── Permission check ──
-            is_superuser    = user.is_superuser
-            is_creator      = event.created_by == user
-            is_moderator    = EventModerator.objects.filter(
-                event=event, user=user, can_check_in=True
-            ).exists()
+    # Eligible events: all for Super Admin; only owned or assigned
+    # check-in events for everyone else.
+    if is_super_admin:
+        eligible_events = Event.objects.all()
+    else:
+        checkin_event_ids = EventModerator.objects.filter(
+            user=user,
+            can_check_in=True,
+        ).values_list("event_id", flat=True)
 
-            if not (is_superuser or is_creator or is_moderator):
+        eligible_events = Event.objects.filter(
+            Q(created_by=user) | Q(id__in=checkin_event_ids)
+        ).distinct()
+
+    if request.method == "POST":
+        booking_id = request.POST.get("booking_id", "").strip()
+
+        if not booking_id.isdigit():
+            result = {
+                "status": "invalid",
+                "message": "Please enter a valid booking ID.",
+            }
+        else:
+            # Restrict the lookup itself to eligible events.
+            booking = Booking.objects.filter(
+                id=int(booking_id),
+                event__in=eligible_events,
+            ).select_related("event", "user").first()
+
+            if booking is None:
                 result = {
-                    'status':  'denied',
-                    'message': "❌ You don't have permission to verify tickets for this event."
+                    "status": "denied",
+                    "message": "Ticket not found or you do not have permission to verify it.",
                 }
             elif booking.is_used:
                 result = {
-                    'status':  'used',
-                    'message': f"⚠️ Ticket already used for '{event.title}'."
+                    "status": "used",
+                    "message": f"Ticket already used for '{booking.event.title}'.",
                 }
             else:
                 booking.is_used = True
-                booking.save()
+                booking.save(update_fields=["is_used"])
+
                 result = {
-                    'status':  'valid',
-                    'message': f"✅ Valid ticket! Entry allowed for '{event.title}'.",
-                    'user':    booking.user.username,
-                    'ticket':  booking.ticket_type,
-                    'event':   event.title,
+                    "status": "valid",
+                    "message": f"Valid ticket! Entry allowed for '{booking.event.title}'.",
+                    "user": booking.user.username,
+                    "ticket": booking.ticket_type,
+                    "event": booking.event.title,
                 }
 
-        except Booking.DoesNotExist:
-            result = {
-                'status':  'invalid',
-                'message': "❌ Invalid ticket ID. No booking found."
-            }
-
-    return render(request, 'events/verify_ticket.html', {'result': result})
+    return render(request, "events/verify_ticket.html", {
+        "result": result,
+        "eligible_events": eligible_events,
+        "is_super_admin": is_super_admin,
+    })
 
 
 # ══════════════════════════════════════
@@ -783,43 +844,68 @@ def cancel_booking(request, id):
     return render(request, 'events/cancel_booking.html', {'booking': booking})
 
 
+
 # ══════════════════════════════════════
 # REGISTER
 # ══════════════════════════════════════
 def register(request):
     if request.method == 'POST':
-        username  = request.POST.get('username', '').strip()
-        email     = request.POST.get('email', '').strip()
-        mobile    = request.POST.get('mobile', '').strip()
+
+        # Verify Cloudflare Turnstile CAPTCHA first
+        token = request.POST.get("cf-turnstile-response", "")
+        if not verify_turnstile(token):
+            messages.error(
+                request,
+                "CAPTCHA verification failed. Please try again."
+            )
+            return render(request, 'registration/register.html')
+
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        mobile = request.POST.get('mobile', '').strip()
         password1 = request.POST.get('password1', '')
         password2 = request.POST.get('password2', '')
 
         if not username or not email or not password1:
             messages.error(request, "All fields are required.")
             return render(request, 'registration/register.html')
+
         if password1 != password2:
             messages.error(request, "Passwords do not match.")
             return render(request, 'registration/register.html')
+
         if len(password1) < 8:
             messages.error(request, "Password must be at least 8 characters.")
             return render(request, 'registration/register.html')
+
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already taken.")
             return render(request, 'registration/register.html')
+
         if User.objects.filter(email=email).exists():
             messages.error(request, "Email already registered.")
             return render(request, 'registration/register.html')
 
-        user           = User.objects.create_user(username=username, email=email, password=password1)
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password1
+        )
+
+        # Keep the existing account-creation behavior for now.
         user.is_active = True
         user.save()
 
-        profile        = user.userprofile
+        profile = user.userprofile
         profile.mobile = mobile
         profile.save()
 
         otp_code = OTPVerification.generate_otp()
-        OTPVerification.objects.create(user=user, otp=otp_code, otp_type='email_verify')
+        OTPVerification.objects.create(
+            user=user,
+            otp=otp_code,
+            otp_type='email_verify'
+        )
 
         html = get_email_html(
             title="Verify Your Email! 🎉",
@@ -834,6 +920,7 @@ def register(request):
                 <p>If you didn't create an account, ignore this email.</p>
             """
         )
+
         email_msg = EmailMessage(
             subject='EventHub — Verify Your Email 🎉',
             body=html,
@@ -843,13 +930,14 @@ def register(request):
         email_msg.content_subtype = 'html'
         email_msg.send(fail_silently=True)
 
-
         request.session['otp_user_id'] = user.id
-        request.session['otp_type']    = 'email_verify'
+        request.session['otp_type'] = 'email_verify'
+
         messages.success(request, f"OTP sent to {email}!")
         return redirect('verify_otp')
 
     return render(request, 'registration/register.html')
+
 
 
 # ══════════════════════════════════════

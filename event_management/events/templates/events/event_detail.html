@@ -270,12 +270,22 @@
 
         </div>
 
-        {% if user == event.created_by or user.is_superuser %}
-          <div class="organizer-bar">
-            <a href="{% url 'edit_event' event.id %}" class="btn-org btn-edit">✏️ Edit Event</a>
-            <a href="{% url 'delete_event' event.id %}" class="btn-org btn-delete">🗑️ Delete</a>
-            <a href="{% url 'event_attendees' event.id %}" class="btn-org btn-attend">👥 Attendees</a>
-          </div>
+        {# ── ORGANIZER BAR: visible to creator, Super Admin, or moderator with edit permission ── #}
+        {% if user.is_authenticated %}
+          {% if user == event.created_by or user.is_superuser or can_edit_event %}
+            <div class="organizer-bar">
+              {% if user == event.created_by or user.is_superuser or can_edit_event %}
+                <a href="{% url 'edit_event' event.id %}"
+                   class="btn-org btn-edit">
+                  ✏️ Edit Event
+                </a>
+              {% endif %}
+              {% if user == event.created_by or user.is_superuser %}
+                <a href="{% url 'delete_event' event.id %}" class="btn-org btn-delete">🗑️ Delete</a>
+                <a href="{% url 'event_attendees' event.id %}" class="btn-org btn-attend">👥 Attendees</a>
+              {% endif %}
+            </div>
+          {% endif %}
         {% endif %}
 
       </div>

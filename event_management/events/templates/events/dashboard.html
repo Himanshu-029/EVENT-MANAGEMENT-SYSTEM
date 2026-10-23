@@ -156,6 +156,27 @@
   .stat-lemon:hover { box-shadow: 8px 8px 0 #e6c800 !important; }
   .stat-lemon .stat-card-value { color: #b89e00; }
 
+  /* ── MY EVENT ACTION BUTTONS ── */
+  .event-action-btn {
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+    padding: 0.3rem 0.8rem;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.75rem;
+    text-decoration: none !important;
+    box-shadow: 2px 2px 0 var(--dark);
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .event-action-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--dark) !important;
+    text-decoration: none !important;
+  }
+  .btn-ev-sky { background: var(--sky); color: var(--dark) !important; }
+  .btn-ev-pink { background: var(--pink); color: #fff !important; }
+  .btn-ev-mint { background: var(--mint); color: var(--dark) !important; }
+
   /* ── TOP EVENT CARD ── */
   .top-event-card {
     background: #fff;
@@ -273,12 +294,43 @@
 
 <!-- ══ HEADER ══ -->
 <div class="dash-header">
-  <h1>Admin <em>Dashboard</em> 📊</h1>
-  <p>Everything you need to manage EventHub</p>
-  <div class="admin-badge">⚡ Superuser Access</div>
+  {% if is_super_admin %}
+    <h1>Admin <em>Dashboard</em> 📊</h1>
+    <p>Everything you need to manage EventHub</p>
+    <div class="admin-badge">⚡ Superuser Access</div>
+  {% else %}
+    <h1>My Event <em>Dashboard</em> 🎪</h1>
+    <p>Manage your events and track performance</p>
+    <div class="admin-badge">🎯 Organizer / Moderator Access</div>
+  {% endif %}
 </div>
 
 <div class="dash-wrap">
+
+  <!-- ══ MY EVENTS ══ -->
+  <div class="section-title">🎪 My Events</div>
+
+  <div class="stats-grid">
+    {% for event in my_events %}
+      <div class="stat-card">
+        <div class="stat-card-label">{{ event.category }}</div>
+        <div style="font-weight:800;color:var(--dark);font-size:1.1rem;">
+          {{ event.title }}
+        </div>
+        <div class="stat-card-sub">
+          📅 {{ event.date|date:"M d, Y" }}
+        </div>
+
+        <div style="margin-top:1.2rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+          <a href="{% url 'event_detail' event.id %}" class="event-action-btn btn-ev-sky">👁️ View</a>
+          <a href="{% url 'event_attendees' event.id %}" class="event-action-btn btn-ev-pink">👥 Attendees</a>
+          <a href="{% url 'verify_ticket' %}" class="event-action-btn btn-ev-mint">✅ Verify</a>
+        </div>
+      </div>
+    {% empty %}
+      <p>You do not have any events assigned to your account yet.</p>
+    {% endfor %}
+  </div>
 
   <!-- ══ STATS ══ -->
   <div class="section-title">📈 Overview</div>
@@ -296,11 +348,13 @@
       <div class="stat-card-sub">Tickets booked</div>
     </div>
 
+    {% if is_super_admin %}
     <div class="stat-card stat-mint" data-emoji="👥">
       <div class="stat-card-label">Total Users</div>
       <div class="stat-card-value">{{ total_users }}</div>
       <div class="stat-card-sub">Registered users</div>
     </div>
+    {% endif %}
 
     <div class="stat-card stat-lemon" data-emoji="💰">
       <div class="stat-card-label">Total Revenue</div>
@@ -360,17 +414,19 @@
       <div class="action-title">My Bookings</div>
       <div class="action-sub">View your tickets</div>
     </a>
+    {% if is_super_admin %}
     <a href="{% url 'super_admin_dashboard' %}" class="action-card" style="background:linear-gradient(135deg,#f5f0ff,#fff);">
       <div class="action-icon">👑</div>
       <div class="action-title">Super Admin</div>
       <div class="action-sub">Users & badges</div>
     </a>
+    {% endif %}
   </div>
 
 
 
   <!-- ══ ADMIN TOOLS ══ -->
-  {% if user.is_superuser %}
+  {% if is_super_admin %}
   <div style="max-width:1100px;margin:0 auto 3rem;padding:0 2rem;">
     <div style="background:#fff;border:2.5px solid #1a1035;border-radius:20px;padding:1.5rem 2rem;box-shadow:5px 5px 0 #1a1035;">
       <div style="font-family:'Boogaloo',cursive;font-size:1.4rem;color:#1a1035;margin-bottom:.5rem;">🧹 Data Cleanup</div>

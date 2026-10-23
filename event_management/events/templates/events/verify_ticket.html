@@ -226,6 +226,26 @@
         <span class="info-chip">✅ Real-time</span>
       </div>
 
+      <!-- Eligible events (visual aid only — server-side checks still apply) -->
+      <div style="margin-bottom:1.2rem;">
+        <label class="input-label">🎪 Events you can verify</label>
+
+        {% for event in eligible_events %}
+          <div style="
+            background:#fff0fa;
+            border:2px solid #1a1035;
+            border-radius:12px;
+            padding:.7rem 1rem;
+            margin-bottom:.5rem;
+            font-weight:700;
+            color:#1a1035;">
+            {{ event.title }}
+          </div>
+        {% empty %}
+          <p>You do not currently have permission to verify tickets for any event.</p>
+        {% endfor %}
+      </div>
+
       <form method="post">
         {% csrf_token %}
 

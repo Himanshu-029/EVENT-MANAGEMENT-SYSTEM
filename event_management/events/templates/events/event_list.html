@@ -218,7 +218,7 @@
     <div class="ev-card">
 
       {% if event.image %}
-        <img src="{{ event.image.url }}" class="ev-img" alt="{{ event.title }}">
+          <img src="{{ event.image.url }}" alt="{{ event.title }}">
       {% else %}
         {% if event.category == 'Tech' %}<div class="ev-top-nimg top-tech">💻</div>
         {% elif event.category == 'Music' %}<div class="ev-top-nimg top-music">🎵</div>
