@@ -16,6 +16,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+import os
+
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv(
@@ -24,6 +26,10 @@ ALLOWED_HOSTS = [
     ).split(",")
     if host.strip()
 ]
+
+# Allow Vercel deployment hostnames
+if ".vercel.app" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".vercel.app")
 
 
 # ══════════════════════════════════════
