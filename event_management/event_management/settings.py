@@ -13,11 +13,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ══════════════════════════════════════
 # SECURITY
 # ══════════════════════════════════════
-SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = True
+
+SECRET_KEY = os.environ["SECRET_KEY"]
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = [
-    "127.0.0.1", "localhost", "testserver"
+    host.strip()
+    for host in os.getenv(
+        "ALLOWED_HOSTS",
+        "127.0.0.1,localhost,testserver"
+    ).split(",")
+    if host.strip()
 ]
+
 
 # ══════════════════════════════════════
 # APPLICATIONS
@@ -68,11 +75,14 @@ WSGI_APPLICATION = 'event_management.wsgi.application'
 # CSRF_TRUSTED_ORIGINS
 # ══════════════════════════════════════
 
-CSRF_TRUSTED_ORIGINS = os.environ.get(
-    'CSRF_TRUSTED_ORIGINS',
-    'https://event-management-system-production-698e.up.railway.app'
-).split(',')
-
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip().rstrip("/")
+    for origin in os.environ.get(
+        "CSRF_TRUSTED_ORIGINS",
+        "https://eventhub-rgfwkh06y-himanshu-029.vercel.app,https://eventhub-time-kappa.vercel.app"
+    ).split(",")
+    if origin.strip()
+]
 
 # ══════════════════════════════════════
 # DATABASE
@@ -80,9 +90,13 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
 
 
 DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL')
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL"),
+        conn_max_age=0,
+        ssl_require=True,
     )
 }
+
 
 # ══════════════════════════════════════
 # PASSWORD VALIDATION
@@ -105,7 +119,7 @@ USE_TZ        = True
 # ══════════════════════════════════════
 # STATIC & MEDIA
 # ══════════════════════════════════════
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = "/media/"
